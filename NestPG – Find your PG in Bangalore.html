@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>NestPG – Find your PG in Bangalore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fff8ee;
+        --ink: #1e1b3a;
+        --card: #fff;
+        --brand: #ff5a3c;
+        --ind: #2b2d6e;
+        --teal: #0fa3a3;
+        --sun: #ffc83d;
+        --muted: #6b6880;
+        --line: #eadfcb;
+        --ok: #12805c;
+        --bad: #c93b3b;
+        --hd: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+        --bd: "DM Sans", system-ui, sans-serif;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #15132b;
+          --ink: #f4efe6;
+          --card: #1f1d3d;
+          --ind: #b9bbff;
+          --muted: #a7a3c4;
+          --line: #343160;
+          --ok: #4ade9f;
+          --bad: #ff8080;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #15132b;
+        --ink: #f4efe6;
+        --card: #1f1d3d;
+        --ind: #b9bbff;
+        --muted: #a7a3c4;
+        --line: #343160;
+        --ok: #4ade9f;
+        --bad: #ff8080;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.5 var(--bd);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--hd);
+        margin: 0;
+        line-height: 1.1;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0 0 auto;
+        height: env(safe-area-inset-top, 0px);
+        background: var(--bg);
+        z-index: 30;
+      }
+      .wrap {
+        max-width: 1180px;
+        margin: auto;
+        padding: 0 20px;
+      }
+      header {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+        z-index: 20;
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        height: 62px;
+      }
+      .logo {
+        font: 800 24px var(--hd);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: -0.5px;
+      }
+      .logo i {
+        width: 28px;
+        height: 28px;
+        background: var(--brand);
+        clip-path: polygon(50% 0, 100% 45%, 100% 100%, 0 100%, 0 45%);
+        display: grid;
+        place-items: center;
+      }
+      .logo i::after {
+        content: "";
+        width: 9px;
+        height: 12px;
+        background: var(--bg);
+        margin-top: 10px;
+        border-radius: 5px 5px 0 0;
+      }
+      .logo b {
+        color: var(--brand);
+      }
+      .nav nav {
+        display: flex;
+        gap: 18px;
+        margin-left: auto;
+        align-items: center;
+        font-weight: 500;
+      }
+      .nav nav a:hover {
+        color: var(--brand);
+      }
+      .btn {
+        display: inline-block;
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font: 700 14px var(--bd);
+        cursor: pointer;
+        background: var(--brand);
+        color: #fff;
+      }
+      .btn.alt {
+        background: var(--ind);
+        color: var(--bg);
+      }
+      .btn.line {
+        background: none;
+        border: 1.5px solid var(--line);
+        color: var(--ink);
+      }
+      .btn.sm {
+        padding: 6px 12px;
+        font-size: 12.5px;
+      }
+      .hero {
+        background: var(--ind);
+        color: #fff8ee;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero .wrap {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 30px;
+        padding-top: 54px;
+        padding-bottom: 54px;
+        align-items: center;
+      }
+      .hero h1 {
+        font-size: clamp(34px, 5vw, 58px);
+        letter-spacing: -1.5px;
+      }
+      .hero h1 em {
+        font-style: normal;
+        color: var(--sun);
+      }
+      .hero p {
+        color: #d6d4f5;
+        max-width: 480px;
+        margin: 14px 0 22px;
+        font-size: 16px;
+      }
+      .search {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 14px;
+        padding: 8px;
+        display: grid;
+        grid-template-columns: 1.2fr 1fr auto;
+        gap: 8px;
+        max-width: 620px;
+      }
+      .search select {
+        border: 0;
+        background: none;
+        color: var(--ink);
+        font: 500 15px var(--bd);
+        padding: 10px;
+        border-right: 1px solid var(--line);
+      }
+      .skyline {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        height: 260px;
+        justify-content: center;
+      }
+      .skyline span {
+        width: 52px;
+        border-radius: 8px 8px 0 0;
+        position: relative;
+      }
+      .skyline span::before {
+        content: "";
+        position: absolute;
+        inset: 12px 10px auto;
+        height: calc(100% - 24px);
+        background: repeating-linear-gradient(
+          #0003 0 8px,
+          transparent 8px 20px
+        );
+        opacity: 0.5;
+      }
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        border: 1.5px solid var(--line);
+        background: var(--card);
+        border-radius: 99px;
+        padding: 5px 13px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        color: var(--ink);
+      }
+      .chip.on {
+        background: var(--ink);
+        color: var(--bg);
+        border-color: var(--ink);
+      }
+      section {
+        padding: 42px 0;
+      }
+      .sec h2 {
+        font-size: 30px;
+        margin-bottom: 6px;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 22px;
+      }
+      .areas {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .area {
+        border-radius: 14px;
+        padding: 18px;
+        color: #fff;
+        min-height: 96px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        font: 800 18px var(--hd);
+      }
+      .area small {
+        font: 500 12px var(--bd);
+        opacity: 0.9;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        display: block;
+        transition: transform 0.15s;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+      }
+      .tile {
+        height: 150px;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        padding: 12px;
+        color: #fff;
+        font: 800 40px var(--hd);
+        background:
+          repeating-linear-gradient(
+            115deg,
+            #fff1 0 14px,
+            transparent 14px 28px
+          ),
+          linear-gradient(
+            135deg,
+            hsl(var(--h) 75% 55%),
+            hsl(calc(var(--h) + 40) 70% 38%)
+          );
+      }
+      .tag {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--sun);
+        color: #1e1b3a;
+        font: 700 11px var(--bd);
+        padding: 3px 9px;
+        border-radius: 99px;
+      }
+      .cb {
+        padding: 14px;
+      }
+      .cb h3 {
+        font-size: 18px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 3px 0 10px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+      .price {
+        font: 800 20px var(--hd);
+      }
+      .price small {
+        font: 400 12px var(--bd);
+        color: var(--muted);
+      }
+      .rate {
+        background: var(--ok);
+        color: #fff;
+        border-radius: 6px;
+        padding: 1px 7px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .g {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 99px;
+        background: color-mix(in srgb, var(--teal) 20%, transparent);
+        color: var(--teal);
+      }
+      .how {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .how div {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+      }
+      .how b {
+        font: 800 34px var(--hd);
+        color: var(--brand);
+      }
+      .lay {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 24px;
+        padding-top: 26px;
+      }
+      .side {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 18px;
+        align-self: start;
+        position: sticky;
+        top: 80px;
+      }
+      .side label {
+        display: block;
+        font-weight: 700;
+        font-size: 13px;
+        margin: 14px 0 6px;
+      }
+      .side label:first-child {
+        margin-top: 0;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px var(--bd);
+      }
+      .det {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 26px;
+        padding-top: 24px;
+      }
+      .det .tile {
+        height: 280px;
+        border-radius: 18px;
+        font-size: 70px;
+      }
+      .pnl {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      .pnl h3 {
+        font-size: 19px;
+        margin-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .tw {
+        overflow-x: auto;
+      }
+      .dl {
+        display: grid;
+        grid-template-columns: 210px 1fr;
+        gap: 22px;
+        padding-top: 24px;
+        min-height: 70vh;
+      }
+      .sb {
+        background: var(--ind);
+        color: #fff8ee;
+        border-radius: 16px;
+        padding: 14px;
+        align-self: start;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .sb a {
+        padding: 10px 12px;
+        border-radius: 9px;
+        font-weight: 500;
+      }
+      .sb a.on {
+        background: var(--brand);
+        color: #fff;
+      }
+      .sb small {
+        opacity: 0.7;
+        padding: 6px 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 11px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+      .stat {
+        border-radius: 14px;
+        padding: 16px;
+        color: #fff;
+      }
+      .stat b {
+        font: 800 30px var(--hd);
+        display: block;
+      }
+      .bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        height: 140px;
+      }
+      .bars span {
+        flex: 1;
+        background: var(--teal);
+        border-radius: 6px 6px 0 0;
+        text-align: center;
+        font-size: 11px;
+        color: #fff;
+        padding-top: 3px;
+      }
+      .st {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 9px;
+        border-radius: 99px;
+      }
+      .st.live,
+      .st.verified,
+      .st.new {
+        background: #12805c22;
+        color: var(--ok);
+      }
+      .st.pending {
+        background: #ffc83d44;
+        color: var(--ind);
+      }
+      .st.blocked,
+      .st.rejected {
+        background: #c93b3b22;
+        color: var(--bad);
+      }
+      .form {
+        max-width: 440px;
+        margin: 40px auto;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 28px;
+      }
+      .form label {
+        display: block;
+        font-weight: 700;
+        font-size: 13px;
+        margin: 12px 0 5px;
+      }
+      .f2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .seg {
+        display: flex;
+        gap: 6px;
+      }
+      .seg .chip {
+        flex: 1;
+        text-align: center;
+      }
+      #toast {
+        position: fixed;
+        bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--ink);
+        color: var(--bg);
+        padding: 11px 20px;
+        border-radius: 10px;
+        opacity: 0;
+        transition: 0.25s;
+        pointer-events: none;
+        z-index: 40;
+      }
+      #toast.on {
+        opacity: 1;
+      }
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 26px 0;
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 30px;
+      }
+      @media (max-width: 820px) {
+        .hero .wrap,
+        .det,
+        .lay,
+        .dl {
+          grid-template-columns: 1fr;
+        }
+        .skyline {
+          display: none;
+        }
+        .areas {
+          grid-template-columns: 1fr 1fr;
+        }
+        .how {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+        .side {
+          position: static;
+        }
+        .search {
+          grid-template-columns: 1fr;
+        }
+        .search select {
+          border: 0;
+        }
+        .nav nav a.hm {
+          display: none;
+        }
+        .sb {
+          flex-direction: row;
+          overflow-x: auto;
+        }
+        .sb small {
+          display: none;
+        }
+        .sb a {
+          white-space: nowrap;
+        }
+      }
+      /* ===== Claymorphism theme ===== */
+      :root {
+        --bg: #f1eafd;
+        --card: #fbf8ff;
+        --line: #e3d8f7;
+        --muted: #6f6a8f;
+        --clay:
+          10px 10px 24px rgba(110, 80, 170, 0.22),
+          -8px -8px 20px rgba(255, 255, 255, 0.95),
+          inset -5px -5px 10px rgba(110, 80, 170, 0.12),
+          inset 5px 5px 10px rgba(255, 255, 255, 0.95);
+        --clay-sm:
+          5px 5px 12px rgba(110, 80, 170, 0.22),
+          -4px -4px 10px rgba(255, 255, 255, 0.95),
+          inset -3px -3px 6px rgba(0, 0, 0, 0.12),
+          inset 3px 3px 6px rgba(255, 255, 255, 0.55);
+        --pit:
+          inset 4px 4px 9px rgba(110, 80, 170, 0.2),
+          inset -4px -4px 9px rgba(255, 255, 255, 0.95);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --clay:
+            10px 10px 24px rgba(0, 0, 0, 0.5),
+            -6px -6px 16px rgba(255, 255, 255, 0.05),
+            inset -5px -5px 10px rgba(0, 0, 0, 0.35),
+            inset 5px 5px 10px rgba(255, 255, 255, 0.07);
+          --clay-sm:
+            5px 5px 12px rgba(0, 0, 0, 0.5),
+            -3px -3px 9px rgba(255, 255, 255, 0.05),
+            inset -3px -3px 6px rgba(0, 0, 0, 0.25),
+            inset 3px 3px 6px rgba(255, 255, 255, 0.12);
+          --pit:
+            inset 4px 4px 9px rgba(0, 0, 0, 0.5),
+            inset -3px -3px 8px rgba(255, 255, 255, 0.05);
+        }
+      }
+      :root[data-theme="dark"] {
+        --clay:
+          10px 10px 24px rgba(0, 0, 0, 0.5),
+          -6px -6px 16px rgba(255, 255, 255, 0.05),
+          inset -5px -5px 10px rgba(0, 0, 0, 0.35),
+          inset 5px 5px 10px rgba(255, 255, 255, 0.07);
+        --clay-sm:
+          5px 5px 12px rgba(0, 0, 0, 0.5),
+          -3px -3px 9px rgba(255, 255, 255, 0.05),
+          inset -3px -3px 6px rgba(0, 0, 0, 0.25),
+          inset 3px 3px 6px rgba(255, 255, 255, 0.12);
+        --pit:
+          inset 4px 4px 9px rgba(0, 0, 0, 0.5),
+          inset -3px -3px 8px rgba(255, 255, 255, 0.05);
+      }
+      header {
+        border: 0;
+        box-shadow: 0 6px 18px rgba(110, 80, 170, 0.12);
+      }
+      .card,
+      .pnl,
+      .side,
+      .form,
+      .how div,
+      .stat,
+      .area,
+      .search {
+        border: 0;
+        border-radius: 28px;
+        box-shadow: var(--clay);
+      }
+      .card {
+        border-radius: 30px;
+      }
+      .card:hover {
+        transform: translateY(-5px) scale(1.01);
+      }
+      .tile {
+        margin: 10px;
+        border-radius: 22px;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        background:
+          repeating-linear-gradient(
+            115deg,
+            #fff2 0 14px,
+            transparent 14px 28px
+          ),
+          linear-gradient(
+            135deg,
+            hsl(var(--h) 85% 70%),
+            hsl(calc(var(--h) + 30) 80% 60%)
+          );
+        box-shadow:
+          inset -5px -5px 10px rgba(0, 0, 0, 0.12),
+          inset 5px 5px 10px rgba(255, 255, 255, 0.4);
+      }
+      .det .tile {
+        margin: 0;
+        border-radius: 32px;
+      }
+      .btn {
+        border-radius: 18px;
+        padding: 11px 22px;
+        background: linear-gradient(145deg, #ff7a5c, #f0482a);
+        box-shadow: var(--clay-sm);
+        transition: 0.15s;
+      }
+      .btn.alt {
+        background: linear-gradient(145deg, #4c4fb5, #2b2d6e);
+      }
+      .btn.line {
+        background: var(--card);
+        color: var(--ink);
+        border: 0;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+      .btn:active {
+        transform: translateY(1px);
+        box-shadow: var(--pit);
+      }
+      .chip {
+        border: 0;
+        border-radius: 99px;
+        padding: 7px 15px;
+        box-shadow: var(--clay-sm);
+        background: var(--card);
+      }
+      .chip.on {
+        background: linear-gradient(145deg, #ff7a5c, #f0482a);
+        color: #fff;
+        box-shadow: var(--pit);
+      }
+      input,
+      select,
+      textarea {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: var(--pit);
+        padding: 11px 14px;
+      }
+      input[type="checkbox"] {
+        box-shadow: none;
+      }
+      .search select {
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+      .hero {
+        margin: 16px 16px 0;
+        border-radius: 40px;
+        background: linear-gradient(145deg, #6a6ee8, #3a3da6);
+        box-shadow: var(--clay);
+      }
+      .skyline span {
+        border-radius: 22px 22px 0 0;
+        box-shadow:
+          inset -5px -5px 10px rgba(0, 0, 0, 0.18),
+          inset 5px 5px 10px rgba(255, 255, 255, 0.35);
+      }
+      .sb {
+        border-radius: 28px;
+        background: linear-gradient(160deg, #5558c9, #2b2d6e);
+        box-shadow: var(--clay);
+      }
+      .sb a {
+        border-radius: 16px;
+      }
+      .sb a.on {
+        background: linear-gradient(145deg, #ff7a5c, #f0482a);
+        box-shadow: var(--clay-sm);
+      }
+      .rate,
+      .g,
+      .st,
+      .tag {
+        box-shadow: var(--clay-sm);
+      }
+      .stat {
+        box-shadow:
+          inset -6px -6px 12px rgba(0, 0, 0, 0.2),
+          inset 6px 6px 12px rgba(255, 255, 255, 0.3),
+          8px 8px 18px rgba(110, 80, 170, 0.25);
+      }
+      .bars span {
+        border-radius: 12px 12px 0 0;
+        box-shadow:
+          inset 3px 3px 6px rgba(255, 255, 255, 0.4),
+          inset -3px -3px 6px rgba(0, 0, 0, 0.15);
+      }
+      th,
+      td {
+        border-bottom: 1px dashed var(--line);
+      }
+      footer {
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap nav">
+        <a class="logo" href="#home"><i></i>Nest<b>PG</b></a>
+        <nav>
+          <a class="hm" href="#listings">Find a PG</a
+          ><a class="hm" href="#register">List your PG</a
+          ><a id="nl" href="#login">Log in</a>
+        </nav>
+      </div>
+    </header>
+    <main id="app"></main>
+    <footer>
+      <div class="wrap">
+        NestPG · Verified PGs across Bangalore · Prototype with mock data, ready
+        for a real API.
+      </div>
+    </footer>
+    <div id="toast"></div>
+    <script>
+      const $ = (s) => document.querySelector(s),
+        esc = (s) =>
+          String(s).replace(
+            /[&<>"]/g,
+            (c) =>
+              ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+          );
+      const AREAS = [
+        "Koramangala",
+        "HSR Layout",
+        "Indiranagar",
+        "Whitefield",
+        "BTM Layout",
+        "Marathahalli",
+        "Electronic City",
+        "Bellandur",
+      ];
+      const AH = {
+        Koramangala: 12,
+        "HSR Layout": 190,
+        Indiranagar: 340,
+        Whitefield: 260,
+        "BTM Layout": 30,
+        Marathahalli: 160,
+        "Electronic City": 215,
+        Bellandur: 300,
+      };
+      const nm = [
+        "Sunrise Nest",
+        "GreenLeaf Stay",
+        "Orchid Residency",
+        "Tech Park Homes",
+        "Lakeview PG",
+        "Maple Co-Living",
+        "Urban Roost",
+        "Banyan House",
+        "Cubbon Court",
+        "Silk Board Suites",
+      ];
+      const AM = [
+        "WiFi",
+        "AC",
+        "Meals",
+        "Laundry",
+        "Power backup",
+        "Hot water",
+        "CCTV",
+        "Gym",
+        "Housekeeping",
+      ];
+      const PGS = nm.map((n, i) => ({
+        id: i + 1,
+        n,
+        a: AREAS[i % 8],
+        p: 6500 + ((i * 1700) % 7500),
+        g: ["Men", "Women", "Co-ed"][i % 3],
+        r: (4 + ((i * 37) % 10) / 10).toFixed(1),
+        rv: 40 + i * 23,
+        am: AM.filter((_, j) => (j + i) % 3 !== 0 || j < 3),
+        st: i === 3 || i === 8 ? "pending" : "live",
+        o: i % 4,
+        tag: ["Popular", "Verified", "New", "Best value"][i % 4],
+        h: AH[AREAS[i % 8]],
+      }));
+      const OWN = [
+        { n: "Ramesh Gowda", ph: "98450 12345", v: "verified" },
+        { n: "Anita Sharma", ph: "99001 22334", v: "verified" },
+        { n: "Joseph D’Souza", ph: "97311 55667", v: "pending" },
+        { n: "Lakshmi Iyer", ph: "90080 88776", v: "verified" },
+      ];
+      const USR = [
+        { n: "Aarav Nair", e: "aarav@mail.com", s: "live" },
+        { n: "Priya Reddy", e: "priya@mail.com", s: "live" },
+        { n: "Karthik S", e: "karthik@mail.com", s: "live" },
+        { n: "Meera Joshi", e: "meera@mail.com", s: "blocked" },
+      ];
+      const ENQ = [
+        { n: "Aarav Nair", pg: 1, ph: "98860 11223", d: "1 Nov", s: "new" },
+        { n: "Priya Reddy", pg: 5, ph: "98450 99887", d: "30 Oct", s: "new" },
+        {
+          n: "Karthik S",
+          pg: 7,
+          ph: "99720 44556",
+          d: "28 Oct",
+          s: "contacted",
+        },
+      ];
+      let role = null,
+        F = { a: "", g: "", max: 20000, sh: "", am: [], sort: "rec" };
+      const price = (p, sh) =>
+          sh === "Single" ? p + 6000 : sh === "Double" ? p + 2500 : p,
+        inr = (n) => "₹" + n.toLocaleString("en-IN");
+      const toast = (m) => {
+        const t = $("#toast");
+        t.textContent = m;
+        t.classList.add("on");
+        setTimeout(() => t.classList.remove("on"), 2200);
+      };
+      const tile = (p) =>
+        `<div class="tile" style="--h:${p.h}"><span class="tag">${p.tag}</span>${esc(p.a.split(" ")[0])}</div>`;
+      const card = (p) =>
+        `<a class="card" href="#pg-${p.id}">${tile(p)}<div class="cb"><div class="row"><h3>${esc(p.n)}</h3><span class="rate">★ ${p.r}</span></div><div class="meta">${esc(p.a)}, Bangalore · ${p.rv} reviews</div><div class="row"><span class="price">${inr(p.p)}<small>/month</small></span><span class="g">${p.g}</span></div></div></a>`;
+
+      const V = {};
+      V.home =
+        () => `<div class="hero"><div class="wrap"><div><h1>Your next <em>home</em> in Bangalore, sorted.</h1><p>Verified PGs near your office or campus, with honest prices, real photos and owners you can call.</p>
+<div class="search"><select id="ha"><option value="">All Bangalore</option>${AREAS.map((a) => `<option>${a}</option>`).join("")}</select><select id="hg"><option value="">Anyone</option><option>Men</option><option>Women</option><option>Co-ed</option></select><button class="btn" onclick="F.a=$('#ha').value;F.g=$('#hg').value;location.hash='listings'">Search</button></div></div>
+<div class="skyline">${[120, 190, 150, 240, 170, 210].map((h, i) => `<span style="height:${h}px;background:${["#FF5A3C", "#FFC83D", "#0FA3A3", "#FF5A3C", "#8F94FF", "#FFC83D"][i]}"></span>`).join("")}</div></div></div>
+<section><div class="wrap sec"><h2>Browse by neighbourhood</h2><p class="sub">Where is your office or college?</p><div class="areas">${AREAS.map((a) => `<a class="area" href="#listings" onclick="F.a='${a}'" style="background:linear-gradient(135deg,hsl(${AH[a]} 75% 52%),hsl(${AH[a] + 40} 70% 36%))">${a}<small>${PGS.filter((p) => p.a === a).length} PGs</small></a>`).join("")}</div></div></section>
+<section><div class="wrap sec"><h2>Popular this week</h2><p class="sub">Highly rated and quick to fill.</p><div class="grid">${PGS.filter(
+          (p) => p.st === "live",
+        )
+          .slice(0, 4)
+          .map(card)
+          .join("")}</div></div></section>
+<section><div class="wrap sec"><h2>How NestPG works</h2><p class="sub">Three steps, no brokerage.</p><div class="how"><div><b>1</b><h3>Search</h3><p>Filter by area, budget, sharing and food.</p></div><div><b>2</b><h3>Enquire</h3><p>Send one request. The owner calls you back.</p></div><div><b>3</b><h3>Visit &amp; move in</h3><p>See the room, then book. Every listing is checked by our team.</p></div></div></div></section>`;
+
+      V.listings =
+        () => `<div class="wrap lay"><aside class="side"><label>Area</label><select id="fa"><option value="">All areas</option>${AREAS.map((a) => `<option ${F.a === a ? "selected" : ""}>${a}</option>`).join("")}</select>
+<label>Gender</label><div class="chips">${["", "Men", "Women", "Co-ed"].map((g) => `<span class="chip ${F.g === g ? "on" : ""}" data-g="${g}">${g || "Any"}</span>`).join("")}</div>
+<label>Sharing</label><div class="chips">${["", "Single", "Double", "Triple"].map((g) => `<span class="chip ${F.sh === g ? "on" : ""}" data-s="${g}">${g || "Any"}</span>`).join("")}</div>
+<label>Max budget: <span id="mv">${inr(F.max)}</span></label><input id="fm" type="range" min="6000" max="20000" step="500" value="${F.max}">
+<label>Amenities</label>${["WiFi", "AC", "Meals", "Laundry"].map((a) => `<div><input type="checkbox" style="width:auto" value="${a}" ${F.am.includes(a) ? "checked" : ""}> ${a}</div>`).join("")}
+<label>Sort</label><select id="fs"><option value="rec">Recommended</option><option value="lo">Price: low to high</option><option value="hi">Price: high to low</option><option value="rt">Top rated</option></select></aside>
+<div><div class="row" style="margin-bottom:14px"><h2 id="cnt"></h2></div><div class="grid" id="res"></div></div></div>`;
+      function drawList() {
+        let l = PGS.filter(
+          (p) =>
+            p.st === "live" &&
+            (!F.a || p.a === F.a) &&
+            (!F.g || p.g === F.g) &&
+            price(p.p, F.sh) <= F.max &&
+            F.am.every((a) => p.am.includes(a)),
+        );
+        const s = {
+          lo: (a, b) => a.p - b.p,
+          hi: (a, b) => b.p - a.p,
+          rt: (a, b) => b.r - a.r,
+          rec: (a, b) => b.rv - a.rv,
+        }[F.sort];
+        l.sort(s);
+        $("#cnt").textContent =
+          l.length + " PGs" + (F.a ? " in " + F.a : " in Bangalore");
+        $("#res").innerHTML =
+          l.map(card).join("") ||
+          "<p class='sub'>No PGs match. Try a higher budget or fewer filters.</p>";
+      }
+      function bindList() {
+        const s = $(".side");
+        s.addEventListener("change", (e) => {
+          const t = e.target;
+          if (t.id === "fa") F.a = t.value;
+          if (t.id === "fs") F.sort = t.value;
+          if (t.type === "checkbox")
+            F.am = [...s.querySelectorAll("input[type=checkbox]:checked")].map(
+              (i) => i.value,
+            );
+          drawList();
+        });
+        $("#fm").oninput = (e) => {
+          F.max = +e.target.value;
+          $("#mv").textContent = inr(F.max);
+          drawList();
+        };
+        s.addEventListener("click", (e) => {
+          const c = e.target.closest(".chip");
+          if (!c) return;
+          const k = "g" in c.dataset ? "g" : "sh";
+          F[k] = c.dataset.g ?? c.dataset.s;
+          c.parentNode
+            .querySelectorAll(".chip")
+            .forEach((x) => x.classList.toggle("on", x === c));
+        });
+        s.addEventListener("click", () => drawList());
+        drawList();
+      }
+
+      V.pg = (id) => {
+        const p = PGS.find((x) => x.id == id);
+        if (!p)
+          return "<div class='wrap'><h2 style='padding:40px 0'>PG not found</h2></div>";
+        const o = OWN[p.o];
+        return `<div class="wrap det"><div>${tile(p).replace("height:150px", "")}<div class="row" style="margin:18px 0 4px"><h1>${esc(p.n)}</h1><span class="rate">★ ${p.r}</span></div><div class="meta">${esc(p.a)}, Bangalore · ${p.rv} reviews · <span class="g">${p.g}</span></div>
+<div class="pnl" style="margin-top:16px"><h3>Rooms &amp; pricing</h3><div class="tw"><table><tr><th>Sharing</th><th>Rent / month</th><th>Deposit</th></tr>${["Single", "Double", "Triple"].map((s) => `<tr><td>${s}</td><td><b>${inr(price(p.p, s))}</b></td><td>${inr(price(p.p, s) * 2)}</td></tr>`).join("")}</table></div></div>
+<div class="pnl"><h3>Amenities</h3><div class="chips">${p.am.map((a) => `<span class="chip">${a}</span>`).join("")}</div></div>
+<div class="pnl"><h3>House rules</h3><p>Gate closes at 11 PM. No smoking inside. Guests allowed in common area till 8 PM. One month notice to vacate.</p></div></div>
+<aside><div class="pnl" style="position:sticky;top:80px"><div class="price">${inr(p.p)}<small> /month onwards</small></div><p class="meta">Managed by ${esc(o.n)} · <span class="st ${o.v}">${o.v}</span></p>
+<label class="meta">Your name</label><input id="en" placeholder="Full name"><label class="meta" style="display:block;margin-top:10px">Phone</label><input id="ep" type="tel" placeholder="98xxx xxxxx"><label class="meta" style="display:block;margin-top:10px">Move-in</label><input id="ed" type="date">
+<button class="btn" style="width:100%;margin-top:14px" onclick="sendEnq(${p.id})">Request a callback</button></div></aside></div>`;
+      };
+      function sendEnq(id) {
+        const n = $("#en").value.trim(),
+          ph = $("#ep").value.trim();
+        if (!n || ph.length < 8) return toast("Please add your name and phone");
+        ENQ.unshift({ n, pg: id, ph, d: "Today", s: "new" });
+        toast("Sent! The owner will call you soon.");
+        $("#en").value = $("#ep").value = "";
+      }
+
+      V.login =
+        () => `<div class="form"><h2>Welcome back</h2><p class="sub">Choose a demo role to explore.</p><label>Email</label><input value="demo@nestpg.in"><label>Password</label><input type="password" value="password"><label>Log in as</label><div class="seg" id="rl">${["Customer", "Owner", "Admin"].map((r, i) => `<span class="chip ${i ? "" : "on"}">${r}</span>`).join("")}</div>
+<button class="btn" style="width:100%;margin-top:18px" id="go">Log in</button><p class="meta">New here? <a href="#register" style="color:var(--brand)">Create an account</a></p></div>`;
+      V.register =
+        () => `<div class="form"><h2>Join NestPG</h2><p class="sub">Find a PG or list yours.</p><div class="f2"><div><label>Name</label><input></div><div><label>Phone</label><input></div></div><label>Email</label><input><label>Password</label><input type="password"><label>I am a</label><div class="seg" id="rl"><span class="chip on">Customer</span><span class="chip">Owner</span></div>
+<button class="btn" style="width:100%;margin-top:18px" id="go">Create account</button></div>`;
+      function bindAuth() {
+        $("#rl").onclick = (e) => {
+          const c = e.target.closest(".chip");
+          if (c)
+            $("#rl")
+              .querySelectorAll(".chip")
+              .forEach((x) => x.classList.toggle("on", x === c));
+        };
+        $("#go").onclick = () => {
+          const r = $("#rl .on").textContent;
+          role = r;
+          nl();
+          toast("Signed in as " + r);
+          location.hash =
+            r === "Owner" ? "owner" : r === "Admin" ? "admin" : "listings";
+        };
+      }
+      function nl() {
+        const a = $("#nl");
+        if (role) {
+          a.textContent = "Log out";
+          a.href = "#home";
+          a.onclick = () => {
+            role = null;
+            nl();
+          };
+        } else {
+          a.textContent = "Log in";
+          a.href = "#login";
+          a.onclick = null;
+        }
+      }
+
+      const DL = (items, cur, body) =>
+        `<div class="wrap dl"><div class="sb"><small>${items.t}</small>${items.l.map(([h, t]) => `<a href="#${h}" class="${h === cur ? "on" : ""}">${t}</a>`).join("")}</div><div>${body}</div></div>`;
+      const OM = {
+          t: "Owner",
+          l: [
+            ["owner", "Overview"],
+            ["owner-add", "Add a PG"],
+            ["owner-enq", "Enquiries"],
+          ],
+        },
+        AMn = {
+          t: "Admin",
+          l: [
+            ["admin", "Overview"],
+            ["admin-pgs", "PGs"],
+            ["admin-owners", "Owners"],
+            ["admin-users", "Users"],
+          ],
+        };
+      const stat = (n, l, c) =>
+        `<div class="stat" style="background:${c}"><b>${n}</b>${l}</div>`;
+      const bars = (a) =>
+        `<div class="pnl"><h3>Enquiries, last 7 days</h3><div class="bars">${a.map((v, i) => `<span style="height:${v * 8}px">${v}</span>`).join("")}</div></div>`;
+      const tbl = (h, rows) =>
+        `<div class="pnl tw"><table><tr>${h.map((x) => `<th>${x}</th>`).join("")}</tr>${rows}</table></div>`;
+      V.owner = () =>
+        DL(
+          OM,
+          "owner",
+          `<h2 style="margin-bottom:16px">Hello, Ramesh</h2><div class="stats">${stat(3, "Active PGs", "#2B2D6E") + stat(ENQ.length, "Enquiries", "#FF5A3C") + stat("86%", "Occupancy", "#0FA3A3") + stat("4.6", "Avg rating", "#C98A00")}</div>${bars([3, 5, 2, 6, 4, 7, 5])}`,
+        );
+      V["owner-add"] = () =>
+        DL(
+          OM,
+          "owner-add",
+          `<div class="pnl"><h3>Add a new PG</h3><div class="f2"><div><label class="meta">PG name</label><input id="an"></div><div><label class="meta">Area</label><select id="aa">${AREAS.map((a) => `<option>${a}</option>`).join("")}</select></div><div><label class="meta">Starting rent (₹)</label><input id="ap" type="number" value="9000"></div><div><label class="meta">Gender</label><select id="ag"><option>Men</option><option>Women</option><option>Co-ed</option></select></div></div><label class="meta" style="display:block;margin:12px 0 6px">Amenities</label><div class="chips" id="aam">${AM.map((a) => `<span class="chip">${a}</span>`).join("")}</div><button class="btn" style="margin-top:18px" id="sv">Submit for approval</button></div>`,
+        );
+      V["owner-enq"] = () =>
+        DL(
+          OM,
+          "owner-enq",
+          `<h2 style="margin-bottom:14px">Enquiries</h2>${tbl(["Name", "PG", "Phone", "Date", "Status"], ENQ.map((e) => `<tr><td>${esc(e.n)}</td><td>${PGS[e.pg - 1].n}</td><td>${esc(e.ph)}</td><td>${e.d}</td><td><span class="st ${e.s === "new" ? "new" : "pending"}">${e.s}</span></td></tr>`).join(""))}`,
+        );
+      V.admin = () =>
+        DL(
+          AMn,
+          "admin",
+          `<h2 style="margin-bottom:16px">Platform overview</h2><div class="stats">${stat(PGS.length, "Total PGs", "#2B2D6E") + stat(OWN.length, "Owners", "#FF5A3C") + stat(USR.length, "Users", "#0FA3A3") + stat(PGS.filter((p) => p.st === "pending").length, "Awaiting approval", "#C98A00")}</div>${bars([12, 18, 9, 22, 17, 25, 20])}`,
+        );
+      const adPgs = () =>
+        DL(
+          AMn,
+          "admin-pgs",
+          `<h2 style="margin-bottom:14px">PG listings</h2>${tbl(["PG", "Area", "Rent", "Status", "Action"], PGS.map((p) => `<tr><td>${p.n}</td><td>${p.a}</td><td>${inr(p.p)}</td><td><span class="st ${p.st}">${p.st}</span></td><td>${p.st === "pending" ? `<button class="btn sm" data-ap="${p.id}">Approve</button>` : `<button class="btn sm line" data-ap="${p.id}">Suspend</button>`}</td></tr>`).join(""))}`,
+        );
+      V["admin-pgs"] = adPgs;
+      V["admin-owners"] = () =>
+        DL(
+          AMn,
+          "admin-owners",
+          `<h2 style="margin-bottom:14px">PG owners</h2>${tbl(["Owner", "Phone", "PGs", "KYC", "Action"], OWN.map((o, i) => `<tr><td>${esc(o.n)}</td><td>${o.ph}</td><td>${PGS.filter((p) => p.o === i).length}</td><td><span class="st ${o.v}">${o.v}</span></td><td>${o.v === "pending" ? `<button class="btn sm" data-ao="${i}">Verify</button>` : "—"}</td></tr>`).join(""))}`,
+        );
+      V["admin-users"] = () =>
+        DL(
+          AMn,
+          "admin-users",
+          `<h2 style="margin-bottom:14px">Customers</h2>${tbl(["Name", "Email", "Status", "Action"], USR.map((u, i) => `<tr><td>${u.n}</td><td>${u.e}</td><td><span class="st ${u.s}">${u.s}</span></td><td><button class="btn sm line" data-au="${i}">${u.s === "blocked" ? "Unblock" : "Block"}</button></td></tr>`).join(""))}`,
+        );
+
+      function guard(k) {
+        const need = k.startsWith("owner")
+          ? "Owner"
+          : k.startsWith("admin")
+            ? "Admin"
+            : null;
+        if (need && role !== need) {
+          role = need;
+          nl();
+          toast("Demo mode: signed in as " + need);
+        }
+      }
+      function route() {
+        let k = location.hash.slice(1) || "home",
+          m = k.match(/^pg-(\d+)$/);
+        guard(k);
+        $("#app").innerHTML = m ? V.pg(m[1]) : (V[k] || V.home)();
+        scrollTo(0, 0);
+        if (k === "listings") bindList();
+        if (k === "login" || k === "register") bindAuth();
+        if (k === "owner-add") {
+          $("#aam").onclick = (e) => e.target.classList.toggle("on");
+          $("#sv").onclick = () => {
+            const n = $("#an").value.trim();
+            if (!n) return toast("Enter a PG name");
+            PGS.push({
+              id: PGS.length + 1,
+              n,
+              a: $("#aa").value,
+              p: +$("#ap").value || 8000,
+              g: $("#ag").value,
+              r: "4.0",
+              rv: 0,
+              am: [...$("#aam").querySelectorAll(".on")].map(
+                (c) => c.textContent,
+              ),
+              st: "pending",
+              o: 0,
+              tag: "New",
+              h: AH[$("#aa").value],
+            });
+            toast("Submitted. Admin will review it shortly.");
+            location.hash = "admin-pgs";
+          };
+        }
+        if (k.startsWith("admin-"))
+          $("#app").onclick = (e) => {
+            const d = e.target.dataset;
+            if (d.ap) {
+              const p = PGS[d.ap - 1];
+              p.st = p.st === "live" ? "pending" : "live";
+            } else if (d.ao) OWN[d.ao].v = "verified";
+            else if (d.au)
+              USR[d.au].s = USR[d.au].s === "blocked" ? "live" : "blocked";
+            else return;
+            route();
+          };
+      }
+      addEventListener("hashchange", route);
+      nl();
+      route();
+    </script>
+  </body>
+</html>
