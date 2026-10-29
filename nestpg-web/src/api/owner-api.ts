@@ -71,6 +71,40 @@ export type OwnerResident = {
   finalSettlementPaid?: boolean
 }
 
+export type OwnerLedgerEntry = {
+  _id: string
+  ownerId: string
+  pgId?: string
+  entryType: 'income' | 'expense'
+  category: string
+  amount: number
+  entryDate: string
+  notes?: string
+  residentName?: string
+  source?: 'individual' | 'bulk'
+  createdAt: string
+  updatedAt: string
+}
+
+export type OwnerBalanceSheet = {
+  _id: string
+  ownerId: string
+  pgId?: { _id?: string; name?: string; area?: string } | string
+  title: string
+  periodStart: string
+  periodEnd: string
+  totalIncome: number
+  totalExpense: number
+  netBalance: number
+  entriesCount: number
+  incomeByCategory: Array<{ category: string; amount: number }>
+  expenseByCategory: Array<{ category: string; amount: number }>
+  notes?: string
+  createdAt: string
+  updatedAt: string
+  lastGeneratedAt: string
+}
+
 export async function getOwnerSummary() {
   return api<{
     activeListings: number
@@ -217,4 +251,134 @@ export async function initializeOwnerPgBeds(pgId: string) {
     url: `/owner/pgs/${pgId}/initialize-beds`,
     method: 'POST',
   })
+}
+
+export async function createOwnerLedgerEntry(payload: {
+  pgId?: string
+  entryType: 'income' | 'expense'
+  category: string
+  amount: number
+  entryDate: string
+  notes?: string
+  residentName?: string
+}) {
+  return api<OwnerLedgerEntry>({
+    url: '/owner/ledger/entries',
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export async function createOwnerLedgerEntriesBulk(entries: Array<{
+  pgId?: string
+  entryType: 'income' | 'expense'
+  category: string
+  amount: number
+  entryDate: string
+  notes?: string
+  residentName?: string
+}>) {
+  return api<{ insertedCount: number; items: OwnerLedgerEntry[] }>({
+    url: '/owner/ledger/entries/bulk',
+    method: 'POST',
+    data: { entries },
+  })
+}
+
+export async function getOwnerLedgerEntries(params?: {
+  pgId?: string
+  entryType?: 'income' | 'expense'
+  startDate?: string
+  endDate?: string
+  page?: number
+  limit?: number
+}) {
+  const query = new URLSearchParams()
+  if (params?.pgId) query.set('pgId', params.pgId)
+  if (params?.entryType) query.set('entryType', params.entryType)
+  if (params?.startDate) query.set('startDate', params.startDate)
+  if (params?.endDate) query.set('endDate', params.endDate)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.limit) query.set('limit', String(params.limit))
+
+  return api<{ items: OwnerLedgerEntry[]; pagination: { page: number; limit: number; totalItems: number; totalPages: number } }>({
+    url: `/owner/ledger/entries${query.size ? `?${query.toString()}` : ''}`,
+  })
+}
+
+export async function deleteOwnerLedgerEntry(entryId: string) {
+  return api<{ message: string }>({
+    url: `/owner/ledger/entries/${entryId}`,
+    method: 'DELETE',
+  })
+}
+
+export async function generateOwnerBalanceSheet(payload: {
+  title?: string
+  pgId?: string
+  periodStart: string
+  periodEnd: string
+  notes?: string
+}) {
+  return api<{
+    title: string
+    pgId?: string | null
+    notes?: string
+    periodStart: string
+    periodEnd: string
+    totalIncome: number
+    totalExpense: number
+    netBalance: number
+    entriesCount: number
+    incomeByCategory: Array<{ category: string; amount: number }>
+    expenseByCategory: Array<{ category: string; amount: number }>
+    lastGeneratedAt: string
+  }>({
+    url: '/owner/balance-sheets/generate',
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export async function saveOwnerBalanceSheet(payload: {
+  title: string
+  pgId?: string
+  periodStart: string
+  periodEnd: string
+  notes?: string
+}) {
+  return api<OwnerBalanceSheet>({
+    url: '/owner/balance-sheets',
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export async function getOwnerBalanceSheets(params?: { pgId?: string; page?: number; limit?: number }) {
+  const query = new URLSearchParams()
+  if (params?.pgId) query.set('pgId', params.pgId)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.limit) query.set('limit', String(params.limit))
+
+  return api<{ items: OwnerBalanceSheet[]; pagination: { page: number; limit: number; totalItems: number; totalPages: number } }>({
+    url: `/owner/balance-sheets${query.size ? `?${query.toString()}` : ''}`,
+  })
+}
+
+export async function deleteOwnerBalanceSheet(id: string) {
+  return api<{ message: string }>({
+    url: `/owner/balance-sheets/${id}`,
+    method: 'DELETE',
+  })
+}
+
+export async function exportOwnerBalanceSheetCsv(id: string) {
+  try {
+    const response = await apiClient.get<Blob>(`/owner/balance-sheets/${id}/export`, {
+      responseType: 'blob',
+    })
+    return response.data
+  } catch (error) {
+    throw new Error(toApiError(error))
+  }
 }

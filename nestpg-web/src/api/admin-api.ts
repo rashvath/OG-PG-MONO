@@ -84,6 +84,36 @@ export type AdminResident = {
   pgId?: { _id?: string; name?: string; area?: string } | string
 }
 
+export type AdminBalanceSheet = {
+  _id: string
+  title: string
+  ownerId?: { _id?: string; name?: string; email?: string } | string
+  pgId?: { _id?: string; name?: string; area?: string } | string
+  periodStart: string
+  periodEnd: string
+  totalIncome: number
+  totalExpense: number
+  netBalance: number
+  entriesCount: number
+  createdAt: string
+  updatedAt: string
+  lastGeneratedAt: string
+}
+
+export type AdminLedgerEntry = {
+  _id: string
+  ownerId?: { _id?: string; name?: string; email?: string } | string
+  pgId?: { _id?: string; name?: string; area?: string } | string
+  entryType: 'income' | 'expense'
+  category: string
+  amount: number
+  entryDate: string
+  notes?: string
+  residentName?: string
+  source?: 'individual' | 'bulk'
+  createdAt: string
+}
+
 export async function getAdminSummary() {
   return api<{ pgs: number; owners: number; users: number; pending: number }>({
     url: '/admin/dashboard/summary',
@@ -283,5 +313,49 @@ export async function markResidentLeftByAdmin(
     url: `/admin/residents/${residentId}/mark-left`,
     method: 'POST',
     data: payload,
+  })
+}
+
+export async function getAdminBalanceSheets(params?: {
+  ownerId?: string
+  pgId?: string
+  startDate?: string
+  endDate?: string
+  page?: number
+  limit?: number
+}) {
+  const query = new URLSearchParams()
+  if (params?.ownerId) query.set('ownerId', params.ownerId)
+  if (params?.pgId) query.set('pgId', params.pgId)
+  if (params?.startDate) query.set('startDate', params.startDate)
+  if (params?.endDate) query.set('endDate', params.endDate)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.limit) query.set('limit', String(params.limit))
+
+  return api<{ items: AdminBalanceSheet[]; pagination: { page: number; limit: number; totalItems: number; totalPages: number } }>({
+    url: `/admin/balance-sheets${query.size ? `?${query.toString()}` : ''}`,
+  })
+}
+
+export async function getAdminLedgerEntries(params?: {
+  ownerId?: string
+  pgId?: string
+  entryType?: 'income' | 'expense'
+  startDate?: string
+  endDate?: string
+  page?: number
+  limit?: number
+}) {
+  const query = new URLSearchParams()
+  if (params?.ownerId) query.set('ownerId', params.ownerId)
+  if (params?.pgId) query.set('pgId', params.pgId)
+  if (params?.entryType) query.set('entryType', params.entryType)
+  if (params?.startDate) query.set('startDate', params.startDate)
+  if (params?.endDate) query.set('endDate', params.endDate)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.limit) query.set('limit', String(params.limit))
+
+  return api<{ items: AdminLedgerEntry[]; pagination: { page: number; limit: number; totalItems: number; totalPages: number } }>({
+    url: `/admin/ledger/entries${query.size ? `?${query.toString()}` : ''}`,
   })
 }

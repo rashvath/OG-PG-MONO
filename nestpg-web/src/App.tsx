@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
+import { ModuleHelpButton } from '@/components/layout/ModuleHelpButton'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { RouteSpinner } from '@/components/ui/RouteSpinner'
 import { AppToaster } from '@/components/ui/toaster'
@@ -22,6 +23,9 @@ const OwnerOverviewPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({
 const OwnerAddPgPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerAddPgPage })))
 const OwnerEnquiriesPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerEnquiriesPage })))
 const OwnerResidentsPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerResidentsPage })))
+const OwnerBalanceSheetPage = lazy(() =>
+  import('@/pages/BalanceSheetPages').then((m) => ({ default: m.OwnerBalanceSheetPage })),
+)
 
 const AdminOverviewPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminOverviewPage })))
 const AdminPgsPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminPgsPage })))
@@ -32,6 +36,9 @@ const AdminOwnerApprovalsPage = lazy(() =>
 const AdminEnquiriesPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminEnquiriesPage })))
 const AdminResidentsPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminResidentsPage })))
 const AdminUsersPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminUsersPage })))
+const AdminBalanceSheetPage = lazy(() =>
+  import('@/pages/BalanceSheetPages').then((m) => ({ default: m.AdminBalanceSheetPage })),
+)
 
 function App() {
   return (
@@ -61,6 +68,7 @@ function App() {
                             { label: 'PGs', to: '/owner/add' },
                             { label: 'People', to: '/owner/residents' },
                             { label: 'Enquiries', to: '/owner/enquiries' },
+                            { label: 'Balance Sheet', to: '/owner/balance-sheet' },
                           ]}
                         />
                       }
@@ -69,6 +77,7 @@ function App() {
                       <Route path="add" element={<OwnerAddPgPage />} />
                       <Route path="residents" element={<OwnerResidentsPage />} />
                       <Route path="enquiries" element={<OwnerEnquiriesPage />} />
+                      <Route path="balance-sheet" element={<OwnerBalanceSheetPage />} />
                     </Route>
                   </Route>
 
@@ -86,6 +95,7 @@ function App() {
                             { label: 'Approvals', to: '/admin/approvals' },
                             { label: 'Enquiries', to: '/admin/enquiries' },
                             { label: 'Users', to: '/admin/users' },
+                            { label: 'Balance Sheet', to: '/admin/balance-sheet' },
                           ]}
                         />
                       }
@@ -97,6 +107,7 @@ function App() {
                       <Route path="approvals" element={<AdminOwnerApprovalsPage />} />
                       <Route path="enquiries" element={<AdminEnquiriesPage />} />
                       <Route path="users" element={<AdminUsersPage />} />
+                      <Route path="balance-sheet" element={<AdminBalanceSheetPage />} />
                     </Route>
                   </Route>
 
@@ -104,6 +115,7 @@ function App() {
                 </Routes>
               </Suspense>
             </main>
+            <ModuleHelpButton />
             <Footer />
             <AppToaster />
           </BrowserRouter>

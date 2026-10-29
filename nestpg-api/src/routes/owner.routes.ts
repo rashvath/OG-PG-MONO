@@ -2,8 +2,10 @@ import { Router } from 'express'
 import { z } from 'zod'
 
 import { auth, type AuthedRequest } from '../middleware/auth'
+import { BalanceSheetModel } from '../models/BalanceSheet'
 import { BedModel } from '../models/Bed'
 import { EnquiryModel } from '../models/Enquiry'
+import { LedgerEntryModel } from '../models/LedgerEntry'
 import { ListingModel } from '../models/Listing'
 import { OwnerProfileModel } from '../models/OwnerProfile'
 import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
@@ -216,6 +218,94 @@ async function syncListingOccupancy(pgId: string) {
     occupiedBeds,
     availableBeds: Math.max(totalBeds - occupiedBeds, 0),
   })
+}
+
+const ledgerEntryInputSchema = z.object({
+  pgId: z.string().optional(),
+  entryType: z.enum(['income', 'expense']),
+  category: z.string().trim().min(1).max(80),
+  amount: z.number().positive(),
+  entryDate: z.coerce.date(),
+  notes: z.string().trim().max(500).optional(),
+  residentName: z.string().trim().max(120).optional(),
+})
+
+const balanceSheetBaseSchema = z.object({
+  title: z.string().trim().min(2).max(150).optional(),
+  pgId: z.string().optional(),
+  periodStart: z.coerce.date(),
+  periodEnd: z.coerce.date(),
+  notes: z.string().trim().max(1000).optional(),
+})
+
+function toDayStart(value: Date) {
+  const next = new Date(value)
+  next.setHours(0, 0, 0, 0)
+  return next
+}
+
+function toDayEnd(value: Date) {
+  const next = new Date(value)
+  next.setHours(23, 59, 59, 999)
+  return next
+}
+
+function mapToSortedCategoryTotals(source: Map<string, number>) {
+  return Array.from(source.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([category, amount]) => ({ category, amount: Number(amount.toFixed(2)) }))
+}
+
+function csvEscape(value: string | number) {
+  const text = String(value ?? '')
+  if (/[,"\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`
+  }
+  return text
+}
+
+async function computeBalanceSnapshot(ownerId: string, params: { pgId?: string; periodStart: Date; periodEnd: Date }) {
+  const periodStart = toDayStart(params.periodStart)
+  const periodEnd = toDayEnd(params.periodEnd)
+
+  const filter: Record<string, unknown> = {
+    ownerId,
+    entryDate: { $gte: periodStart, $lte: periodEnd },
+  }
+
+  if (params.pgId) {
+    filter.pgId = params.pgId
+  }
+
+  const entries = await LedgerEntryModel.find(filter).sort({ entryDate: 1, createdAt: 1 }).lean()
+
+  let totalIncome = 0
+  let totalExpense = 0
+  const incomeMap = new Map<string, number>()
+  const expenseMap = new Map<string, number>()
+
+  for (const entry of entries) {
+    const amount = Number(entry.amount ?? 0)
+    const category = String(entry.category ?? 'Other').trim() || 'Other'
+    if (entry.entryType === 'income') {
+      totalIncome += amount
+      incomeMap.set(category, (incomeMap.get(category) ?? 0) + amount)
+    } else {
+      totalExpense += amount
+      expenseMap.set(category, (expenseMap.get(category) ?? 0) + amount)
+    }
+  }
+
+  return {
+    periodStart,
+    periodEnd,
+    totalIncome: Number(totalIncome.toFixed(2)),
+    totalExpense: Number(totalExpense.toFixed(2)),
+    netBalance: Number((totalIncome - totalExpense).toFixed(2)),
+    entriesCount: entries.length,
+    incomeByCategory: mapToSortedCategoryTotals(incomeMap),
+    expenseByCategory: mapToSortedCategoryTotals(expenseMap),
+  }
 }
 
 router.get('/dashboard/summary', auth('owner'), async (req: AuthedRequest, res) => {
@@ -858,6 +948,429 @@ router.get('/residents/:id/activity', auth('owner'), async (req: AuthedRequest, 
 
   const items = await ResidentActivityModel.find({ residentId: resident.id }).sort({ createdAt: -1 })
   res.json({ items })
+})
+
+router.post('/ledger/entries', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const approved = await ensureApprovedOwner(ownerId)
+  if (!approved) {
+    res.status(403).json({ message: 'Owner account is not approved' })
+    return
+  }
+
+  const parsed = ledgerEntryInputSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  if (parsed.data.pgId) {
+    const isAssigned = await ensureAssignedPg(ownerId, parsed.data.pgId)
+    if (!isAssigned) {
+      res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
+      return
+    }
+  }
+
+  const item = await LedgerEntryModel.create({
+    ownerId,
+    entryType: parsed.data.entryType,
+    category: parsed.data.category,
+    amount: parsed.data.amount,
+    entryDate: parsed.data.entryDate,
+    ...(parsed.data.pgId ? { pgId: parsed.data.pgId } : {}),
+    ...(parsed.data.residentName ? { residentName: parsed.data.residentName } : {}),
+    ...(parsed.data.notes ? { notes: parsed.data.notes } : {}),
+    source: 'individual',
+    createdBy: ownerId,
+  })
+
+  res.status(201).json(item)
+})
+
+router.post('/ledger/entries/bulk', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const approved = await ensureApprovedOwner(ownerId)
+  if (!approved) {
+    res.status(403).json({ message: 'Owner account is not approved' })
+    return
+  }
+
+  const parsed = z.object({ entries: z.array(ledgerEntryInputSchema).min(1) }).safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const pgIds = Array.from(new Set(parsed.data.entries.map((entry) => entry.pgId).filter(Boolean)))
+  for (const pgId of pgIds) {
+    if (!pgId) {
+      continue
+    }
+    const isAssigned = await ensureAssignedPg(ownerId, pgId)
+    if (!isAssigned) {
+      res.status(403).json({ message: `Forbidden: PG ${pgId} is not assigned to this owner` })
+      return
+    }
+  }
+
+  const docs = parsed.data.entries.map((entry) => ({
+    ...entry,
+    ownerId,
+    source: 'bulk',
+    createdBy: ownerId,
+  }))
+
+  const inserted = await LedgerEntryModel.insertMany(docs)
+  res.status(201).json({ insertedCount: inserted.length, items: inserted })
+})
+
+router.get('/ledger/entries', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const approved = await ensureApprovedOwner(ownerId)
+  if (!approved) {
+    res.status(403).json({ message: 'Owner account is not approved' })
+    return
+  }
+
+  const parsed = z
+    .object({
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(500).default(100),
+      pgId: z.string().optional(),
+      entryType: z.enum(['income', 'expense']).optional(),
+      startDate: z.coerce.date().optional(),
+      endDate: z.coerce.date().optional(),
+    })
+    .safeParse(req.query)
+
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const { page, limit, pgId, entryType, startDate, endDate } = parsed.data
+
+  if (pgId) {
+    const isAssigned = await ensureAssignedPg(ownerId, pgId)
+    if (!isAssigned) {
+      res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
+      return
+    }
+  }
+
+  const filter: Record<string, unknown> = { ownerId }
+  if (pgId) {
+    filter.pgId = pgId
+  }
+  if (entryType) {
+    filter.entryType = entryType
+  }
+  if (startDate || endDate) {
+    filter.entryDate = {
+      ...(startDate ? { $gte: toDayStart(startDate) } : {}),
+      ...(endDate ? { $lte: toDayEnd(endDate) } : {}),
+    }
+  }
+
+  const [items, totalItems] = await Promise.all([
+    LedgerEntryModel.find(filter)
+      .sort({ entryDate: -1, createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    LedgerEntryModel.countDocuments(filter),
+  ])
+
+  res.json({
+    items,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+    },
+  })
+})
+
+router.delete('/ledger/entries/:id', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const item = await LedgerEntryModel.findOneAndDelete({
+    _id: req.params.id,
+    ownerId,
+  } as Record<string, unknown>)
+
+  if (!item) {
+    res.status(404).json({ message: 'Ledger entry not found' })
+    return
+  }
+
+  res.json({ message: 'Ledger entry deleted' })
+})
+
+router.post('/balance-sheets/generate', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const approved = await ensureApprovedOwner(ownerId)
+  if (!approved) {
+    res.status(403).json({ message: 'Owner account is not approved' })
+    return
+  }
+
+  const parsed = balanceSheetBaseSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  if (parsed.data.pgId) {
+    const isAssigned = await ensureAssignedPg(ownerId, parsed.data.pgId)
+    if (!isAssigned) {
+      res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
+      return
+    }
+  }
+
+  if (parsed.data.periodEnd < parsed.data.periodStart) {
+    res.status(400).json({ message: 'Period end must be greater than or equal to period start' })
+    return
+  }
+
+  const snapshot = await computeBalanceSnapshot(ownerId, {
+    ...(parsed.data.pgId ? { pgId: parsed.data.pgId } : {}),
+    periodStart: parsed.data.periodStart,
+    periodEnd: parsed.data.periodEnd,
+  })
+
+  res.json({
+    title: parsed.data.title ?? 'Generated balance sheet',
+    pgId: parsed.data.pgId ?? null,
+    notes: parsed.data.notes ?? '',
+    ...snapshot,
+    lastGeneratedAt: new Date(),
+  })
+})
+
+router.post('/balance-sheets', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const approved = await ensureApprovedOwner(ownerId)
+  if (!approved) {
+    res.status(403).json({ message: 'Owner account is not approved' })
+    return
+  }
+
+  const parsed = balanceSheetBaseSchema.extend({ title: z.string().trim().min(2).max(150) }).safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  if (parsed.data.pgId) {
+    const isAssigned = await ensureAssignedPg(ownerId, parsed.data.pgId)
+    if (!isAssigned) {
+      res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
+      return
+    }
+  }
+
+  if (parsed.data.periodEnd < parsed.data.periodStart) {
+    res.status(400).json({ message: 'Period end must be greater than or equal to period start' })
+    return
+  }
+
+  const snapshot = await computeBalanceSnapshot(ownerId, {
+    ...(parsed.data.pgId ? { pgId: parsed.data.pgId } : {}),
+    periodStart: parsed.data.periodStart,
+    periodEnd: parsed.data.periodEnd,
+  })
+
+  const sheet = await BalanceSheetModel.create({
+    ownerId,
+    ...(parsed.data.pgId ? { pgId: parsed.data.pgId } : {}),
+    title: parsed.data.title,
+    notes: parsed.data.notes ?? '',
+    createdBy: ownerId,
+    lastGeneratedAt: new Date(),
+    ...snapshot,
+  })
+
+  res.status(201).json(sheet)
+})
+
+router.get('/balance-sheets', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const parsed = z
+    .object({
+      pgId: z.string().optional(),
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(250).default(50),
+    })
+    .safeParse(req.query)
+
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const { pgId, page, limit } = parsed.data
+  if (pgId) {
+    const isAssigned = await ensureAssignedPg(ownerId, pgId)
+    if (!isAssigned) {
+      res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
+      return
+    }
+  }
+
+  const filter: Record<string, unknown> = { ownerId }
+  if (pgId) {
+    filter.pgId = pgId
+  }
+
+  const [items, totalItems] = await Promise.all([
+    BalanceSheetModel.find(filter)
+      .populate('pgId', 'name area')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    BalanceSheetModel.countDocuments(filter),
+  ])
+
+  res.json({
+    items,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+    },
+  })
+})
+
+router.get('/balance-sheets/:id', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const item = await BalanceSheetModel.findOne({
+    _id: req.params.id,
+    ownerId,
+  } as Record<string, unknown>).populate('pgId', 'name area')
+
+  if (!item) {
+    res.status(404).json({ message: 'Balance sheet not found' })
+    return
+  }
+
+  res.json(item)
+})
+
+router.delete('/balance-sheets/:id', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const item = await BalanceSheetModel.findOneAndDelete({
+    _id: req.params.id,
+    ownerId,
+  } as Record<string, unknown>)
+
+  if (!item) {
+    res.status(404).json({ message: 'Balance sheet not found' })
+    return
+  }
+
+  res.json({ message: 'Balance sheet deleted' })
+})
+
+router.get('/balance-sheets/:id/export', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const item = await BalanceSheetModel.findOne({
+    _id: req.params.id,
+    ownerId,
+  } as Record<string, unknown>).populate('pgId', 'name area')
+
+  if (!item) {
+    res.status(404).json({ message: 'Balance sheet not found' })
+    return
+  }
+
+  item.lastGeneratedAt = new Date() as unknown as never
+  await item.save()
+
+  const pgName = (item.pgId as unknown as { name?: string } | undefined)?.name ?? 'All PGs'
+  const rows: string[] = []
+  rows.push('Balance Sheet')
+  rows.push(`Title,${csvEscape(item.title)}`)
+  rows.push(`PG,${csvEscape(pgName)}`)
+  rows.push(`Period Start,${csvEscape(item.periodStart.toISOString())}`)
+  rows.push(`Period End,${csvEscape(item.periodEnd.toISOString())}`)
+  rows.push(`Created At,${csvEscape(item.createdAt.toISOString())}`)
+  rows.push(`Last Generated At,${csvEscape(item.lastGeneratedAt.toISOString())}`)
+  rows.push('')
+  rows.push('Totals')
+  rows.push(`Total Income,${csvEscape(item.totalIncome)}`)
+  rows.push(`Total Expense,${csvEscape(item.totalExpense)}`)
+  rows.push(`Net Balance,${csvEscape(item.netBalance)}`)
+  rows.push(`Entries Count,${csvEscape(item.entriesCount)}`)
+  rows.push('')
+  rows.push('Income Breakdown')
+  rows.push('Category,Amount')
+  for (const entry of item.incomeByCategory) {
+    rows.push(`${csvEscape(entry.category)},${csvEscape(entry.amount)}`)
+  }
+  rows.push('')
+  rows.push('Expense Breakdown')
+  rows.push('Category,Amount')
+  for (const entry of item.expenseByCategory) {
+    rows.push(`${csvEscape(entry.category)},${csvEscape(entry.amount)}`)
+  }
+
+  const csv = `${rows.join('\n')}\n`
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+  res.setHeader('Content-Disposition', `attachment; filename=balance-sheet-${item.id}.csv`)
+  res.status(200).send(csv)
 })
 
 export default router

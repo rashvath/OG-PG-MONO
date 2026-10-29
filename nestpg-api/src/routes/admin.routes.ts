@@ -3,8 +3,10 @@ import { Router } from 'express'
 import { z } from 'zod'
 
 import { auth, type AuthedRequest } from '../middleware/auth'
+import { BalanceSheetModel } from '../models/BalanceSheet'
 import { EnquiryModel } from '../models/Enquiry'
 import { BedModel } from '../models/Bed'
+import { LedgerEntryModel } from '../models/LedgerEntry'
 import { ListingModel } from '../models/Listing'
 import { OwnerApplicationModel } from '../models/OwnerApplication'
 import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
@@ -734,6 +736,116 @@ router.patch('/users/:id/status', auth('admin'), async (req, res) => {
   }
 
   res.json(user)
+})
+
+router.get('/balance-sheets', auth('admin'), async (req, res) => {
+  const parsed = z
+    .object({
+      ownerId: z.string().optional(),
+      pgId: z.string().optional(),
+      startDate: z.coerce.date().optional(),
+      endDate: z.coerce.date().optional(),
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(500).default(100),
+    })
+    .safeParse(req.query)
+
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const { ownerId, pgId, startDate, endDate, page, limit } = parsed.data
+  const filter: Record<string, unknown> = {}
+  if (ownerId) {
+    filter.ownerId = ownerId
+  }
+  if (pgId) {
+    filter.pgId = pgId
+  }
+  if (startDate || endDate) {
+    filter.periodStart = {
+      ...(startDate ? { $gte: startDate } : {}),
+      ...(endDate ? { $lte: endDate } : {}),
+    }
+  }
+
+  const [items, totalItems] = await Promise.all([
+    BalanceSheetModel.find(filter)
+      .populate('ownerId', 'name email')
+      .populate('pgId', 'name area')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    BalanceSheetModel.countDocuments(filter),
+  ])
+
+  res.json({
+    items,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+    },
+  })
+})
+
+router.get('/ledger/entries', auth('admin'), async (req, res) => {
+  const parsed = z
+    .object({
+      ownerId: z.string().optional(),
+      pgId: z.string().optional(),
+      entryType: z.enum(['income', 'expense']).optional(),
+      startDate: z.coerce.date().optional(),
+      endDate: z.coerce.date().optional(),
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(500).default(100),
+    })
+    .safeParse(req.query)
+
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const { ownerId, pgId, entryType, startDate, endDate, page, limit } = parsed.data
+  const filter: Record<string, unknown> = {}
+  if (ownerId) {
+    filter.ownerId = ownerId
+  }
+  if (pgId) {
+    filter.pgId = pgId
+  }
+  if (entryType) {
+    filter.entryType = entryType
+  }
+  if (startDate || endDate) {
+    filter.entryDate = {
+      ...(startDate ? { $gte: startDate } : {}),
+      ...(endDate ? { $lte: endDate } : {}),
+    }
+  }
+
+  const [items, totalItems] = await Promise.all([
+    LedgerEntryModel.find(filter)
+      .populate('ownerId', 'name email')
+      .populate('pgId', 'name area')
+      .sort({ entryDate: -1, createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    LedgerEntryModel.countDocuments(filter),
+  ])
+
+  res.json({
+    items,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+    },
+  })
 })
 
 export default router

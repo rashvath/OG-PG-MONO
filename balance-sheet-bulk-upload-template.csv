@@ -1,0 +1,8 @@
+residentName,amount,entryDate,category,entryType,notes
+John,9000,2026-10-01,Rent,income,October rent
+Diya,9800,2026-10-01,Rent,income,October rent
+Kabir,9200,2026-10-02,Rent,income,October rent
+Meera,10000,2026-10-02,Rent,income,October rent
+Manager,14500,2026-10-08,Electricity Bill,expense,Monthly power bill
+Manager,4800,2026-10-09,Water Bill,expense,Water charges
+Manager,7200,2026-10-09,Maintenance,expense,Repairs and plumbing
