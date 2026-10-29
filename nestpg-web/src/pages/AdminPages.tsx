@@ -3,10 +3,10 @@ import { ArrowRight, Building2, Clock3, MessageSquare, UserRound, Users } from '
 import { Link } from 'react-router-dom'
 
 import { PgDetailsDialog, PgFormDialog, type PgFormValues } from '@/components/pg/PgDialogs'
-import { AppTable } from '@/components/ui/AppTable'
+import { AppTable } from '@/components/data-display/AppTable'
 import { EnquiriesChart } from '@/components/charts/EnquiriesChart'
-import { EmptyTableState } from '@/components/ui/EmptyTableState'
-import { StatusBadge } from '@/components/ui/StatusBadge'
+import { EmptyTableState } from '@/components/data-display/EmptyTableState'
+import { StatusBadge } from '@/components/data-display/StatusBadge'
 import {
   getAdminEnquiries,
   approveOwnerApplication,
@@ -32,8 +32,8 @@ import {
   type AdminUser,
   type AdminResident,
   type OwnerApplication,
-} from '@/lib/admin-api'
-import { inr } from '@/lib/format'
+} from '@/api/admin-api'
+import { inr } from '@/helpers/format'
 import { useToast } from '@/lib/toast'
 import { NumberTicker } from '@/registry/magicui/number-ticker'
 

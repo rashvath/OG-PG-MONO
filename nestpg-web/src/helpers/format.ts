@@ -1,4 +1,4 @@
-import type { Listing } from './types'
+import type { Listing } from '@/lib/types'
 
 export function inr(value: number) {
   return `INR ${value.toLocaleString('en-IN')}`

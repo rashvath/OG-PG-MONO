@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type WheelEvent } from 'react'
+import axios from 'axios'
 import { X } from 'lucide-react'
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { AMENITIES, AREAS } from '@/lib/mock-data'
-import { uploadPgImages } from '@/lib/upload-api'
+import { uploadPgImages } from '@/api/upload-api'
 
 const BENGALURU_CENTER: [number, number] = [12.9716, 77.5946]
 const BENGALURU_BOUNDS = {
@@ -208,49 +209,52 @@ function toDisplayAreaName(value: string) {
 }
 
 async function resolveAreaFromCoordinates(coords: [number, number]) {
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords[0]}&lon=${coords[1]}&addressdetails=1`,
-  )
+  try {
+    const { data } = await axios.get<{
+      address?: Record<string, string | undefined>
+      display_name?: string
+    }>('https://nominatim.openstreetmap.org/reverse', {
+      params: {
+        format: 'jsonv2',
+        lat: coords[0],
+        lon: coords[1],
+        addressdetails: 1,
+      },
+    })
 
-  if (!response.ok) {
+    const address = data.address ?? {}
+    const cityTokens = [address.city, address.town, address.county, address.state_district]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    if (!cityTokens.includes('bangalore') && !cityTokens.includes('bengaluru')) {
+      return null
+    }
+
+    const candidates = [
+      address.suburb,
+      address.neighbourhood,
+      address.city_district,
+      address.quarter,
+      address.village,
+      ...(data.display_name ? data.display_name.split(',').map((part) => part.trim()) : []),
+    ].filter((value): value is string => Boolean(value && value.trim()))
+
+    const mappedKnownArea = mapCandidatesToKnownArea(candidates)
+    if (mappedKnownArea) {
+      return mappedKnownArea
+    }
+
+    const firstCandidate = candidates[0]
+    if (firstCandidate) {
+      return toDisplayAreaName(firstCandidate)
+    }
+
+    return null
+  } catch {
     return null
   }
-
-  const data = (await response.json()) as {
-    address?: Record<string, string | undefined>
-    display_name?: string
-  }
-
-  const address = data.address ?? {}
-  const cityTokens = [address.city, address.town, address.county, address.state_district]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
-
-  if (!cityTokens.includes('bangalore') && !cityTokens.includes('bengaluru')) {
-    return null
-  }
-
-  const candidates = [
-    address.suburb,
-    address.neighbourhood,
-    address.city_district,
-    address.quarter,
-    address.village,
-    ...(data.display_name ? data.display_name.split(',').map((part) => part.trim()) : []),
-  ].filter((value): value is string => Boolean(value && value.trim()))
-
-  const mappedKnownArea = mapCandidatesToKnownArea(candidates)
-  if (mappedKnownArea) {
-    return mappedKnownArea
-  }
-
-  const firstCandidate = candidates[0]
-  if (firstCandidate) {
-    return toDisplayAreaName(firstCandidate)
-  }
-
-  return null
 }
 
 function LocationClickLayer({ value, onChange, onOutOfBounds }: LocationPickerProps) {

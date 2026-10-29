@@ -6,9 +6,9 @@ import { Building2, MapPin, MessageCircle, Search, ShieldCheck, Users, Wallet } 
 
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { ListingCard } from '@/components/ui/ListingCard'
-import { fetchLiveListings } from '@/lib/listings-api'
+import { fetchLiveListings } from '@/api/listings-api'
 import { areaGradientClass, neighborhoodMeta } from '@/lib/mock-data'
-import { inr } from '@/lib/format'
+import { inr } from '@/helpers/format'
 import sectionVisual from '@/assets/section2.png'
 import type { Listing } from '@/lib/types'
 import { NumberTicker } from '@/registry/magicui/number-ticker'

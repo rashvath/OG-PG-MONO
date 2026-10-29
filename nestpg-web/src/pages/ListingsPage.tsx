@@ -3,9 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { ListingCard } from '@/components/ui/ListingCard'
-import { fetchLiveListings } from '@/lib/listings-api'
+import { fetchLiveListings } from '@/api/listings-api'
 import { AMENITIES } from '@/lib/mock-data'
-import { listingRent, inr } from '@/lib/format'
+import { listingRent, inr } from '@/helpers/format'
 import type { Listing } from '@/lib/types'
 
 export function ListingsPage() {

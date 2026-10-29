@@ -1,6 +1,5 @@
-import type { Listing } from './types'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1'
+import type { Listing } from '@/lib/types'
+import { apiClient, toApiError } from './http'
 
 type ApiListing = {
   _id: string
@@ -140,23 +139,21 @@ export function normalizeListing(input: ApiListing): Listing {
 }
 
 export async function fetchLiveListings() {
-  const response = await fetch(`${API_BASE_URL}/listings?page=1&limit=200&sort=rec`)
-  const data = (await response.json()) as { items?: ApiListing[]; message?: string }
-
-  if (!response.ok) {
-    throw new Error(data.message ?? 'Unable to fetch listings')
+  try {
+    const { data } = await apiClient.get<{ items?: ApiListing[] }>('/listings', {
+      params: { page: 1, limit: 200, sort: 'rec' },
+    })
+    return (data.items ?? []).map(normalizeListing)
+  } catch (error) {
+    throw new Error(toApiError(error, 'Unable to fetch listings'))
   }
-
-  return (data.items ?? []).map(normalizeListing)
 }
 
 export async function fetchListingById(id: string) {
-  const response = await fetch(`${API_BASE_URL}/listings/${id}`)
-  const data = (await response.json()) as (ApiListing & { message?: string })
-
-  if (!response.ok) {
-    throw new Error(data.message ?? 'Unable to fetch listing')
+  try {
+    const { data } = await apiClient.get<ApiListing>(`/listings/${id}`)
+    return normalizeListing(data)
+  } catch (error) {
+    throw new Error(toApiError(error, 'Unable to fetch listing'))
   }
-
-  return normalizeListing(data)
 }

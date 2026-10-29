@@ -1,26 +1,14 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1'
+import type { AxiosRequestConfig } from 'axios'
 
-function getToken() {
-  return localStorage.getItem('nestpg-token')
-}
+import { apiClient, toApiError } from './http'
 
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getToken()
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  })
-
-  const data = (await response.json()) as T & { message?: string }
-  if (!response.ok) {
-    throw new Error(data.message ?? 'Request failed')
+async function api<T>(config: AxiosRequestConfig): Promise<T> {
+  try {
+    const response = await apiClient.request<T>(config)
+    return response.data
+  } catch (error) {
+    throw new Error(toApiError(error))
   }
-
-  return data
 }
 
 export type AdminPg = {
@@ -97,11 +85,13 @@ export type AdminResident = {
 }
 
 export async function getAdminSummary() {
-  return api<{ pgs: number; owners: number; users: number; pending: number }>('/admin/dashboard/summary')
+  return api<{ pgs: number; owners: number; users: number; pending: number }>({
+    url: '/admin/dashboard/summary',
+  })
 }
 
 export async function getAdminPgs() {
-  return api<{ items: AdminPg[] }>('/admin/pgs')
+  return api<{ items: AdminPg[] }>({ url: '/admin/pgs' })
 }
 
 export async function createAdminPg(payload: {
@@ -121,9 +111,10 @@ export async function createAdminPg(payload: {
   status?: 'pending' | 'live' | 'suspended' | 'rejected' | 'unassigned'
   ownerId?: string
 }) {
-  return api('/admin/pgs', {
+  return api({
+    url: '/admin/pgs',
     method: 'POST',
-    body: JSON.stringify({
+    data: {
       ...payload,
       description: '',
       amenities: payload.amenities ?? [],
@@ -138,7 +129,7 @@ export async function createAdminPg(payload: {
         { sharing: 'Double', rent: Math.round(payload.baseRent * 1.2), deposit: Math.round(payload.baseRent * 2.4) },
         { sharing: 'Triple', rent: payload.baseRent, deposit: payload.baseRent * 2 },
       ],
-    }),
+    },
   })
 }
 
@@ -174,21 +165,23 @@ export async function updateAdminPg(
     delete body.photos
   }
 
-  return api(`/admin/pgs/${pgId}`, {
+  return api({
+    url: `/admin/pgs/${pgId}`,
     method: 'PATCH',
-    body: JSON.stringify(body),
+    data: body,
   })
 }
 
 export async function setPgStatus(pgId: string, status: 'pending' | 'live' | 'suspended' | 'rejected' | 'unassigned') {
-  return api(`/admin/listings/${pgId}/status`, {
+  return api({
+    url: `/admin/listings/${pgId}/status`,
     method: 'PATCH',
-    body: JSON.stringify({ status }),
+    data: { status },
   })
 }
 
 export async function getAdminOwners() {
-  return api<{ items: AdminOwner[] }>('/admin/owners')
+  return api<{ items: AdminOwner[] }>({ url: '/admin/owners' })
 }
 
 export async function createAdminOwner(payload: {
@@ -198,57 +191,64 @@ export async function createAdminOwner(payload: {
   temporaryPassword: string
   assignedPgIds: string[]
 }) {
-  return api('/admin/owners', {
+  return api({
+    url: '/admin/owners',
     method: 'POST',
-    body: JSON.stringify({ ...payload, status: 'approved' }),
+    data: { ...payload, status: 'approved' },
   })
 }
 
 export async function assignPgsToOwner(ownerId: string, pgIds: string[]) {
-  return api(`/admin/owners/${ownerId}/assign-pgs`, {
+  return api({
+    url: `/admin/owners/${ownerId}/assign-pgs`,
     method: 'POST',
-    body: JSON.stringify({ pgIds }),
+    data: { pgIds },
   })
 }
 
 export async function setOwnerStatus(ownerId: string, status: 'active' | 'blocked') {
-  return api(`/admin/owners/${ownerId}/status`, {
+  return api({
+    url: `/admin/owners/${ownerId}/status`,
     method: 'PATCH',
-    body: JSON.stringify({ status }),
+    data: { status },
   })
 }
 
 export async function deleteOwner(ownerId: string) {
-  return api(`/admin/owners/${ownerId}`, {
+  return api({
+    url: `/admin/owners/${ownerId}`,
     method: 'DELETE',
   })
 }
 
 export async function getAdminUsers() {
-  return api<{ items: AdminUser[] }>('/admin/users')
+  return api<{ items: AdminUser[] }>({ url: '/admin/users' })
 }
 
 export async function getAdminEnquiries() {
-  return api<{ items: AdminEnquiry[] }>('/admin/enquiries')
+  return api<{ items: AdminEnquiry[] }>({ url: '/admin/enquiries' })
 }
 
 export async function setUserStatus(userId: string, status: 'active' | 'blocked') {
-  return api(`/admin/users/${userId}/status`, {
+  return api({
+    url: `/admin/users/${userId}/status`,
     method: 'PATCH',
-    body: JSON.stringify({ status }),
+    data: { status },
   })
 }
 
 export async function getOwnerApplications() {
-  return api<{ items: OwnerApplication[] }>('/admin/owner-applications?status=pending')
+  return api<{ items: OwnerApplication[] }>({
+    url: '/admin/owner-applications?status=pending',
+  })
 }
 
 export async function approveOwnerApplication(id: string) {
-  return api(`/admin/owner-applications/${id}/approve`, { method: 'POST' })
+  return api({ url: `/admin/owner-applications/${id}/approve`, method: 'POST' })
 }
 
 export async function rejectOwnerApplication(id: string) {
-  return api(`/admin/owner-applications/${id}/reject`, { method: 'POST' })
+  return api({ url: `/admin/owner-applications/${id}/reject`, method: 'POST' })
 }
 
 export async function getAdminResidents(params?: { status?: string; ownerId?: string; pgId?: string }) {
@@ -263,7 +263,9 @@ export async function getAdminResidents(params?: { status?: string; ownerId?: st
     query.set('pgId', params.pgId)
   }
 
-  return api<{ items: AdminResident[] }>(`/admin/residents${query.size ? `?${query.toString()}` : ''}`)
+  return api<{ items: AdminResident[] }>({
+    url: `/admin/residents${query.size ? `?${query.toString()}` : ''}`,
+  })
 }
 
 export async function markResidentLeftByAdmin(
@@ -277,8 +279,9 @@ export async function markResidentLeftByAdmin(
     finalRoomCondition?: string
   },
 ) {
-  return api(`/admin/residents/${residentId}/mark-left`, {
+  return api({
+    url: `/admin/residents/${residentId}/mark-left`,
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   })
 }

@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1'
+import { apiClient, toApiError } from './http'
 
 type ImageNormalizationOptions = {
   width: number
@@ -9,10 +9,6 @@ type ImageNormalizationOptions = {
 
 type UploadImageOptions = {
   normalize?: ImageNormalizationOptions
-}
-
-function getToken() {
-  return localStorage.getItem('nestpg-token')
 }
 
 function loadImageElement(file: File) {
@@ -111,21 +107,10 @@ export async function uploadPgImages(files: File[], options?: UploadImageOptions
     formData.append('images', file)
   }
 
-  const token = getToken()
-  const response = await fetch(`${API_BASE_URL}/uploads/images`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: formData,
-  })
-
-  const data = (await response.json()) as {
-    items?: Array<{ url: string }>
-    message?: string
+  try {
+    const { data } = await apiClient.post<{ items?: Array<{ url: string }> }>('/uploads/images', formData)
+    return (data.items ?? []).map((item) => item.url).filter(Boolean)
+  } catch (error) {
+    throw new Error(toApiError(error, 'Failed to upload images'))
   }
-
-  if (!response.ok) {
-    throw new Error(data.message ?? 'Failed to upload images')
-  }
-
-  return (data.items ?? []).map((item) => item.url).filter(Boolean)
 }

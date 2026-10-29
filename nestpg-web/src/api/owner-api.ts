@@ -1,60 +1,14 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1'
+import type { AxiosRequestConfig } from 'axios'
 
-type ErrorEnvelope = {
-  message?: string | { formErrors?: string[]; fieldErrors?: Record<string, string[] | string> }
-  error?: string
-}
+import { apiClient, toApiError } from './http'
 
-function extractErrorMessage(data: ErrorEnvelope): string {
-  if (typeof data.message === 'string' && data.message.trim()) {
-    return data.message
+async function api<T>(config: AxiosRequestConfig): Promise<T> {
+  try {
+    const response = await apiClient.request<T>(config)
+    return response.data
+  } catch (error) {
+    throw new Error(toApiError(error))
   }
-
-  if (data.message && typeof data.message === 'object') {
-    const formError = data.message.formErrors?.find((item) => item && item.trim().length > 0)
-    if (formError) {
-      return formError
-    }
-
-    const entries = Object.entries(data.message.fieldErrors ?? {})
-    for (const [field, value] of entries) {
-      if (Array.isArray(value) && value.length > 0 && value[0]) {
-        return `${field}: ${value[0]}`
-      }
-      if (typeof value === 'string' && value.trim()) {
-        return `${field}: ${value}`
-      }
-    }
-  }
-
-  if (typeof data.error === 'string' && data.error.trim()) {
-    return data.error
-  }
-
-  return 'Request failed'
-}
-
-function getToken() {
-  return localStorage.getItem('nestpg-token')
-}
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getToken()
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  })
-
-  const data = (await response.json()) as T & ErrorEnvelope
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data))
-  }
-
-  return data
 }
 
 export type OwnerPg = {
@@ -129,11 +83,11 @@ export async function getOwnerSummary() {
     occupancy: number
     averageRating: number
     weeklyEnquiries: Array<{ label: string; count: number }>
-  }>('/owner/dashboard/summary')
+  }>({ url: '/owner/dashboard/summary' })
 }
 
 export async function getOwnerPgs() {
-  return api<{ items: OwnerPg[] }>('/owner/pgs')
+  return api<{ items: OwnerPg[] }>({ url: '/owner/pgs' })
 }
 
 export async function updateOwnerPg(
@@ -174,14 +128,15 @@ export async function updateOwnerPg(
     delete body.photos
   }
 
-  return api(`/owner/pgs/${pgId}`, {
+  return api({
+    url: `/owner/pgs/${pgId}`,
     method: 'PATCH',
-    body: JSON.stringify(body),
+    data: body,
   })
 }
 
 export async function getOwnerEnquiries() {
-  return api<{ items: OwnerEnquiry[] }>('/owner/enquiries')
+  return api<{ items: OwnerEnquiry[] }>({ url: '/owner/enquiries' })
 }
 
 export async function getOwnerResidents(params?: { pgId?: string; status?: string }) {
@@ -193,7 +148,9 @@ export async function getOwnerResidents(params?: { pgId?: string; status?: strin
     query.set('status', params.status)
   }
 
-  return api<{ items: OwnerResident[] }>(`/owner/residents${query.size ? `?${query.toString()}` : ''}`)
+  return api<{ items: OwnerResident[] }>({
+    url: `/owner/residents${query.size ? `?${query.toString()}` : ''}`,
+  })
 }
 
 export async function createOwnerResident(payload: {
@@ -213,9 +170,10 @@ export async function createOwnerResident(payload: {
     delete body.profilePhoto
   }
 
-  return api('/owner/residents', {
+  return api({
+    url: '/owner/residents',
     method: 'POST',
-    body: JSON.stringify(body),
+    data: body,
   })
 }
 
@@ -230,9 +188,10 @@ export async function updateOwnerResident(
     amountPaid: number
   },
 ) {
-  return api<OwnerResident>(`/owner/residents/${residentId}`, {
+  return api<OwnerResident>({
+    url: `/owner/residents/${residentId}`,
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    data: payload,
   })
 }
 
@@ -246,17 +205,16 @@ export async function markOwnerResidentLeft(
     notes?: string
   },
 ) {
-  return api<OwnerResident>(`/owner/residents/${residentId}/mark-left`, {
+  return api<OwnerResident>({
+    url: `/owner/residents/${residentId}/mark-left`,
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   })
 }
 
 export async function initializeOwnerPgBeds(pgId: string) {
-  return api<{ message: string; createdRooms: number; createdBeds: number; totalBeds: number; availableBeds: number }>(
-    `/owner/pgs/${pgId}/initialize-beds`,
-    {
-      method: 'POST',
-    },
-  )
+  return api<{ message: string; createdRooms: number; createdBeds: number; totalBeds: number; availableBeds: number }>({
+    url: `/owner/pgs/${pgId}/initialize-beds`,
+    method: 'POST',
+  })
 }

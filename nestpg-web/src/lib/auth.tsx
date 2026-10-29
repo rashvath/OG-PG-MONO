@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { apiClient, toApiError } from '@/api/http'
 import type { Role } from './types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1'
 const TOKEN_STORAGE_KEY = 'nestpg-token'
 const USER_STORAGE_KEY = 'nestpg-user'
 
@@ -60,37 +60,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       user,
       login: async (email: string, password: string) => {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        })
+        try {
+          const { data } = await apiClient.post<{
+            message?: string
+            token?: string
+            user?: AuthUser
+          }>('/auth/login', { email, password })
 
-        const data = (await response.json()) as {
-          message?: string
-          token?: string
-          user?: AuthUser
+          if (!data.token || !data.user) {
+            throw new Error('Unable to log in')
+          }
+
+          localStorage.setItem(TOKEN_STORAGE_KEY, data.token)
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user))
+          setUser(data.user)
+          return data.user
+        } catch (error) {
+          throw new Error(toApiError(error, 'Unable to log in'))
         }
-
-        if (!response.ok || !data.token || !data.user) {
-          throw new Error(data.message ?? 'Unable to log in')
-        }
-
-        localStorage.setItem(TOKEN_STORAGE_KEY, data.token)
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user))
-        setUser(data.user)
-        return data.user
       },
       register: async (payload: RegisterPayload) => {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        const data = (await response.json()) as { message?: string }
-        if (!response.ok) {
-          throw new Error(data.message ?? 'Unable to register')
+        try {
+          await apiClient.post('/auth/register', payload)
+        } catch (error) {
+          throw new Error(toApiError(error, 'Unable to register'))
         }
       },
       logout: () => {

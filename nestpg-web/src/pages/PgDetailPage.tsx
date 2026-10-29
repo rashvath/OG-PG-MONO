@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { BedDouble, Building2, CheckCircle2, IndianRupee, MapPin, Phone, ShieldCheck, User } from 'lucide-react'
 
-import { inr } from '@/lib/format'
-import { fetchListingById } from '@/lib/listings-api'
+import { inr } from '@/helpers/format'
+import { fetchListingById } from '@/api/listings-api'
 import { areaGradientClass } from '@/lib/mock-data'
 import type { Listing } from '@/lib/types'
 

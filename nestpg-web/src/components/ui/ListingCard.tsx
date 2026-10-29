@@ -3,7 +3,7 @@ import { ShieldCheck, Sparkles } from 'lucide-react'
 
 import GlareHover from '@/components/ui/GlareHover'
 import { areaGradientClass } from '@/lib/mock-data'
-import { inr } from '@/lib/format'
+import { inr } from '@/helpers/format'
 import type { Listing } from '@/lib/types'
 
 interface ListingCardProps {

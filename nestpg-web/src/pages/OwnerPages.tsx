@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { PgDetailsDialog, PgFormDialog, type PgFormValues } from '@/components/pg/PgDialogs'
 import { EnquiriesChart } from '@/components/charts/EnquiriesChart'
-import { AppTable } from '@/components/ui/AppTable'
-import { EmptyTableState } from '@/components/ui/EmptyTableState'
-import { StatCard } from '@/components/ui/StatCard'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { inr } from '@/lib/format'
-import { uploadPgImages } from '@/lib/upload-api'
+import { AppTable } from '@/components/data-display/AppTable'
+import { EmptyTableState } from '@/components/data-display/EmptyTableState'
+import { StatCard } from '@/components/data-display/StatCard'
+import { StatusBadge } from '@/components/data-display/StatusBadge'
+import { inr } from '@/helpers/format'
+import { uploadPgImages } from '@/api/upload-api'
 import {
   createOwnerResident,
   getOwnerEnquiries,
@@ -21,7 +21,7 @@ import {
   type OwnerResident,
   updateOwnerResident,
   updateOwnerPg,
-} from '@/lib/owner-api'
+} from '@/api/owner-api'
 import { useToast } from '@/lib/toast'
 
 function buildRoomTypes(baseRent: number) {

@@ -1,7 +1,7 @@
 import { CalendarIcon, FileTextIcon } from '@radix-ui/react-icons'
 import { BellIcon, Share2Icon } from 'lucide-react'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/helpers/utils'
 import { Calendar } from '@/components/ui/calendar'
 import AnimatedBeamMultipleOutputDemo from '@/registry/example/animated-beam-multiple-outputs'
 import AnimatedListDemo from '@/registry/example/animated-list-demo'
