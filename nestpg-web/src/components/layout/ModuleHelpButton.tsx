@@ -65,6 +65,14 @@ const HELP_BY_PATH: Array<{ match: (path: string) => boolean; content: HelpConte
     },
   },
   {
+    match: (path) => path.startsWith('/owner') && path.endsWith('/documents'),
+    content: {
+      title: 'Owner Document Locker',
+      purpose: 'Store PG-related documents safely as images and access them anytime.',
+      howTo: ['Select PG and upload a document image.', 'Save with title/type for easy search.', 'Filter and open documents when needed.'],
+    },
+  },
+  {
     match: (path) => path === '/owner',
     content: {
       title: 'Owner Overview',

@@ -7,6 +7,7 @@ import { BedModel } from '../models/Bed'
 import { EnquiryModel } from '../models/Enquiry'
 import { LedgerEntryModel } from '../models/LedgerEntry'
 import { ListingModel } from '../models/Listing'
+import { OwnerDocumentModel } from '../models/OwnerDocument'
 import { OwnerProfileModel } from '../models/OwnerProfile'
 import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
 import { ResidentActivityModel } from '../models/ResidentActivity'
@@ -238,6 +239,14 @@ const balanceSheetBaseSchema = z.object({
   notes: z.string().trim().max(1000).optional(),
 })
 
+const ownerDocumentSchema = z.object({
+  pgId: z.string().trim().min(1),
+  title: z.string().trim().min(2).max(140),
+  documentType: z.string().trim().min(2).max(60).default('General'),
+  imageUrl: z.string().trim().url(),
+  notes: z.string().trim().max(500).optional(),
+})
+
 function toDayStart(value: Date) {
   const next = new Date(value)
   next.setHours(0, 0, 0, 0)
@@ -425,6 +434,136 @@ router.get('/pgs', auth('owner'), async (req: AuthedRequest, res) => {
   const assignedPgIds = await getAssignedPgIds(ownerId)
   const items = await ListingModel.find({ _id: { $in: assignedPgIds } }).sort({ createdAt: -1 })
   res.json({ items })
+})
+
+router.post('/documents', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const approved = await ensureApprovedOwner(ownerId)
+  if (!approved) {
+    res.status(403).json({ message: 'Owner account is not approved' })
+    return
+  }
+
+  const parsed = ownerDocumentSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const isAssigned = await ensureAssignedPg(ownerId, parsed.data.pgId)
+  if (!isAssigned) {
+    res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
+    return
+  }
+
+  const item = await OwnerDocumentModel.create({
+    ownerId,
+    pgId: parsed.data.pgId,
+    title: parsed.data.title,
+    documentType: parsed.data.documentType,
+    imageUrl: parsed.data.imageUrl,
+    notes: parsed.data.notes ?? '',
+    createdBy: ownerId,
+  })
+
+  res.status(201).json(item)
+})
+
+router.get('/documents', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const approved = await ensureApprovedOwner(ownerId)
+  if (!approved) {
+    res.status(403).json({ message: 'Owner account is not approved' })
+    return
+  }
+
+  const parsed = z
+    .object({
+      pgId: z.string().optional(),
+      documentType: z.string().trim().optional(),
+      search: z.string().trim().optional(),
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(200).default(50),
+    })
+    .safeParse(req.query)
+
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  if (parsed.data.pgId) {
+    const isAssigned = await ensureAssignedPg(ownerId, parsed.data.pgId)
+    if (!isAssigned) {
+      res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
+      return
+    }
+  }
+
+  const assignedPgIds = await getAssignedPgIds(ownerId)
+  const filter: Record<string, unknown> = {
+    ownerId,
+    pgId: parsed.data.pgId ? parsed.data.pgId : { $in: assignedPgIds },
+  }
+
+  if (parsed.data.documentType) {
+    filter.documentType = parsed.data.documentType
+  }
+
+  if (parsed.data.search) {
+    filter.$or = [
+      { title: { $regex: parsed.data.search, $options: 'i' } },
+      { notes: { $regex: parsed.data.search, $options: 'i' } },
+      { documentType: { $regex: parsed.data.search, $options: 'i' } },
+    ]
+  }
+
+  const { page, limit } = parsed.data
+  const [items, totalItems] = await Promise.all([
+    OwnerDocumentModel.find(filter)
+      .populate('pgId', 'name area')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    OwnerDocumentModel.countDocuments(filter),
+  ])
+
+  res.json({
+    items,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+    },
+  })
+})
+
+router.delete('/documents/:id', auth('owner'), async (req: AuthedRequest, res) => {
+  const ownerId = req.user?.sub
+  if (!ownerId) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const item = await OwnerDocumentModel.findOneAndDelete({ _id: req.params.id, ownerId } as Record<string, unknown>)
+
+  if (!item) {
+    res.status(404).json({ message: 'Document not found' })
+    return
+  }
+
+  res.json({ message: 'Document deleted' })
 })
 
 router.post('/pgs/:id/initialize-beds', auth('owner'), async (req: AuthedRequest, res) => {

@@ -105,6 +105,18 @@ export type OwnerBalanceSheet = {
   lastGeneratedAt: string
 }
 
+export type OwnerDocument = {
+  _id: string
+  ownerId: string
+  pgId: { _id?: string; name?: string; area?: string } | string
+  title: string
+  documentType: string
+  imageUrl: string
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export async function getOwnerSummary() {
   return api<{
     activeListings: number
@@ -381,4 +393,44 @@ export async function exportOwnerBalanceSheetCsv(id: string) {
   } catch (error) {
     throw new Error(toApiError(error))
   }
+}
+
+export async function createOwnerDocument(payload: {
+  pgId: string
+  title: string
+  documentType: string
+  imageUrl: string
+  notes?: string
+}) {
+  return api<OwnerDocument>({
+    url: '/owner/documents',
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export async function getOwnerDocuments(params?: {
+  pgId?: string
+  documentType?: string
+  search?: string
+  page?: number
+  limit?: number
+}) {
+  const query = new URLSearchParams()
+  if (params?.pgId) query.set('pgId', params.pgId)
+  if (params?.documentType) query.set('documentType', params.documentType)
+  if (params?.search) query.set('search', params.search)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.limit) query.set('limit', String(params.limit))
+
+  return api<{ items: OwnerDocument[]; pagination: { page: number; limit: number; totalItems: number; totalPages: number } }>({
+    url: `/owner/documents${query.size ? `?${query.toString()}` : ''}`,
+  })
+}
+
+export async function deleteOwnerDocument(id: string) {
+  return api<{ message: string }>({
+    url: `/owner/documents/${id}`,
+    method: 'DELETE',
+  })
 }
