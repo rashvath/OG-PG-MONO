@@ -63,8 +63,34 @@ router.get('/', async (req, res) => {
     ListingModel.countDocuments(filter),
   ])
 
+  const normalizedItems = items.map((listing) => {
+    const sharingAvailability = (listing as unknown as { availabilityBySharing?: Array<{ sharing: string; availableBeds: number; totalBeds: number }> }).availabilityBySharing ?? []
+
+    const availableSharing = new Set(
+      sharingAvailability
+        .filter((item) => Number(item.availableBeds ?? 0) > 0)
+        .map((item) => item.sharing),
+    )
+
+    const roomTypes = (listing.roomTypes ?? []).filter((roomType) => {
+      if (availableSharing.size === 0) {
+        return true
+      }
+
+      const normalizedSharing = roomType.sharing === 'Four' ? 'Four' : roomType.sharing
+      return availableSharing.has(normalizedSharing)
+    })
+
+    const raw = listing.toObject()
+    return {
+      ...raw,
+      roomTypes,
+      availabilityBySharing: sharingAvailability,
+    }
+  })
+
   res.json({
-    items,
+    items: normalizedItems,
     pagination: {
       page,
       limit,
@@ -80,7 +106,26 @@ router.get('/:id', async (req, res) => {
     res.status(404).json({ message: 'Listing not found' })
     return
   }
-  res.json(listing)
+
+  const sharingAvailability = (listing as unknown as { availabilityBySharing?: Array<{ sharing: string; availableBeds: number; totalBeds: number }> }).availabilityBySharing ?? []
+  const availableSharing = new Set(
+    sharingAvailability
+      .filter((item) => Number(item.availableBeds ?? 0) > 0)
+      .map((item) => item.sharing),
+  )
+
+  const roomTypes = (listing.roomTypes ?? []).filter((roomType) => {
+    if (availableSharing.size === 0) {
+      return true
+    }
+    return availableSharing.has(roomType.sharing)
+  })
+
+  res.json({
+    ...listing.toObject(),
+    roomTypes,
+    availabilityBySharing: sharingAvailability,
+  })
 })
 
 router.post('/', auth('owner'), async (req: AuthedRequest, res) => {

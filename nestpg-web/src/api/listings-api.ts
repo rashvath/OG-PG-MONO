@@ -41,9 +41,14 @@ type ApiListing = {
   rating?: number
   reviewCount?: number
   roomTypes?: Array<{
-    sharing: 'Single' | 'Double' | 'Triple'
+    sharing: 'Single' | 'Double' | 'Triple' | 'Four' | 'Custom'
     rent: number
     deposit: number
+  }>
+  availabilityBySharing?: Array<{
+    sharing: 'Single' | 'Double' | 'Triple' | 'Four' | 'Custom'
+    availableBeds: number
+    totalBeds: number
   }>
 }
 
@@ -136,6 +141,7 @@ export function normalizeListing(input: ApiListing): Listing {
     rating: input.rating ?? 4,
     reviewCount: input.reviewCount ?? 0,
     roomTypes: withFallbackRoomTypes(input.baseRent, input.roomTypes),
+    availabilityBySharing: input.availabilityBySharing ?? [],
     tag: toTag(input),
   }
 }

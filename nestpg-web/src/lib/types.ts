@@ -45,9 +45,14 @@ export interface Listing {
   availability?: number
   tag: 'Popular' | 'Verified' | 'New' | 'Best value'
   roomTypes: Array<{
-    sharing: 'Single' | 'Double' | 'Triple'
+    sharing: 'Single' | 'Double' | 'Triple' | 'Four' | 'Custom'
     rent: number
     deposit: number
+  }>
+  availabilityBySharing?: Array<{
+    sharing: 'Single' | 'Double' | 'Triple' | 'Four' | 'Custom'
+    availableBeds: number
+    totalBeds: number
   }>
 }
 

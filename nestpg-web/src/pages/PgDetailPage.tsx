@@ -51,6 +51,7 @@ export function PgDetailPage() {
     galleryVisibleCount <= 1 ? 'is-single' : galleryVisibleCount === 2 ? 'is-two' : galleryVisibleCount === 3 ? 'is-three' : 'is-multi'
 
   const amenityItems = listing.amenities.filter(Boolean)
+  const sharingAvailability = new Map((listing.availabilityBySharing ?? []).map((item) => [item.sharing, item]))
 
   const visibleCharges = [
     { label: 'Security deposit', value: listing.deposit ?? 0 },
@@ -125,6 +126,7 @@ export function PgDetailPage() {
                   <th>Sharing</th>
                   <th>Rent / month</th>
                   <th>Deposit</th>
+                  <th>Available beds</th>
                 </tr>
               </thead>
               <tbody>
@@ -133,6 +135,7 @@ export function PgDetailPage() {
                     <td>{room.sharing}</td>
                     <td>{inr(room.rent)}</td>
                     <td>{inr(room.deposit)}</td>
+                    <td>{sharingAvailability.get(room.sharing)?.availableBeds ?? '-'}</td>
                   </tr>
                 ))}
               </tbody>

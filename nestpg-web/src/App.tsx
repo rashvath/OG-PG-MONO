@@ -23,6 +23,7 @@ const OwnerOverviewPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({
 const OwnerAddPgPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerAddPgPage })))
 const OwnerEnquiriesPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerEnquiriesPage })))
 const OwnerResidentsPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerResidentsPage })))
+const OwnerInventoryPage = lazy(() => import('@/pages/OwnerInventoryPage').then((m) => ({ default: m.OwnerInventoryPage })))
 const OwnerBalanceSheetPage = lazy(() =>
   import('@/pages/BalanceSheetPages').then((m) => ({ default: m.OwnerBalanceSheetPage })),
 )
@@ -66,6 +67,7 @@ function App() {
                             { label: 'Overview', to: '/owner' },
                             { label: 'PGs', to: '/owner/add' },
                             { label: 'People', to: '/owner/residents' },
+                            { label: 'Rooms & Beds', to: '/owner/inventory' },
                             { label: 'Enquiries', to: '/owner/enquiries' },
                             { label: 'Balance Sheet', to: '/owner/balance-sheet' },
                             { label: 'Documents', to: '/owner/documents' },
@@ -76,6 +78,7 @@ function App() {
                       <Route index element={<OwnerOverviewPage />} />
                       <Route path="add" element={<OwnerAddPgPage />} />
                       <Route path="residents" element={<OwnerResidentsPage />} />
+                      <Route path="inventory" element={<OwnerInventoryPage />} />
                       <Route path="enquiries" element={<OwnerEnquiriesPage />} />
                       <Route path="balance-sheet" element={<OwnerBalanceSheetPage />} />
                       <Route path="documents" element={<OwnerDocumentsPage />} />

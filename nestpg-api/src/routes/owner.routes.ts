@@ -124,7 +124,7 @@ async function initializePgBedInventory(pgId: string) {
   const existingBedsCount = await BedModel.countDocuments({ pgId })
   if (existingBedsCount >= targetBeds) {
     await syncListingOccupancy(pgId)
-    const availableBeds = await BedModel.countDocuments({ pgId, status: { $in: ['available', 'vacant', 'cleaning'] } })
+    const availableBeds = await BedModel.countDocuments({ pgId, status: 'vacant' })
     return {
       createdRooms: 0,
       createdBeds: 0,
@@ -177,7 +177,7 @@ async function initializePgBedInventory(pgId: string) {
       pgId,
       roomId: room._id,
       bedLabel: `B${String(nextCount).padStart(2, '0')}`,
-      status: 'available',
+      status: 'vacant',
     })
 
     bedCountByRoom.set(roomKey, nextCount)
@@ -199,7 +199,7 @@ async function initializePgBedInventory(pgId: string) {
   await syncListingOccupancy(pgId)
 
   const totalBeds = await BedModel.countDocuments({ pgId })
-  const availableBeds = await BedModel.countDocuments({ pgId, status: { $in: ['available', 'vacant', 'cleaning'] } })
+  const availableBeds = await BedModel.countDocuments({ pgId, status: 'vacant' })
 
   return {
     createdRooms,
@@ -218,7 +218,7 @@ async function syncListingOccupancy(pgId: string) {
   await ListingModel.findByIdAndUpdate(pgId, {
     totalBeds,
     occupiedBeds,
-    availableBeds: Math.max(totalBeds - occupiedBeds, 0),
+    availableBeds: await BedModel.countDocuments({ pgId, status: 'vacant' }),
   })
 }
 
@@ -674,7 +674,7 @@ router.patch('/pgs/:id', auth('owner'), async (req: AuthedRequest, res) => {
       roomTypes: z
         .array(
           z.object({
-            sharing: z.enum(['Single', 'Double', 'Triple']),
+            sharing: z.enum(['Single', 'Double', 'Triple', 'Four', 'Custom']),
             rent: z.number().positive(),
             deposit: z.number().positive(),
           }),
@@ -816,7 +816,7 @@ router.post('/residents', auth('owner'), async (req: AuthedRequest, res) => {
   let bedId = parsed.data.bedId
 
   if (!roomId || !bedId) {
-    const autoBed = await BedModel.findOne({ pgId: parsed.data.pgId, status: { $in: ['available', 'vacant', 'cleaning'] } })
+    const autoBed = await BedModel.findOne({ pgId: parsed.data.pgId, status: 'vacant' })
       .sort({ createdAt: 1 })
       .lean()
 
@@ -839,7 +839,7 @@ router.post('/residents', auth('owner'), async (req: AuthedRequest, res) => {
     return
   }
 
-  if (!['available', 'vacant', 'cleaning'].includes(bed.status)) {
+  if (bed.status !== 'vacant') {
     res.status(409).json({ message: 'Bed is not available for assignment' })
     return
   }
@@ -937,7 +937,7 @@ router.post('/residents/:id/move', auth('owner'), async (req: AuthedRequest, res
     return
   }
 
-  if (!['available', 'vacant', 'cleaning'].includes(newBed.status)) {
+  if (newBed.status !== 'vacant') {
     res.status(409).json({ message: 'Destination bed is not available' })
     return
   }
@@ -954,7 +954,7 @@ router.post('/residents/:id/move', auth('owner'), async (req: AuthedRequest, res
   await resident.save()
 
   await Promise.all([
-    BedModel.findByIdAndUpdate(previous.bedId, { status: 'available' }),
+    BedModel.findByIdAndUpdate(previous.bedId, { status: 'vacant' }),
     BedModel.findByIdAndUpdate(parsed.data.bedId, { status: 'occupied' }),
   ])
 
@@ -1086,7 +1086,7 @@ router.post('/residents/:id/mark-left', auth('owner'), async (req: AuthedRequest
   resident.finalRoomCondition = parsed.data.finalRoomCondition
   await resident.save()
 
-  await BedModel.findByIdAndUpdate(resident.bedId, { status: 'available' })
+  await BedModel.findByIdAndUpdate(resident.bedId, { status: 'vacant' })
   await syncListingOccupancy(String(resident.pgId))
 
   await ResidentActivityModel.create({

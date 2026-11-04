@@ -7,4 +7,7 @@ export const env = {
   mongoUri: process.env.MONGO_URI ?? 'mongodb://127.0.0.1:27017/nestpg',
   jwtSecret: process.env.JWT_SECRET ?? 'change-me-in-env',
   cloudinaryUrl: process.env.CLOUDINARY_URL ?? '',
+  gmailUser: process.env.GMAIL_USER?.trim() ?? '',
+  gmailAppPassword: process.env.GMAIL_APP_PASSWORD?.trim() ?? '',
+  gmailFrom: process.env.GMAIL_FROM?.trim() ?? '',
 }

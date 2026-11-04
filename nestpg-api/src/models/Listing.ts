@@ -2,9 +2,18 @@ import { Schema, model } from 'mongoose'
 
 const roomTypeSchema = new Schema(
   {
-    sharing: { type: String, enum: ['Single', 'Double', 'Triple'], required: true },
+    sharing: { type: String, enum: ['Single', 'Double', 'Triple', 'Four', 'Custom'], required: true },
     rent: { type: Number, required: true },
     deposit: { type: Number, required: true },
+  },
+  { _id: false },
+)
+
+const sharingAvailabilitySchema = new Schema(
+  {
+    sharing: { type: String, enum: ['Single', 'Double', 'Triple', 'Four', 'Custom'], required: true },
+    availableBeds: { type: Number, default: 0 },
+    totalBeds: { type: Number, default: 0 },
   },
   { _id: false },
 )
@@ -59,6 +68,7 @@ const listingSchema = new Schema(
     rating: { type: Number, default: 4 },
     reviewCount: { type: Number, default: 0 },
     roomTypes: { type: [roomTypeSchema], default: [] },
+    availabilityBySharing: { type: [sharingAvailabilitySchema], default: [] },
   },
   { timestamps: true },
 )

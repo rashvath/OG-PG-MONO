@@ -6,6 +6,7 @@ import { AppTable } from '@/components/data-display/AppTable'
 import { EmptyTableState } from '@/components/data-display/EmptyTableState'
 import { StatCard } from '@/components/data-display/StatCard'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
+import { FilterDrawer } from '@/components/ui/FilterDrawer'
 import { inr } from '@/helpers/format'
 import { uploadPgImages } from '@/api/upload-api'
 import { useFormConfig } from '@/hooks/use-form-config'
@@ -394,12 +395,18 @@ export function OwnerResidentsPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [isInitializingBeds, setIsInitializingBeds] = useState(false)
   const [uploadError, setUploadError] = useState('')
-  const [residentErrors, setResidentErrors] = useState<{ pgId?: string; fullName?: string; phone?: string; rent?: string }>({})
+  const [residentErrors, setResidentErrors] = useState<{ pgId?: string; fullName?: string; phone?: string; email?: string; rent?: string }>({})
   const [residentFormError, setResidentFormError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [joinedFrom, setJoinedFrom] = useState('')
   const [joinedTo, setJoinedTo] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<'all' | OwnerResident['status']>('all')
+  const [draftSearchQuery, setDraftSearchQuery] = useState('')
+  const [draftJoinedFrom, setDraftJoinedFrom] = useState('')
+  const [draftJoinedTo, setDraftJoinedTo] = useState('')
+  const [draftSelectedStatus, setDraftSelectedStatus] = useState<'all' | OwnerResident['status']>('all')
+  const [isResidentsFilterDrawerOpen, setIsResidentsFilterDrawerOpen] = useState(false)
+  const [failedResidentImageIds, setFailedResidentImageIds] = useState<Record<string, true>>({})
   const [viewingResident, setViewingResident] = useState<OwnerResident | null>(null)
   const [editingResident, setEditingResident] = useState<OwnerResident | null>(null)
   const [leftResident, setLeftResident] = useState<OwnerResident | null>(null)
@@ -422,6 +429,7 @@ export function OwnerResidentsPage() {
     pgId: '',
     fullName: '',
     phone: '',
+    email: '',
     joiningDate: new Date().toISOString().slice(0, 10),
     rent: 0,
     deposit: 0,
@@ -453,6 +461,7 @@ export function OwnerResidentsPage() {
   const load = () => {
     Promise.all([getOwnerPgs(), getOwnerResidents()])
       .then(([pgData, residentData]) => {
+        setFailedResidentImageIds({})
         setPgs(pgData.items)
         setResidents(residentData.items)
         setForm((current) => {
@@ -468,6 +477,13 @@ export function OwnerResidentsPage() {
   useEffect(() => {
     load()
   }, [])
+
+  useEffect(() => {
+    setDraftSearchQuery(searchQuery)
+    setDraftJoinedFrom(joinedFrom)
+    setDraftJoinedTo(joinedTo)
+    setDraftSelectedStatus(selectedStatus)
+  }, [searchQuery, joinedFrom, joinedTo, selectedStatus])
 
   const pgNameMap = useMemo(
     () => new Map(pgs.map((item) => [item._id, item.name])),
@@ -526,6 +542,7 @@ export function OwnerResidentsPage() {
       pgId: current.pgId || pgs[0]?._id || '',
       fullName: '',
       phone: '',
+      email: '',
       joiningDate: new Date().toISOString().slice(0, 10),
       rent: 0,
       deposit: 0,
@@ -537,6 +554,24 @@ export function OwnerResidentsPage() {
     setResidentErrors({})
     setResidentFormError('')
     setIsFormOpen(true)
+  }
+
+  const applyResidentFilters = () => {
+    setSearchQuery(draftSearchQuery)
+    setJoinedFrom(draftJoinedFrom)
+    setJoinedTo(draftJoinedTo)
+    setSelectedStatus(draftSelectedStatus)
+  }
+
+  const clearResidentFilters = () => {
+    setDraftSearchQuery('')
+    setDraftJoinedFrom('')
+    setDraftJoinedTo('')
+    setDraftSelectedStatus('all')
+    setSearchQuery('')
+    setJoinedFrom('')
+    setJoinedTo('')
+    setSelectedStatus('all')
   }
 
   const openEditResidentDialog = (resident: OwnerResident) => {
@@ -608,7 +643,7 @@ export function OwnerResidentsPage() {
   }
 
   const addResident = async () => {
-    const nextErrors: { pgId?: string; fullName?: string; phone?: string; rent?: string } = {}
+    const nextErrors: { pgId?: string; fullName?: string; phone?: string; email?: string; rent?: string } = {}
     if (residentAddConfig.isRequired('pgId') && !form.pgId) {
       nextErrors.pgId = 'Please choose a PG'
     }
@@ -618,6 +653,11 @@ export function OwnerResidentsPage() {
     const phoneIsValid = /^\d{10}$/.test(form.phone.trim())
     if ((residentAddConfig.isRequired('phone') || form.phone.trim()) && !phoneIsValid) {
       nextErrors.phone = 'Phone must be exactly 10 digits'
+    }
+    const email = form.email.trim()
+    const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    if ((residentAddConfig.isRequired('email') || email) && !emailIsValid) {
+      nextErrors.email = 'Enter a valid email address'
     }
     if (residentAddConfig.isRequired('rent') && form.rent <= 0) {
       nextErrors.rent = 'Monthly rent must be greater than 0'
@@ -640,6 +680,7 @@ export function OwnerResidentsPage() {
         pgId: form.pgId,
         fullName: form.fullName.trim(),
         phone: form.phone.trim(),
+        email: email || undefined,
         joiningDate: form.joiningDate,
         rent: form.rent,
         deposit: form.deposit,
@@ -739,43 +780,54 @@ export function OwnerResidentsPage() {
           <h2 className="page-heading">People in my PGs</h2>
           <p className="section-sub">Add residents and track paid, due, and final settlement amounts.</p>
         </div>
-        <button type="button" className="btn btn-brand" onClick={openAddDialog} disabled={pgs.length === 0}>
-          Add resident
-        </button>
+        <div className="inventory-top-actions">
+          <button type="button" className="btn btn-brand" onClick={openAddDialog} disabled={pgs.length === 0}>
+            Add resident
+          </button>
+          <FilterDrawer
+            isOpen={isResidentsFilterDrawerOpen}
+            onOpenChange={setIsResidentsFilterDrawerOpen}
+            drawerId="owner-residents-filter-drawer"
+            title="Filter residents"
+            onClear={clearResidentFilters}
+            onApply={applyResidentFilters}
+          >
+            <div className="form-field">
+              <label>Search resident / phone / PG</label>
+              <input
+                value={draftSearchQuery}
+                onChange={(event) => setDraftSearchQuery(event.target.value)}
+                placeholder="Type resident name, phone, or PG"
+              />
+            </div>
+            <div className="form-field">
+              <label>Status filter</label>
+              <select
+                value={draftSelectedStatus}
+                onChange={(event) => setDraftSelectedStatus(event.target.value as 'all' | OwnerResident['status'])}
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="left">Left</option>
+                <option value="notice_period">Notice period</option>
+                <option value="pending_verification">Pending verification</option>
+                <option value="suspended">Suspended</option>
+                <option value="invited">Invited</option>
+              </select>
+            </div>
+            <div className="form-field">
+              <label>Joining date from</label>
+              <input type="date" value={draftJoinedFrom} onChange={(event) => setDraftJoinedFrom(event.target.value)} />
+            </div>
+            <div className="form-field">
+              <label>Joining date to</label>
+              <input type="date" value={draftJoinedTo} onChange={(event) => setDraftJoinedTo(event.target.value)} />
+            </div>
+          </FilterDrawer>
+        </div>
       </div>
 
       {pgs.length === 0 ? <p className="section-sub spaced-top">No PGs assigned yet. Ask admin to assign a PG first.</p> : null}
-
-      <div className="form-grid two-col pg-form-grid spaced-top">
-        <div className="form-field">
-          <label>Search resident / phone / PG</label>
-          <input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Type resident name, phone, or PG"
-          />
-        </div>
-        <div className="form-field">
-          <label>Status filter</label>
-          <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value as 'all' | OwnerResident['status'])}>
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="left">Left</option>
-            <option value="notice_period">Notice period</option>
-            <option value="pending_verification">Pending verification</option>
-            <option value="suspended">Suspended</option>
-            <option value="invited">Invited</option>
-          </select>
-        </div>
-        <div className="form-field">
-          <label>Joining date from</label>
-          <input type="date" value={joinedFrom} onChange={(event) => setJoinedFrom(event.target.value)} />
-        </div>
-        <div className="form-field">
-          <label>Joining date to</label>
-          <input type="date" value={joinedTo} onChange={(event) => setJoinedTo(event.target.value)} />
-        </div>
-      </div>
 
       <AppTable headers={['Resident', 'PG', 'Phone', 'Joining', 'Rent', 'Deposit', 'Paid', 'Due', 'Final settlement', 'Status', 'Actions']}>
         {filteredResidents.length === 0 ? (
@@ -789,26 +841,21 @@ export function OwnerResidentsPage() {
             <tr key={item._id}>
               <td>
                 <div className="table-user-cell">
-                  {item.profilePhoto ? (
+                  {item.profilePhoto && !failedResidentImageIds[item._id] ? (
                     <img
+                      className="resident-avatar-img"
                       src={item.profilePhoto}
                       alt={item.fullName}
-                      style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
                       loading="lazy"
+                      onError={() =>
+                        setFailedResidentImageIds((current) => ({
+                          ...current,
+                          [item._id]: true,
+                        }))
+                      }
                     />
                   ) : (
-                    <span
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        display: 'inline-grid',
-                        placeItems: 'center',
-                        border: '1px solid var(--line)',
-                        fontSize: 12,
-                        color: 'var(--warm-gray)',
-                      }}
-                    >
+                    <span className="resident-avatar-fallback">
                       {item.fullName.charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -1128,6 +1175,19 @@ export function OwnerResidentsPage() {
                   placeholder="10-digit mobile"
                 />
                 {residentErrors.phone ? <small className="upload-error-text">{residentErrors.phone}</small> : null}
+              </div>
+              <div className="form-field">
+                <label>
+                  {residentAddConfig.getLabel('email', 'Email')}
+                  {residentAddConfig.isRequired('email') ? <span className="required-mark"> *</span> : null}
+                </label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateResidentField('email', event.target.value)}
+                  placeholder="name@example.com"
+                />
+                {residentErrors.email ? <small className="upload-error-text">{residentErrors.email}</small> : null}
               </div>
               <div className="form-field">
                 <label>

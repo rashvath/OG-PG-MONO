@@ -23,6 +23,7 @@ export type OwnerPg = {
   totalRooms?: number
   totalBeds?: number
   availableBeds?: number
+  occupiedBeds?: number
   pgType?: string
   totalFloors?: number
   gender: 'Men' | 'Women' | 'Co-ed'
@@ -51,7 +52,10 @@ export type OwnerResident = {
   fullName: string
   profilePhoto?: string
   phone: string
+  email?: string
   pgId: string
+  roomId?: string
+  bedId?: string
   rent: number
   deposit: number
   amountPaid?: number
@@ -59,9 +63,76 @@ export type OwnerResident = {
   paymentStatus: 'pending' | 'partial' | 'paid'
   status: 'invited' | 'pending_verification' | 'active' | 'notice_period' | 'left' | 'suspended'
   joiningDate: string
+  expectedExitDate?: string
   actualExitDate?: string
   finalSettlementAmount?: number
   finalSettlementPaid?: boolean
+}
+
+export type BedStatus = 'vacant' | 'occupied' | 'reserved' | 'maintenance'
+
+export type OwnerFloor = {
+  _id: string
+  pgId: string
+  name: string
+  level: number
+  sortOrder: number
+  layoutMode?: 'grid' | 'custom'
+  gridColumns?: number
+  isActive: boolean
+}
+
+export type OwnerBed = {
+  _id: string
+  pgId: string
+  roomId: string
+  bedLabel: string
+  bedNumber?: number
+  status: BedStatus
+  monthlyRent?: number
+  maintenanceReason?: string
+  reservedForName?: string
+  reservedForPhone?: string
+  reservedAt?: string
+  expectedMoveInDate?: string
+  expectedVacatingDate?: string
+}
+
+export type OwnerRoom = {
+  _id: string
+  pgId: string
+  floorId?: string
+  floorNumber: number
+  floorName?: string
+  roomNumber: string
+  roomType: 'Single Sharing' | 'Double Sharing' | 'Triple Sharing' | 'Four Sharing' | 'Custom'
+  totalBeds: number
+  occupiedBeds: number
+  monthlyRent?: number
+  bathroomType?: 'attached' | 'common'
+  acType?: 'ac' | 'non-ac'
+  description?: string
+  status?: 'active' | 'maintenance' | 'inactive'
+  customOrder?: number
+  beds: OwnerBed[]
+  occupancy: {
+    occupied: number
+    vacant: number
+    reserved: number
+    maintenance: number
+    total: number
+  }
+}
+
+export type OwnerInventoryStats = {
+  totalFloors: number
+  totalRooms: number
+  totalBeds: number
+  availableBeds: number
+  occupiedBeds: number
+  reservedBeds: number
+  maintenanceBeds: number
+  occupancyPercentage: number
 }
 
 export type OwnerLedgerEntry = {
@@ -159,7 +230,7 @@ export async function updateOwnerPg(
     securityInfo?: string
     contactName?: string
     contactPhone?: string
-    roomTypes: Array<{ sharing: 'Single' | 'Double' | 'Triple'; rent: number; deposit: number }>
+    roomTypes: Array<{ sharing: 'Single' | 'Double' | 'Triple' | 'Four' | 'Custom'; rent: number; deposit: number }>
   },
 ) {
   const body: Record<string, unknown> = { ...payload }
@@ -192,6 +263,171 @@ export async function getOwnerResidents(params?: { pgId?: string; status?: strin
   })
 }
 
+export async function getOwnerInventory(
+  pgId: string,
+  params?: {
+    floorId?: string
+    bedStatus?: BedStatus
+    roomType?: OwnerRoom['roomType']
+    search?: string
+    onlyWithAvailableBeds?: boolean
+  },
+) {
+  const query = new URLSearchParams()
+  if (params?.floorId) query.set('floorId', params.floorId)
+  if (params?.bedStatus) query.set('bedStatus', params.bedStatus)
+  if (params?.roomType) query.set('roomType', params.roomType)
+  if (params?.search) query.set('search', params.search)
+  if (params?.onlyWithAvailableBeds) query.set('onlyWithAvailableBeds', 'true')
+
+  return api<{ stats: OwnerInventoryStats; floors: OwnerFloor[]; rooms: OwnerRoom[] }>({
+    url: `/owner/pgs/${pgId}/inventory${query.size ? `?${query.toString()}` : ''}`,
+  })
+}
+
+export async function createOwnerFloor(
+  pgId: string,
+  payload: { name: string; level?: number; sortOrder?: number; layoutMode?: 'grid' | 'custom'; gridColumns?: number },
+) {
+  return api<OwnerFloor>({
+    url: `/owner/pgs/${pgId}/floors`,
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export async function updateOwnerFloor(
+  pgId: string,
+  floorId: string,
+  payload: { name?: string; level?: number; sortOrder?: number; layoutMode?: 'grid' | 'custom'; gridColumns?: number; isActive?: boolean },
+) {
+  return api<OwnerFloor>({
+    url: `/owner/pgs/${pgId}/floors/${floorId}`,
+    method: 'PATCH',
+    data: payload,
+  })
+}
+
+export async function deleteOwnerFloor(pgId: string, floorId: string) {
+  return api<{ message: string }>({
+    url: `/owner/pgs/${pgId}/floors/${floorId}`,
+    method: 'DELETE',
+  })
+}
+
+export async function createOwnerRoom(
+  pgId: string,
+  payload: {
+    floorId: string
+    roomNumber: string
+    roomType: OwnerRoom['roomType']
+    totalBedCapacity: number
+    monthlyRent: number
+    bathroomType: 'attached' | 'common'
+    acType: 'ac' | 'non-ac'
+    description?: string
+    status?: 'active' | 'maintenance' | 'inactive'
+    customOrder?: number
+  },
+) {
+  return api({
+    url: `/owner/pgs/${pgId}/rooms`,
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export async function updateOwnerRoom(
+  pgId: string,
+  roomId: string,
+  payload: {
+    floorId?: string
+    roomNumber?: string
+    roomType?: OwnerRoom['roomType']
+    totalBedCapacity?: number
+    monthlyRent?: number
+    bathroomType?: 'attached' | 'common'
+    acType?: 'ac' | 'non-ac'
+    description?: string
+    status?: 'active' | 'maintenance' | 'inactive'
+    customOrder?: number
+  },
+) {
+  return api({
+    url: `/owner/pgs/${pgId}/rooms/${roomId}`,
+    method: 'PATCH',
+    data: payload,
+  })
+}
+
+export async function deleteOwnerRoom(pgId: string, roomId: string) {
+  return api<{ message: string }>({
+    url: `/owner/pgs/${pgId}/rooms/${roomId}`,
+    method: 'DELETE',
+  })
+}
+
+export async function updateOwnerBedStatus(
+  pgId: string,
+  bedId: string,
+  payload: {
+    status: BedStatus
+    maintenanceReason?: string
+    reservedForName?: string
+    reservedForPhone?: string
+    expectedMoveInDate?: string
+    expectedVacatingDate?: string
+    monthlyRent?: number
+  },
+) {
+  return api<OwnerBed>({
+    url: `/owner/pgs/${pgId}/beds/${bedId}/status`,
+    method: 'PATCH',
+    data: payload,
+  })
+}
+
+export async function assignTenantToOwnerBed(
+  pgId: string,
+  bedId: string,
+  payload: {
+    fullName: string
+    phone: string
+    email?: string
+    joiningDate: string
+    expectedExitDate?: string
+    rent: number
+    deposit?: number
+    amountPaid?: number
+    paymentStatus?: 'pending' | 'partial' | 'paid'
+  },
+) {
+  return api<OwnerResident>({
+    url: `/owner/pgs/${pgId}/beds/${bedId}/assign-tenant`,
+    method: 'POST',
+    data: payload,
+  })
+}
+
+export async function vacateOwnerBed(
+  pgId: string,
+  bedId: string,
+  payload: {
+    leavingDate: string
+    reason?: string
+    finalSettlementAmount: number
+    finalSettlementPaid: boolean
+    notes?: string
+    finalRoomCondition?: string
+  },
+) {
+  return api<OwnerResident>({
+    url: `/owner/pgs/${pgId}/beds/${bedId}/vacate`,
+    method: 'POST',
+    data: payload,
+  })
+}
+
 export async function createOwnerResident(payload: {
   pgId: string
   roomId?: string
@@ -199,6 +435,7 @@ export async function createOwnerResident(payload: {
   fullName: string
   profilePhoto?: string
   phone: string
+  email?: string
   joiningDate: string
   rent: number
   deposit: number
@@ -230,6 +467,21 @@ export async function updateOwnerResident(
   return api<OwnerResident>({
     url: `/owner/residents/${residentId}`,
     method: 'PATCH',
+    data: payload,
+  })
+}
+
+export async function moveOwnerResident(
+  residentId: string,
+  payload: {
+    pgId: string
+    roomId: string
+    bedId: string
+  },
+) {
+  return api<OwnerResident>({
+    url: `/owner/residents/${residentId}/move`,
+    method: 'POST',
     data: payload,
   })
 }

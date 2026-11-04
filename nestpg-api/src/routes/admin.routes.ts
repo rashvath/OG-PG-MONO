@@ -89,7 +89,7 @@ const updatePhotosSchema = z
   .refine((photos) => !photos || photos.length <= 5, 'You can add at most 5 valid image URLs')
 
 const roomTypeSchema = z.object({
-  sharing: z.enum(['Single', 'Double', 'Triple']),
+  sharing: z.enum(['Single', 'Double', 'Triple', 'Four', 'Custom']),
   rent: z.number().positive(),
   deposit: z.number().positive(),
 })

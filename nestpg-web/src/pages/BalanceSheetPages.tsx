@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 
 import { AppTable } from '@/components/data-display/AppTable'
 import { EmptyTableState } from '@/components/data-display/EmptyTableState'
+import { FilterDrawer } from '@/components/ui/FilterDrawer'
 import {
   createOwnerLedgerEntriesBulk,
   createOwnerLedgerEntry,
@@ -47,6 +49,9 @@ export function OwnerBalanceSheetPage() {
   const [isSavingSheet, setIsSavingSheet] = useState(false)
   const [isSavingBulk, setIsSavingBulk] = useState(false)
   const [selectedPgId, setSelectedPgId] = useState('')
+  const [draftPgId, setDraftPgId] = useState('')
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
+  const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false)
   const [entryForm, setEntryForm] = useState({
     entryType: 'income' as 'income' | 'expense',
     category: 'Rent',
@@ -88,7 +93,18 @@ export function OwnerBalanceSheetPage() {
     load()
   }, [])
 
-  const selectedPgName = useMemo(() => pgs.find((item) => item._id === selectedPgId)?.name ?? 'All PGs', [pgs, selectedPgId])
+  useEffect(() => {
+    setDraftPgId(selectedPgId)
+  }, [selectedPgId])
+
+  const applyPgFilter = () => {
+    setSelectedPgId(draftPgId)
+  }
+
+  const clearPgFilter = () => {
+    setDraftPgId('')
+    setSelectedPgId('')
+  }
 
   const addEntry = async () => {
     if (entryForm.amount <= 0) {
@@ -113,6 +129,7 @@ export function OwnerBalanceSheetPage() {
         residentName: '',
         notes: '',
       }))
+      setIsEntryDialogOpen(false)
       toast.success('Entry added')
       load()
     } catch (error) {
@@ -278,55 +295,36 @@ export function OwnerBalanceSheetPage() {
           <h2 className="page-heading">Balance sheet</h2>
           <p className="section-sub">Track income and expenses, then generate snapshots for reports.</p>
         </div>
-      </div>
+        <div className="inventory-top-actions">
+          <button type="button" className="btn btn-brand" onClick={() => setIsEntryDialogOpen(true)}>
+            Add entry
+          </button>
 
-      <div className="panel finance-panel form-grid two-col spaced-top">
-        <div className="form-field">
-          <label>PG filter</label>
-          <select value={selectedPgId} onChange={(event) => setSelectedPgId(event.target.value)}>
-            <option value="">All assigned PGs</option>
-            {pgs.map((pg) => (
-              <option key={pg._id} value={pg._id}>{pg.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="form-field">
-          <label>Selected context</label>
-          <input value={selectedPgName} readOnly />
-        </div>
-      </div>
+          {selectedPgId ? (
+            <button type="button" className="btn btn-line" onClick={clearPgFilter}>
+              <ArrowLeft size={15} />
+              <span>All properties</span>
+            </button>
+          ) : null}
 
-      <div className="panel finance-panel form-grid two-col spaced-top">
-        <h3 className="finance-title span-all">Add individual entry</h3>
-        <div className="form-field">
-          <label>Entry type</label>
-          <select value={entryForm.entryType} onChange={(event) => setEntryForm((c) => ({ ...c, entryType: event.target.value as 'income' | 'expense' }))}>
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
-        </div>
-        <div className="form-field">
-          <label>Category</label>
-          <input value={entryForm.category} onChange={(event) => setEntryForm((c) => ({ ...c, category: event.target.value }))} placeholder="Rent, Electricity, Maintenance..." />
-        </div>
-        <div className="form-field">
-          <label>Amount</label>
-          <input type="number" value={entryForm.amount === 0 ? '' : String(entryForm.amount)} onChange={(event) => setEntryForm((c) => ({ ...c, amount: Number(event.target.value) || 0 }))} />
-        </div>
-        <div className="form-field">
-          <label>Date</label>
-          <input type="date" value={entryForm.entryDate} onChange={(event) => setEntryForm((c) => ({ ...c, entryDate: event.target.value }))} />
-        </div>
-        <div className="form-field">
-          <label>Resident / payer name (optional)</label>
-          <input value={entryForm.residentName} onChange={(event) => setEntryForm((c) => ({ ...c, residentName: event.target.value }))} />
-        </div>
-        <div className="form-field">
-          <label>Notes (optional)</label>
-          <input value={entryForm.notes} onChange={(event) => setEntryForm((c) => ({ ...c, notes: event.target.value }))} />
-        </div>
-        <div className="table-action-row span-all">
-          <button type="button" className="btn btn-brand" onClick={addEntry} disabled={isSavingEntry}>{isSavingEntry ? 'Saving...' : 'Add entry'}</button>
+          <FilterDrawer
+            isOpen={isFilterDrawerOpen}
+            onOpenChange={setIsFilterDrawerOpen}
+            drawerId="owner-balance-sheet-filter-drawer"
+            title="Filter Balance Sheet"
+            onClear={clearPgFilter}
+            onApply={applyPgFilter}
+          >
+            <div className="form-field">
+              <label>PG filter</label>
+              <select value={draftPgId} onChange={(event) => setDraftPgId(event.target.value)}>
+                <option value="">All assigned PGs</option>
+                {pgs.map((pg) => (
+                  <option key={pg._id} value={pg._id}>{pg.name}</option>
+                ))}
+              </select>
+            </div>
+          </FilterDrawer>
         </div>
       </div>
 
@@ -438,6 +436,61 @@ export function OwnerBalanceSheetPage() {
           ))
         )}
       </AppTable>
+
+      {isEntryDialogOpen ? (
+        <div className="app-dialog-backdrop">
+          <div className="app-dialog">
+            <div className="app-dialog-head">
+              <div>
+                <h3>Add individual entry</h3>
+                <p>Capture one income or expense record.</p>
+              </div>
+              <button type="button" className="dialog-close-btn" onClick={() => setIsEntryDialogOpen(false)}>
+                x
+              </button>
+            </div>
+
+            <div className="form-grid two-col">
+              <div className="form-field">
+                <label>Entry type</label>
+                <select value={entryForm.entryType} onChange={(event) => setEntryForm((c) => ({ ...c, entryType: event.target.value as 'income' | 'expense' }))}>
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Category</label>
+                <input value={entryForm.category} onChange={(event) => setEntryForm((c) => ({ ...c, category: event.target.value }))} placeholder="Rent, Electricity, Maintenance..." />
+              </div>
+              <div className="form-field">
+                <label>Amount</label>
+                <input type="number" value={entryForm.amount === 0 ? '' : String(entryForm.amount)} onChange={(event) => setEntryForm((c) => ({ ...c, amount: Number(event.target.value) || 0 }))} />
+              </div>
+              <div className="form-field">
+                <label>Date</label>
+                <input type="date" value={entryForm.entryDate} onChange={(event) => setEntryForm((c) => ({ ...c, entryDate: event.target.value }))} />
+              </div>
+              <div className="form-field">
+                <label>Resident / payer name (optional)</label>
+                <input value={entryForm.residentName} onChange={(event) => setEntryForm((c) => ({ ...c, residentName: event.target.value }))} />
+              </div>
+              <div className="form-field">
+                <label>Notes (optional)</label>
+                <input value={entryForm.notes} onChange={(event) => setEntryForm((c) => ({ ...c, notes: event.target.value }))} />
+              </div>
+            </div>
+
+            <div className="pg-form-actions">
+              <button type="button" className="btn btn-line" onClick={() => setIsEntryDialogOpen(false)} disabled={isSavingEntry}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn-brand" onClick={addEntry} disabled={isSavingEntry}>
+                {isSavingEntry ? 'Saving...' : 'Add entry'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
