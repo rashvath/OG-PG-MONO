@@ -37,9 +37,7 @@ const AdminOwnerApprovalsPage = lazy(() =>
 const AdminEnquiriesPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminEnquiriesPage })))
 const AdminResidentsPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminResidentsPage })))
 const AdminUsersPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminUsersPage })))
-const AdminBalanceSheetPage = lazy(() =>
-  import('@/pages/BalanceSheetPages').then((m) => ({ default: m.AdminBalanceSheetPage })),
-)
+const AdminFormConfigPage = lazy(() => import('@/pages/FormConfigPage').then((m) => ({ default: m.AdminFormConfigPage })))
 
 function App() {
   return (
@@ -98,7 +96,7 @@ function App() {
                             { label: 'Approvals', to: '/admin/approvals' },
                             { label: 'Enquiries', to: '/admin/enquiries' },
                             { label: 'Users', to: '/admin/users' },
-                            { label: 'Balance Sheet', to: '/admin/balance-sheet' },
+                            { label: 'Form Config', to: '/admin/form-config' },
                           ]}
                         />
                       }
@@ -110,7 +108,8 @@ function App() {
                       <Route path="approvals" element={<AdminOwnerApprovalsPage />} />
                       <Route path="enquiries" element={<AdminEnquiriesPage />} />
                       <Route path="users" element={<AdminUsersPage />} />
-                      <Route path="balance-sheet" element={<AdminBalanceSheetPage />} />
+                      <Route path="form-config" element={<AdminFormConfigPage />} />
+                      <Route path="balance-sheet" element={<Navigate to="/admin" replace />} />
                     </Route>
                   </Route>
 

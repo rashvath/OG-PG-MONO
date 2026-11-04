@@ -1,14 +1,7 @@
-import type { AxiosRequestConfig } from 'axios'
+import { apiRequest } from './api'
 
-import { apiClient, toApiError } from './http'
-
-async function api<T>(config: AxiosRequestConfig): Promise<T> {
-  try {
-    const response = await apiClient.request<T>(config)
-    return response.data
-  } catch (error) {
-    throw new Error(toApiError(error))
-  }
+async function api<T>(config: Parameters<typeof apiRequest<T>>[0]): Promise<T> {
+  return apiRequest<T>(config)
 }
 
 export type OwnerPg = {
@@ -385,14 +378,11 @@ export async function deleteOwnerBalanceSheet(id: string) {
 }
 
 export async function exportOwnerBalanceSheetCsv(id: string) {
-  try {
-    const response = await apiClient.get<Blob>(`/owner/balance-sheets/${id}/export`, {
-      responseType: 'blob',
-    })
-    return response.data
-  } catch (error) {
-    throw new Error(toApiError(error))
-  }
+  return apiRequest<Blob>({
+    url: `/owner/balance-sheets/${id}/export`,
+    method: 'GET',
+    responseType: 'blob',
+  })
 }
 
 export async function createOwnerDocument(payload: {

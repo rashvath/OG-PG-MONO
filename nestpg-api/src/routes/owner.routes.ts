@@ -13,6 +13,7 @@ import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
 import { ResidentActivityModel } from '../models/ResidentActivity'
 import { ResidentModel } from '../models/Resident'
 import { RoomModel } from '../models/Room'
+import { validateRequiredFields } from '../services/form-config.service'
 
 const router = Router()
 
@@ -455,6 +456,12 @@ router.post('/documents', auth('owner'), async (req: AuthedRequest, res) => {
     return
   }
 
+  const fieldErrors = await validateRequiredFields('owner.documents', parsed.data as Record<string, unknown>)
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
+    return
+  }
+
   const isAssigned = await ensureAssignedPg(ownerId, parsed.data.pgId)
   if (!isAssigned) {
     res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
@@ -682,6 +689,12 @@ router.patch('/pgs/:id', auth('owner'), async (req: AuthedRequest, res) => {
     return
   }
 
+  const fieldErrors = await validateRequiredFields('owner.pgs', parsed.data as Record<string, unknown>)
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
+    return
+  }
+
   const { latitude, longitude } = parsed.data
   if ((latitude === undefined) !== (longitude === undefined)) {
     res.status(400).json({ message: 'Both latitude and longitude are required together' })
@@ -784,6 +797,12 @@ router.post('/residents', auth('owner'), async (req: AuthedRequest, res) => {
 
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const fieldErrors = await validateRequiredFields('owner.residentAdd', parsed.data as Record<string, unknown>)
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
     return
   }
 
@@ -978,6 +997,12 @@ router.patch('/residents/:id', auth('owner'), async (req: AuthedRequest, res) =>
     return
   }
 
+  const fieldErrors = await validateRequiredFields('owner.residentEdit', parsed.data as Record<string, unknown>)
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
+    return
+  }
+
   const resident = await ResidentModel.findOne({ _id: req.params.id, ownerId })
   if (!resident) {
     res.status(404).json({ message: 'Resident not found' })
@@ -1034,6 +1059,12 @@ router.post('/residents/:id/mark-left', auth('owner'), async (req: AuthedRequest
 
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const fieldErrors = await validateRequiredFields('owner.residentLeft', parsed.data as Record<string, unknown>)
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
     return
   }
 

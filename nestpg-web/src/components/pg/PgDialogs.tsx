@@ -7,6 +7,7 @@ import L from 'leaflet'
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { AMENITIES, AREAS } from '@/lib/mock-data'
 import { uploadPgImages } from '@/api/upload-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 
 const BENGALURU_CENTER: [number, number] = [12.9716, 77.5946]
 const BENGALURU_BOUNDS = {
@@ -68,19 +69,6 @@ type PgFormDialogProps = {
   onClose: () => void
   onSubmit: (values: PgFormValues) => Promise<void> | void
 }
-
-const ADMIN_REQUIRED_FIELDS: Array<keyof PgFormValues> = ['name', 'baseRent', 'gender', 'contactName', 'mapsLocation']
-const OWNER_REQUIRED_FIELDS: Array<keyof PgFormValues> = [
-  'name',
-  'area',
-  'address',
-  'baseRent',
-  'gender',
-  'contactName',
-  'contactPhone',
-  'mapsLocation',
-  'weeklyMenu',
-]
 
 const DAYS: readonly string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -363,6 +351,7 @@ export function PgFormDialog({
   onClose,
   onSubmit,
 }: PgFormDialogProps) {
+  const { requiredFieldKeys, isRequired, getLabel } = useFormConfig(role === 'admin' ? 'admin.pgs' : 'owner.pgs')
   const [form, setForm] = useState<PgFormValues>(() => normalizeInitial(initialValues))
   const [imageUrlsText, setImageUrlsText] = useState('')
   const [weeklyMenuText, setWeeklyMenuText] = useState('')
@@ -395,10 +384,15 @@ export function PgFormDialog({
     event.currentTarget.blur()
   }
 
-  const requiredFields = useMemo(
-    () => new Set<keyof PgFormValues>(role === 'admin' ? ADMIN_REQUIRED_FIELDS : OWNER_REQUIRED_FIELDS),
-    [role],
-  )
+  const requiredFields = useMemo(() => {
+    const next = new Set<keyof PgFormValues>()
+    requiredFieldKeys.forEach((fieldKey) => {
+      if (fieldKey in FIELD_LABELS) {
+        next.add(fieldKey as keyof PgFormValues)
+      }
+    })
+    return next
+  }, [requiredFieldKeys])
 
   const isMissingRequired = (field: keyof PgFormValues) => {
     const value = form[field]
@@ -495,10 +489,10 @@ export function PgFormDialog({
     })
   }
 
-  const renderLabel = (field: keyof PgFormValues, text: string) => (
+  const renderLabel = (field: keyof PgFormValues, fallbackText: string) => (
     <label>
-      {text}
-      {requiredFields.has(field) ? <span className="required-mark"> *</span> : null}
+      {getLabel(field, fallbackText)}
+      {isRequired(field) ? <span className="required-mark"> *</span> : null}
     </label>
   )
 

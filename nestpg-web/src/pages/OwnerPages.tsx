@@ -8,6 +8,7 @@ import { StatCard } from '@/components/data-display/StatCard'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { inr } from '@/helpers/format'
 import { uploadPgImages } from '@/api/upload-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 import {
   createOwnerResident,
   getOwnerEnquiries,
@@ -380,6 +381,9 @@ export function OwnerEnquiriesPage() {
 
 export function OwnerResidentsPage() {
   const toast = useToast()
+  const residentAddConfig = useFormConfig('owner.residentAdd')
+  const residentEditConfig = useFormConfig('owner.residentEdit')
+  const residentLeftConfig = useFormConfig('owner.residentLeft')
   const [pgs, setPgs] = useState<OwnerPg[]>([])
   const [residents, setResidents] = useState<OwnerResident[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -605,16 +609,17 @@ export function OwnerResidentsPage() {
 
   const addResident = async () => {
     const nextErrors: { pgId?: string; fullName?: string; phone?: string; rent?: string } = {}
-    if (!form.pgId) {
+    if (residentAddConfig.isRequired('pgId') && !form.pgId) {
       nextErrors.pgId = 'Please choose a PG'
     }
-    if (!form.fullName.trim()) {
+    if (residentAddConfig.isRequired('fullName') && !form.fullName.trim()) {
       nextErrors.fullName = 'Resident name is required'
     }
-    if (!/^\d{10}$/.test(form.phone.trim())) {
+    const phoneIsValid = /^\d{10}$/.test(form.phone.trim())
+    if ((residentAddConfig.isRequired('phone') || form.phone.trim()) && !phoneIsValid) {
       nextErrors.phone = 'Phone must be exactly 10 digits'
     }
-    if (form.rent <= 0) {
+    if (residentAddConfig.isRequired('rent') && form.rent <= 0) {
       nextErrors.rent = 'Monthly rent must be greater than 0'
     }
 
@@ -664,7 +669,11 @@ export function OwnerResidentsPage() {
       return
     }
 
-    if (!editForm.fullName.trim() || !/^\d{10}$/.test(editForm.phone.trim()) || editForm.rent <= 0) {
+    const editNameInvalid = residentEditConfig.isRequired('fullName') && !editForm.fullName.trim()
+    const editPhoneInvalid = (residentEditConfig.isRequired('phone') || editForm.phone.trim()) && !/^\d{10}$/.test(editForm.phone.trim())
+    const editRentInvalid = residentEditConfig.isRequired('rent') && editForm.rent <= 0
+
+    if (editNameInvalid || editPhoneInvalid || editRentInvalid) {
       toast.warning('Fill valid resident name, 10-digit phone and monthly rent')
       return
     }
@@ -694,7 +703,12 @@ export function OwnerResidentsPage() {
       return
     }
 
-    if (leftForm.finalSettlementAmount < 0) {
+    if (residentLeftConfig.isRequired('leavingDate') && !leftForm.leavingDate) {
+      toast.warning('Leaving date is required')
+      return
+    }
+
+    if (residentLeftConfig.isRequired('finalSettlementAmount') && leftForm.finalSettlementAmount < 0) {
       toast.warning('Closing amount cannot be negative')
       return
     }
@@ -885,11 +899,17 @@ export function OwnerResidentsPage() {
 
             <div className="form-grid two-col pg-form-grid">
               <div className="form-field">
-                <label>Resident name *</label>
+                <label>
+                  {residentEditConfig.getLabel('fullName', 'Resident name')}
+                  {residentEditConfig.isRequired('fullName') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input value={editForm.fullName} onChange={(event) => setEditForm((current) => ({ ...current, fullName: event.target.value }))} />
               </div>
               <div className="form-field">
-                <label>Phone *</label>
+                <label>
+                  {residentEditConfig.getLabel('phone', 'Phone')}
+                  {residentEditConfig.isRequired('phone') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   value={editForm.phone}
                   maxLength={10}
@@ -899,11 +919,17 @@ export function OwnerResidentsPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Joining date</label>
+                <label>
+                  {residentEditConfig.getLabel('joiningDate', 'Joining date')}
+                  {residentEditConfig.isRequired('joiningDate') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input type="date" value={editForm.joiningDate} onChange={(event) => setEditForm((current) => ({ ...current, joiningDate: event.target.value }))} />
               </div>
               <div className="form-field">
-                <label>Monthly rent *</label>
+                <label>
+                  {residentEditConfig.getLabel('rent', 'Monthly rent')}
+                  {residentEditConfig.isRequired('rent') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="number"
                   value={toNumberValue(editForm.rent)}
@@ -912,7 +938,10 @@ export function OwnerResidentsPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Deposit</label>
+                <label>
+                  {residentEditConfig.getLabel('deposit', 'Deposit')}
+                  {residentEditConfig.isRequired('deposit') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="number"
                   value={toNumberValue(editForm.deposit)}
@@ -921,7 +950,10 @@ export function OwnerResidentsPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Amount paid by resident</label>
+                <label>
+                  {residentEditConfig.getLabel('amountPaid', 'Amount paid by resident')}
+                  {residentEditConfig.isRequired('amountPaid') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="number"
                   value={toNumberValue(editForm.amountPaid)}
@@ -962,7 +994,10 @@ export function OwnerResidentsPage() {
                 <input value={leftResident.fullName} readOnly />
               </div>
               <div className="form-field">
-                <label>Leaving date *</label>
+                <label>
+                  {residentLeftConfig.getLabel('leavingDate', 'Leaving date')}
+                  {residentLeftConfig.isRequired('leavingDate') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="date"
                   value={leftForm.leavingDate}
@@ -970,7 +1005,10 @@ export function OwnerResidentsPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Closing amount owner is paying *</label>
+                <label>
+                  {residentLeftConfig.getLabel('finalSettlementAmount', 'Closing amount owner is paying')}
+                  {residentLeftConfig.isRequired('finalSettlementAmount') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="number"
                   value={toNumberValue(leftForm.finalSettlementAmount)}
@@ -979,7 +1017,10 @@ export function OwnerResidentsPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Payment settled</label>
+                <label>
+                  {residentLeftConfig.getLabel('finalSettlementPaid', 'Payment settled')}
+                  {residentLeftConfig.isRequired('finalSettlementPaid') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <select
                   value={leftForm.finalSettlementPaid ? 'yes' : 'no'}
                   onChange={(event) => setLeftForm((current) => ({ ...current, finalSettlementPaid: event.target.value === 'yes' }))}
@@ -989,11 +1030,17 @@ export function OwnerResidentsPage() {
                 </select>
               </div>
               <div className="form-field" style={{ gridColumn: '1 / -1' }}>
-                <label>Reason</label>
+                <label>
+                  {residentLeftConfig.getLabel('reason', 'Reason')}
+                  {residentLeftConfig.isRequired('reason') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <textarea rows={2} value={leftForm.reason} onChange={(event) => setLeftForm((current) => ({ ...current, reason: event.target.value }))} />
               </div>
               <div className="form-field" style={{ gridColumn: '1 / -1' }}>
-                <label>Notes</label>
+                <label>
+                  {residentLeftConfig.getLabel('notes', 'Notes')}
+                  {residentLeftConfig.isRequired('notes') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <textarea rows={2} value={leftForm.notes} onChange={(event) => setLeftForm((current) => ({ ...current, notes: event.target.value }))} />
               </div>
             </div>
@@ -1025,7 +1072,10 @@ export function OwnerResidentsPage() {
 
             <div className="form-grid two-col pg-form-grid">
               <div className="form-field">
-                <label>PG *</label>
+                <label>
+                  {residentAddConfig.getLabel('pgId', 'PG')}
+                  {residentAddConfig.isRequired('pgId') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <select value={form.pgId} onChange={(event) => updateResidentField('pgId', event.target.value)}>
                   {pgs.map((pg) => (
                     <option key={pg._id} value={pg._id}>{pg.name}</option>
@@ -1057,12 +1107,18 @@ export function OwnerResidentsPage() {
                 ) : null}
               </div>
               <div className="form-field">
-                <label>Resident name *</label>
+                <label>
+                  {residentAddConfig.getLabel('fullName', 'Resident name')}
+                  {residentAddConfig.isRequired('fullName') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input value={form.fullName} onChange={(event) => updateResidentField('fullName', event.target.value)} />
                 {residentErrors.fullName ? <small className="upload-error-text">{residentErrors.fullName}</small> : null}
               </div>
               <div className="form-field">
-                <label>Phone *</label>
+                <label>
+                  {residentAddConfig.getLabel('phone', 'Phone')}
+                  {residentAddConfig.isRequired('phone') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   value={form.phone}
                   maxLength={10}
@@ -1074,11 +1130,17 @@ export function OwnerResidentsPage() {
                 {residentErrors.phone ? <small className="upload-error-text">{residentErrors.phone}</small> : null}
               </div>
               <div className="form-field">
-                <label>Joining date</label>
+                <label>
+                  {residentAddConfig.getLabel('joiningDate', 'Joining date')}
+                  {residentAddConfig.isRequired('joiningDate') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input type="date" value={form.joiningDate} onChange={(event) => updateResidentField('joiningDate', event.target.value)} />
               </div>
               <div className="form-field">
-                <label>Monthly rent *</label>
+                <label>
+                  {residentAddConfig.getLabel('rent', 'Monthly rent')}
+                  {residentAddConfig.isRequired('rent') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="number"
                   value={toNumberValue(form.rent)}
@@ -1088,7 +1150,10 @@ export function OwnerResidentsPage() {
                 {residentErrors.rent ? <small className="upload-error-text">{residentErrors.rent}</small> : null}
               </div>
               <div className="form-field">
-                <label>Deposit</label>
+                <label>
+                  {residentAddConfig.getLabel('deposit', 'Deposit')}
+                  {residentAddConfig.isRequired('deposit') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="number"
                   value={toNumberValue(form.deposit)}
@@ -1097,7 +1162,10 @@ export function OwnerResidentsPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Amount paid by resident</label>
+                <label>
+                  {residentAddConfig.getLabel('amountPaid', 'Amount paid by resident')}
+                  {residentAddConfig.isRequired('amountPaid') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   type="number"
                   value={toNumberValue(form.amountPaid)}
@@ -1106,7 +1174,10 @@ export function OwnerResidentsPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Resident image (optional)</label>
+                <label>
+                  {residentAddConfig.getLabel('profilePhoto', 'Resident image')}
+                  {residentAddConfig.isRequired('profilePhoto') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <div className="image-upload-row">
                   <input
                     type="file"

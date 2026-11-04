@@ -1,0 +1,12 @@
+{
+  "name": "nestpg-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix nestpg-api\" \"npm run dev --prefix nestpg-web\"",
+    "dev:api": "npm run dev --prefix nestpg-api",
+    "dev:web": "npm run dev --prefix nestpg-web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

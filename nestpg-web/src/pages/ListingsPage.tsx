@@ -3,15 +3,14 @@ import { useSearchParams } from 'react-router-dom'
 
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { ListingCard } from '@/components/ui/ListingCard'
-import { fetchLiveListings } from '@/api/listings-api'
+import { useLiveListings } from '@/api/listings-api'
 import { AMENITIES } from '@/lib/mock-data'
 import { listingRent, inr } from '@/helpers/format'
 import type { Listing } from '@/lib/types'
 
 export function ListingsPage() {
-  const [listings, setListings] = useState<Listing[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [loadError, setLoadError] = useState('')
+  const { data, loading: isLoading, error: loadError } = useLiveListings()
+  const listings: Listing[] = data ?? []
   const [params, setParams] = useSearchParams()
 
   const [gender, setGender] = useState(() => params.get('gender') ?? '')
@@ -21,18 +20,6 @@ export function ListingsPage() {
   const [sort, setSort] = useState<'rec' | 'lo' | 'hi' | 'rt'>('rec')
 
   const area = params.get('area') ?? ''
-
-  useEffect(() => {
-    fetchLiveListings()
-      .then((items) => {
-        setListings(items)
-        setLoadError('')
-      })
-      .catch((error) => {
-        setLoadError(error instanceof Error ? error.message : 'Unable to load listings')
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
 
   const areaOptions = useMemo(
     () => Array.from(new Set(listings.map((item) => item.area))).sort((a, b) => a.localeCompare(b)),

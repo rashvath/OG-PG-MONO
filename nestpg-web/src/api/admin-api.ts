@@ -1,14 +1,7 @@
-import type { AxiosRequestConfig } from 'axios'
+import { apiRequest } from './api'
 
-import { apiClient, toApiError } from './http'
-
-async function api<T>(config: AxiosRequestConfig): Promise<T> {
-  try {
-    const response = await apiClient.request<T>(config)
-    return response.data
-  } catch (error) {
-    throw new Error(toApiError(error))
-  }
+async function api<T>(config: Parameters<typeof apiRequest<T>>[0]): Promise<T> {
+  return apiRequest<T>(config)
 }
 
 export type AdminPg = {
@@ -45,6 +38,7 @@ export type AdminUser = {
   _id: string
   name: string
   email: string
+  role: 'customer' | 'owner' | 'admin'
   status: 'active' | 'blocked'
 }
 

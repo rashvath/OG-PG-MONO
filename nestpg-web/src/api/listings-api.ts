@@ -1,5 +1,7 @@
 import type { Listing } from '@/lib/types'
-import { apiClient, toApiError } from './http'
+import { useApiGet } from '@/hooks/api-hooks'
+
+import { API_ENDPOINTS, apiGet } from './api'
 
 type ApiListing = {
   _id: string
@@ -139,21 +141,19 @@ export function normalizeListing(input: ApiListing): Listing {
 }
 
 export async function fetchLiveListings() {
-  try {
-    const { data } = await apiClient.get<{ items?: ApiListing[] }>('/listings', {
-      params: { page: 1, limit: 200, sort: 'rec' },
-    })
-    return (data.items ?? []).map(normalizeListing)
-  } catch (error) {
-    throw new Error(toApiError(error, 'Unable to fetch listings'))
-  }
+  const data = await apiGet<{ items?: ApiListing[] }>(API_ENDPOINTS.listings.root, {
+    page: 1,
+    limit: 200,
+    sort: 'rec',
+  })
+  return (data.items ?? []).map(normalizeListing)
 }
 
 export async function fetchListingById(id: string) {
-  try {
-    const { data } = await apiClient.get<ApiListing>(`/listings/${id}`)
-    return normalizeListing(data)
-  } catch (error) {
-    throw new Error(toApiError(error, 'Unable to fetch listing'))
-  }
+  const data = await apiGet<ApiListing>(API_ENDPOINTS.listings.byId(id))
+  return normalizeListing(data)
+}
+
+export function useLiveListings() {
+  return useApiGet(fetchLiveListings, [], 'Unable to load listings')
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { EmptyTableState } from '@/components/data-display/EmptyTableState'
 import { createOwnerDocument, deleteOwnerDocument, getOwnerDocuments, getOwnerPgs, type OwnerDocument, type OwnerPg } from '@/api/owner-api'
 import { uploadPgImages } from '@/api/upload-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 import { useToast } from '@/lib/toast'
 
 function formatDateTime(value: string) {
@@ -11,6 +12,7 @@ function formatDateTime(value: string) {
 
 export function OwnerDocumentsPage() {
   const toast = useToast()
+  const { isRequired, getLabel } = useFormConfig('owner.documents')
 
   const [pgs, setPgs] = useState<OwnerPg[]>([])
   const [docs, setDocs] = useState<OwnerDocument[]>([])
@@ -70,15 +72,15 @@ export function OwnerDocumentsPage() {
   }
 
   const submit = async () => {
-    if (!form.pgId) {
+    if (isRequired('pgId') && !form.pgId) {
       toast.warning('Please select a PG')
       return
     }
-    if (!form.title.trim()) {
+    if (isRequired('title') && !form.title.trim()) {
       toast.warning('Document title is required')
       return
     }
-    if (!form.imageUrl.trim()) {
+    if (isRequired('imageUrl') && !form.imageUrl.trim()) {
       toast.warning('Please upload the document image')
       return
     }
@@ -129,7 +131,10 @@ export function OwnerDocumentsPage() {
         <h3 className="finance-title span-all">Upload document</h3>
 
         <div className="form-field">
-          <label>PG</label>
+          <label>
+            {getLabel('pgId', 'PG')}
+            {isRequired('pgId') ? <span className="required-mark"> *</span> : null}
+          </label>
           <select value={form.pgId} onChange={(event) => setForm((current) => ({ ...current, pgId: event.target.value }))}>
             <option value="">Select PG</option>
             {pgs.map((pg) => (
@@ -139,12 +144,18 @@ export function OwnerDocumentsPage() {
         </div>
 
         <div className="form-field">
-          <label>Document name</label>
+          <label>
+            {getLabel('title', 'Document name')}
+            {isRequired('title') ? <span className="required-mark"> *</span> : null}
+          </label>
           <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="PG Trade License" />
         </div>
 
         <div className="form-field span-all">
-          <label>Document image</label>
+          <label>
+            {getLabel('imageUrl', 'Document image')}
+            {isRequired('imageUrl') ? <span className="required-mark"> *</span> : null}
+          </label>
           <div className="image-upload-row">
             <input
               type="file"

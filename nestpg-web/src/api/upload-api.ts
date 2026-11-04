@@ -1,4 +1,5 @@
 import { apiClient, toApiError } from './http'
+import { API_ENDPOINTS } from './api'
 
 type ImageNormalizationOptions = {
   width: number
@@ -108,7 +109,7 @@ export async function uploadPgImages(files: File[], options?: UploadImageOptions
   }
 
   try {
-    const { data } = await apiClient.post<{ items?: Array<{ url: string }> }>('/uploads/images', formData)
+    const { data } = await apiClient.post<{ items?: Array<{ url: string }> }>(API_ENDPOINTS.uploads.images, formData)
     return (data.items ?? []).map((item) => item.url).filter(Boolean)
   } catch (error) {
     throw new Error(toApiError(error, 'Failed to upload images'))

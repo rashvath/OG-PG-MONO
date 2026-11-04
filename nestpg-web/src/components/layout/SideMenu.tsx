@@ -30,6 +30,7 @@ const iconByLabel: Record<string, typeof Home> = {
   Enquiries: MessageSquare,
   Approvals: CheckCircle2,
   'Balance Sheet': Landmark,
+  'Form Config': Settings,
   Documents: FileText,
   Settings: Settings,
   'Add a PG': Building2,

@@ -34,6 +34,7 @@ import {
   type OwnerApplication,
 } from '@/api/admin-api'
 import { inr } from '@/helpers/format'
+import { useFormConfig } from '@/hooks/use-form-config'
 import { useToast } from '@/lib/toast'
 import { NumberTicker } from '@/registry/magicui/number-ticker'
 
@@ -434,6 +435,7 @@ export function AdminPgsPage() {
 
 export function AdminOwnersPage() {
   const toast = useToast()
+  const ownerCreateConfig = useFormConfig('admin.ownerCreate')
   const [owners, setOwners] = useState<AdminOwner[]>([])
   const [pgs, setPgs] = useState<AdminPg[]>([])
   const [viewingOwner, setViewingOwner] = useState<AdminOwner | null>(null)
@@ -460,7 +462,12 @@ export function AdminOwnersPage() {
   }, [])
 
   const createOwner = async () => {
-    if (!ownerName.trim() || !ownerEmail.trim() || !ownerPhone.trim()) {
+    if (
+      (ownerCreateConfig.isRequired('name') && !ownerName.trim()) ||
+      (ownerCreateConfig.isRequired('email') && !ownerEmail.trim()) ||
+      (ownerCreateConfig.isRequired('phone') && !ownerPhone.trim()) ||
+      (ownerCreateConfig.isRequired('temporaryPassword') && !ownerPassword.trim())
+    ) {
       toast.warning('Please fill owner name, email and phone')
       return
     }
@@ -658,15 +665,24 @@ export function AdminOwnersPage() {
             </div>
             <div className="form-grid two-col">
               <div className="form-field">
-                <label>Owner name</label>
+                <label>
+                  {ownerCreateConfig.getLabel('name', 'Owner name')}
+                  {ownerCreateConfig.isRequired('name') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} />
               </div>
               <div className="form-field">
-                <label>Email</label>
+                <label>
+                  {ownerCreateConfig.getLabel('email', 'Email')}
+                  {ownerCreateConfig.isRequired('email') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} />
               </div>
               <div className="form-field">
-                <label>Phone</label>
+                <label>
+                  {ownerCreateConfig.getLabel('phone', 'Phone')}
+                  {ownerCreateConfig.isRequired('phone') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input
                   value={ownerPhone}
                   maxLength={10}
@@ -677,7 +693,10 @@ export function AdminOwnersPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Temporary password</label>
+                <label>
+                  {ownerCreateConfig.getLabel('temporaryPassword', 'Temporary password')}
+                  {ownerCreateConfig.isRequired('temporaryPassword') ? <span className="required-mark"> *</span> : null}
+                </label>
                 <input value={ownerPassword} onChange={(event) => setOwnerPassword(event.target.value)} />
               </div>
             </div>
@@ -766,6 +785,14 @@ export function AdminUsersPage() {
   const toast = useToast()
   const [users, setUsers] = useState<AdminUser[]>([])
 
+  const groupedUsers = useMemo(() => {
+    const domainUsers = users.filter((user) => user.role === 'admin')
+    const ownerUsers = users.filter((user) => user.role === 'owner')
+    const tenantUsers = users.filter((user) => user.role === 'customer')
+
+    return { domainUsers, ownerUsers, tenantUsers }
+  }, [users])
+
   const load = () => {
     getAdminUsers()
       .then((data) => setUsers(data.items))
@@ -783,11 +810,16 @@ export function AdminUsersPage() {
     load()
   }
 
-  return (
-    <>
-      <h2 className="page-heading">Customers</h2>
-      <AppTable headers={['Name', 'Email', 'Status', 'Action']}>
-        {users.map((user) => (
+  const renderUsersTable = (items: AdminUser[]) => (
+    <AppTable headers={['Name', 'Email', 'Status', 'Action']}>
+      {items.length === 0 ? (
+        <tr>
+          <td colSpan={4} className="empty-table-cell">
+            <EmptyTableState />
+          </td>
+        </tr>
+      ) : (
+        items.map((user) => (
           <tr key={user._id}>
             <td>{user.name}</td>
             <td>{user.email}</td>
@@ -800,8 +832,30 @@ export function AdminUsersPage() {
               </button>
             </td>
           </tr>
-        ))}
-      </AppTable>
+        ))
+      )}
+    </AppTable>
+  )
+
+  return (
+    <>
+      <h2 className="page-heading">Users</h2>
+      <p className="section-sub">Users are grouped by domain access, owners, and tenants.</p>
+
+      <div className="spaced-top">
+        <h3>Domain users</h3>
+        {renderUsersTable(groupedUsers.domainUsers)}
+      </div>
+
+      <div className="spaced-top">
+        <h3>Owner users</h3>
+        {renderUsersTable(groupedUsers.ownerUsers)}
+      </div>
+
+      <div className="spaced-top">
+        <h3>Tenant users</h3>
+        {renderUsersTable(groupedUsers.tenantUsers)}
+      </div>
     </>
   )
 }

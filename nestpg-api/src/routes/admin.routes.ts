@@ -14,6 +14,7 @@ import { OwnerProfileModel } from '../models/OwnerProfile'
 import { ResidentModel } from '../models/Resident'
 import { ResidentActivityModel } from '../models/ResidentActivity'
 import { UserModel } from '../models/User'
+import { listDefaultFormConfigs, listMergedFormConfigs, upsertFormConfig, validateRequiredFields } from '../services/form-config.service'
 
 const router = Router()
 
@@ -140,6 +141,59 @@ async function assignListingToOwner(pgId: string, ownerUserId: string, assignedB
   await ListingModel.findByIdAndUpdate(pgId, { ownerId: ownerUserId, status: 'live' })
 }
 
+router.get('/form-configs/defaults', auth('admin'), async (_req, res) => {
+  res.json({ items: listDefaultFormConfigs() })
+})
+
+router.get('/form-configs', auth('admin'), async (req, res) => {
+  const rawKeys = typeof req.query.keys === 'string' ? req.query.keys : ''
+  const formKeys = rawKeys
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  const items = await listMergedFormConfigs(formKeys.length > 0 ? formKeys : undefined)
+  res.json({ items })
+})
+
+router.put('/form-configs/:formKey', auth('admin'), async (req: AuthedRequest, res) => {
+  const formKey = Array.isArray(req.params.formKey) ? req.params.formKey[0] : req.params.formKey
+  if (!formKey) {
+    res.status(400).json({ message: 'formKey is required' })
+    return
+  }
+
+  const parsed = z
+    .object({
+      title: z.string().trim().min(1).optional(),
+      fields: z
+        .array(
+          z.object({
+            key: z.string().trim().min(1),
+            label: z.string().trim().min(1),
+            required: z.boolean(),
+          }),
+        )
+        .min(1),
+    })
+    .safeParse(req.body)
+
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const item = await upsertFormConfig(
+    formKey,
+    {
+      fields: parsed.data.fields,
+      ...(parsed.data.title ? { title: parsed.data.title } : {}),
+    },
+    req.user?.sub,
+  )
+  res.json(item)
+})
+
 router.get('/dashboard/summary', auth('admin'), async (_req, res) => {
   const [pgs, owners, users, pending] = await Promise.all([
     ListingModel.countDocuments(),
@@ -194,6 +248,12 @@ router.post('/pgs', auth('admin'), async (req: AuthedRequest, res) => {
 
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const fieldErrors = await validateRequiredFields('admin.pgs', parsed.data as Record<string, unknown>)
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
     return
   }
 
@@ -425,6 +485,17 @@ router.post('/owners', auth('admin'), async (req: AuthedRequest, res) => {
 
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const fieldErrors = await validateRequiredFields('admin.ownerCreate', {
+    name: parsed.data.name,
+    email: parsed.data.email,
+    phone: parsed.data.phone,
+    temporaryPassword: parsed.data.temporaryPassword,
+  })
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
     return
   }
 
@@ -687,6 +758,12 @@ router.patch('/pgs/:id', auth('admin'), async (req, res) => {
 
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+
+  const fieldErrors = await validateRequiredFields('admin.pgs', parsed.data as Record<string, unknown>)
+  if (Object.keys(fieldErrors).length > 0) {
+    res.status(400).json({ message: { formErrors: ['Please fill all required fields'], fieldErrors } })
     return
   }
 
