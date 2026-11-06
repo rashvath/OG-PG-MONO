@@ -38,3 +38,33 @@
 - No password reset / forgot-password flow.
 - Email OTP verification on registration is not enforced.
 - `AdminBalanceSheetPage` is read-only by design; it does not create ledger entries.
+
+## Phase 2 — Employee management
+
+### Changes made
+
+- Added owner-scoped staff roles, employee records, attendance, employee expenses, leave requests, and salary payments.
+- Mounted the staff API under `/api/v1/owner`; staff operations require an approved owner with an assignment to the requested PG.
+- Added read-only admin staff and staff-expense views under `/api/v1/admin`.
+- Added the owner Staff page at `/owner/staff`, with PG selection, employee and role management, daily attendance editing, monthly attendance summaries, expense CRUD, leave approval/rejection, salary entry and history, totals, and CSV export.
+
+### Files added or updated
+
+- `nestpg-api/src/models/{CustomRole,Employee,Attendance,EmployeeExpense,EmployeeLeave,SalaryPayment}.ts`
+- `nestpg-api/src/routes/employee.routes.ts`
+- `nestpg-api/src/routes/admin.routes.ts`
+- `nestpg-api/src/__tests__/employee.test.ts`
+- `nestpg-web/src/api/staff-api.ts`
+- `nestpg-web/src/pages/OwnerStaffPage.tsx`
+- `nestpg-web/src/App.tsx`
+- `nestpg-web/src/index.css`
+
+### Verification
+
+- Backend: `npx tsc --noEmit` passes; all 29 API tests pass, including employee workflows, owner isolation, admin authorization, and regression suites.
+- Frontend: `npx tsc --noEmit` passes; `npm run build` succeeds.
+
+### Remaining considerations
+
+- The employee workflows currently have API integration coverage but no dedicated browser-level E2E tests.
+- Admin staff views are intentionally read-only.
