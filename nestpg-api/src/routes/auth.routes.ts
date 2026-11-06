@@ -137,7 +137,12 @@ router.post('/register', async (req, res) => {
     return
   }
 
-  res.status(201).json({ id: user.id })
+  const token = jwt.sign({ sub: user.id, role: user.role }, env.jwtSecret, { expiresIn: '1h' })
+  res.status(201).json({
+    id: user.id,
+    token,
+    user: { id: user.id, role: user.role, name: user.name },
+  })
 })
 
 router.post('/login', async (req, res) => {
