@@ -31,6 +31,7 @@ const AdminBalanceSheetPage = lazy(() =>
   import('@/pages/BalanceSheetPages').then((m) => ({ default: m.AdminBalanceSheetPage })),
 )
 const OwnerDocumentsPage = lazy(() => import('@/pages/OwnerDocumentsPage').then((m) => ({ default: m.OwnerDocumentsPage })))
+const OwnerStaffPage = lazy(() => import('@/pages/OwnerStaffPage').then((m) => ({ default: m.OwnerStaffPage })))
 
 const AdminOverviewPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminOverviewPage })))
 const AdminPgsPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminPgsPage })))
@@ -74,6 +75,7 @@ function App() {
                             { label: 'Enquiries', to: '/owner/enquiries' },
                             { label: 'Balance Sheet', to: '/owner/balance-sheet' },
                             { label: 'Documents', to: '/owner/documents' },
+                            { label: 'Staff', to: '/owner/staff' },
                           ]}
                         />
                       }
@@ -85,6 +87,7 @@ function App() {
                       <Route path="enquiries" element={<OwnerEnquiriesPage />} />
                       <Route path="balance-sheet" element={<OwnerBalanceSheetPage />} />
                       <Route path="documents" element={<OwnerDocumentsPage />} />
+                      <Route path="staff" element={<OwnerStaffPage />} />
                     </Route>
                   </Route>
 
