@@ -1,3 +1,4 @@
+import ExcelJS from 'exceljs'
 import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
@@ -67,6 +68,19 @@ describe('owner API', () => {
     expect(entry.body).toMatchObject({ entryType: 'income', category: 'Rent', amount: 12000 })
     expect(new Date(entry.body.entryDate).toISOString().slice(0, 10)).toBe(entryDate)
 
+    const expense = await request(app)
+      .post('/api/v1/owner/ledger/entries')
+      .set(auth)
+      .send({
+        pgId: context.pgId,
+        entryType: 'expense',
+        category: 'Maintenance',
+        amount: 350,
+        entryDate: '2026-03-20',
+        notes: 'Water pump repair',
+      })
+    expect(expense.status).toBe(201)
+
     const listedEntries = await request(app).get('/api/v1/owner/ledger/entries').set(auth)
     expect(listedEntries.status).toBe(200)
     expect(listedEntries.body.items.some((item: { _id: string }) => item._id === entry.body._id)).toBe(true)
@@ -77,7 +91,7 @@ describe('owner API', () => {
       .set(auth)
       .send(period)
     expect(preview.status).toBe(200)
-    expect(preview.body).toMatchObject({ totalIncome: 12000, totalExpense: 0, netBalance: 12000 })
+    expect(preview.body).toMatchObject({ totalIncome: 12000, totalExpense: 350, netBalance: 11650 })
 
     const saved = await request(app)
       .post('/api/v1/owner/balance-sheets')
@@ -94,6 +108,49 @@ describe('owner API', () => {
       .set(auth)
     expect(singleSheet.status).toBe(200)
     expect(singleSheet.body._id).toBe(saved.body._id)
+
+    const exported = await request(app)
+      .get(`/api/v1/owner/balance-sheets/${saved.body._id}/export`)
+      .set(auth)
+      .buffer(true)
+      .parse((response, callback) => {
+        const chunks: Buffer[] = []
+        response.on('data', (chunk: Buffer | string) => {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+        })
+        response.on('end', () => callback(null, Buffer.concat(chunks)))
+      })
+
+    expect(exported.status).toBe(200)
+    expect(exported.headers['content-type']).toContain('spreadsheetml.sheet')
+    expect(exported.headers['content-disposition']).toContain('.xlsx')
+    const workbook = new ExcelJS.Workbook()
+    const exportBytes = new Uint8Array(exported.body)
+    const workbookBuffer = new ArrayBuffer(exportBytes.length)
+    new Uint8Array(workbookBuffer).set(exportBytes)
+    await workbook.xlsx.load(workbookBuffer)
+    const sheet = workbook.getWorksheet('Balance Sheet')
+    expect(sheet).toBeDefined()
+    expect(sheet?.getCell('A1').value).toBe('Test PG')
+    expect(sheet?.getCell('A1').isMerged).toBe(true)
+    expect(sheet?.getCell('A1').font?.size).toBe(16)
+    expect(sheet?.getCell('A1').fill).toMatchObject({ fgColor: { argb: 'FF1E3A5F' } })
+    expect(sheet?.getColumn(1).width).toBe(6)
+    expect(sheet?.getColumn(6).width).toBe(16)
+    expect(sheet?.getCell('A3').value).toBe('Period: 01 Mar 2026 – 31 Mar 2026')
+    expect(sheet?.getCell('A6').value).toBe('INCOME')
+    expect(sheet?.getCell('A7').value).toBe('#')
+    expect(sheet?.getCell('B7').value).toBe('Date')
+    expect(sheet?.getCell('F7').value).toBe('Amount (₹)')
+    expect(sheet?.getCell('F8').value).toBe(12000)
+    expect(sheet?.getCell('F8').numFmt).toBe('#,##0.00')
+    expect(sheet?.getCell('A9').value).toBe('Total Income')
+    expect(sheet?.getCell('A11').value).toBe('EXPENSES')
+    expect(sheet?.getCell('C13').value).toBe('Water pump repair')
+    expect(sheet?.getCell('A14').value).toBe('Total Expenses')
+    expect(sheet?.getCell('F14').value).toBe(350)
+    expect(sheet?.getCell('F16').value).toBe(11650)
+    expect(sheet?.getCell('A16').value).toBe('Net Balance')
 
     const deletedSheet = await request(app)
       .delete(`/api/v1/owner/balance-sheets/${saved.body._id}`)
