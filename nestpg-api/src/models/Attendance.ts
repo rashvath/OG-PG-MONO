@@ -1,6 +1,17 @@
-import { Schema, model } from 'mongoose'
+import { Schema, Types, model } from 'mongoose'
 
-const attendanceSchema = new Schema(
+type Attendance = {
+  employeeId: Types.ObjectId
+  pgId: Types.ObjectId
+  ownerId: Types.ObjectId
+  date: Date
+  status: 'present' | 'absent' | 'half-day' | 'on-leave'
+  checkIn?: string | null
+  checkOut?: string | null
+  notes: string
+}
+
+const attendanceSchema = new Schema<Attendance>(
   {
     employeeId: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
     pgId: { type: Schema.Types.ObjectId, ref: 'Listing', required: true },
@@ -17,4 +28,4 @@ const attendanceSchema = new Schema(
 attendanceSchema.index({ ownerId: 1, pgId: 1, date: -1 })
 attendanceSchema.index({ employeeId: 1, date: 1 }, { unique: true })
 
-export const AttendanceModel = model('Attendance', attendanceSchema)
+export const AttendanceModel = model<Attendance>('Attendance', attendanceSchema)

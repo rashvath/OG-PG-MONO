@@ -1,6 +1,14 @@
-import { Schema, model } from 'mongoose'
+import { Schema, Types, model } from 'mongoose'
 
-const customRoleSchema = new Schema(
+type CustomRole = {
+  name: string
+  pgId: Types.ObjectId
+  ownerId: Types.ObjectId
+  color: string
+  createdBy: Types.ObjectId
+}
+
+const customRoleSchema = new Schema<CustomRole>(
   {
     name: { type: String, required: true, trim: true },
     pgId: { type: Schema.Types.ObjectId, ref: 'Listing', required: true },
@@ -14,4 +22,4 @@ const customRoleSchema = new Schema(
 customRoleSchema.index({ ownerId: 1, pgId: 1 })
 customRoleSchema.index({ pgId: 1, name: 1 }, { unique: true })
 
-export const CustomRoleModel = model('CustomRole', customRoleSchema)
+export const CustomRoleModel = model<CustomRole>('CustomRole', customRoleSchema)

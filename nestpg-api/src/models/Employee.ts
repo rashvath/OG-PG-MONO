@@ -1,4 +1,20 @@
-import { Schema, model } from 'mongoose'
+import { Schema, Types, model } from 'mongoose'
+
+type Employee = {
+  name: string
+  phone: string
+  email?: string
+  pgId: Types.ObjectId
+  ownerId: Types.ObjectId
+  roleId: Types.ObjectId
+  monthlySalary: number
+  joiningDate: Date
+  status: 'active' | 'inactive' | 'resigned'
+  address: string
+  emergencyContact: { name: string; phone: string }
+  profilePhoto: string
+  notes: string
+}
 
 const emergencyContactSchema = new Schema(
   {
@@ -8,7 +24,7 @@ const emergencyContactSchema = new Schema(
   { _id: false },
 )
 
-const employeeSchema = new Schema(
+const employeeSchema = new Schema<Employee>(
   {
     name: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
@@ -29,4 +45,4 @@ const employeeSchema = new Schema(
 
 employeeSchema.index({ ownerId: 1, pgId: 1, status: 1 })
 
-export const EmployeeModel = model('Employee', employeeSchema)
+export const EmployeeModel = model<Employee>('Employee', employeeSchema)

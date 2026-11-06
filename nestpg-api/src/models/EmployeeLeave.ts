@@ -1,6 +1,21 @@
-import { Schema, model } from 'mongoose'
+import { Schema, Types, model } from 'mongoose'
 
-const employeeLeaveSchema = new Schema(
+type EmployeeLeave = {
+  employeeId: Types.ObjectId
+  pgId: Types.ObjectId
+  ownerId: Types.ObjectId
+  startDate: Date
+  endDate: Date
+  totalDays: number
+  leaveType: 'sick' | 'casual' | 'annual' | 'unpaid' | 'emergency'
+  reason: string
+  status: 'pending' | 'approved' | 'rejected'
+  approvedBy?: Types.ObjectId | null
+  approvedAt?: Date | null
+  rejectedNote: string
+}
+
+const employeeLeaveSchema = new Schema<EmployeeLeave>(
   {
     employeeId: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
     pgId: { type: Schema.Types.ObjectId, ref: 'Listing', required: true },
@@ -20,4 +35,4 @@ const employeeLeaveSchema = new Schema(
 
 employeeLeaveSchema.index({ ownerId: 1, pgId: 1, status: 1 })
 
-export const EmployeeLeaveModel = model('EmployeeLeave', employeeLeaveSchema)
+export const EmployeeLeaveModel = model<EmployeeLeave>('EmployeeLeave', employeeLeaveSchema)

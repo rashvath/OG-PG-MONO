@@ -1,6 +1,19 @@
-import { Schema, model } from 'mongoose'
+import { Schema, Types, model } from 'mongoose'
 
-const employeeExpenseSchema = new Schema(
+type EmployeeExpense = {
+  employeeId: Types.ObjectId
+  pgId: Types.ObjectId
+  ownerId: Types.ObjectId
+  amount: number
+  description: string
+  category: 'food' | 'supplies' | 'maintenance' | 'travel' | 'utilities' | 'other'
+  expenseDate: Date
+  receiptUrl?: string | null
+  paidBy?: Types.ObjectId | null
+  notes: string
+}
+
+const employeeExpenseSchema = new Schema<EmployeeExpense>(
   {
     employeeId: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
     pgId: { type: Schema.Types.ObjectId, ref: 'Listing', required: true },
@@ -22,4 +35,4 @@ const employeeExpenseSchema = new Schema(
 
 employeeExpenseSchema.index({ ownerId: 1, pgId: 1, expenseDate: -1 })
 
-export const EmployeeExpenseModel = model('EmployeeExpense', employeeExpenseSchema)
+export const EmployeeExpenseModel = model<EmployeeExpense>('EmployeeExpense', employeeExpenseSchema)
