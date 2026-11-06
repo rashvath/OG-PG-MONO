@@ -34,7 +34,7 @@ import {
 } from '@/api/staff-api'
 import { useToast } from '@/lib/toast'
 
-type Tab = 'employees' | 'attendance' | 'expenses' | 'leaves' | 'salary'
+type Tab = 'employees' | 'roles' | 'attendance' | 'expenses' | 'leaves' | 'salary'
 type AttendanceDraft = { status: StaffAttendance['status']; checkIn: string; checkOut: string }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -42,6 +42,7 @@ const monthNow = new Date().getMonth() + 1
 const yearNow = new Date().getFullYear()
 const tabs: Array<{ id: Tab; label: string }> = [
   { id: 'employees', label: 'Employees & roles' },
+  { id: 'roles', label: 'Manage Roles' },
   { id: 'attendance', label: 'Attendance' },
   { id: 'expenses', label: 'Expenses' },
   { id: 'leaves', label: 'Leave' },
@@ -358,6 +359,10 @@ export function OwnerStaffPage() {
           item.name, item.phone, item.email, personName(item.roleId as StaffRole | string), item.monthlySalary, item.joiningDate, item.status,
         ]),
       },
+      roles: {
+        name: 'roles',
+        rows: roles.map((item) => [item.name, item.color]),
+      },
       attendance: {
         name: 'attendance',
         rows: attendance.map((item) => [personName(item.employeeId), item.date.slice(0, 10), item.status, item.checkIn, item.checkOut]),
@@ -377,6 +382,7 @@ export function OwnerStaffPage() {
     }
     const headers: Record<Tab, string[]> = {
       employees: ['Name', 'Phone', 'Email', 'Role', 'Monthly salary', 'Joining date', 'Status'],
+      roles: ['Role', 'Color'],
       attendance: ['Employee', 'Date', 'Status', 'Check in', 'Check out'],
       expenses: ['Employee', 'Date', 'Category', 'Description', 'Amount'],
       leaves: ['Employee', 'Type', 'Start date', 'End date', 'Days', 'Status'],
@@ -462,7 +468,20 @@ export function OwnerStaffPage() {
                 <div className="form-field"><label htmlFor="employee-name">Name</label><input id="employee-name" required minLength={2} value={employeeForm.name} onChange={(event) => setEmployeeForm({ ...employeeForm, name: event.target.value })} /></div>
                 <div className="form-field"><label htmlFor="employee-phone">Phone</label><input id="employee-phone" required pattern="[0-9]{10}" value={employeeForm.phone} onChange={(event) => setEmployeeForm({ ...employeeForm, phone: event.target.value })} /></div>
                 <div className="form-field"><label htmlFor="employee-email">Email</label><input id="employee-email" type="email" value={employeeForm.email} onChange={(event) => setEmployeeForm({ ...employeeForm, email: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="employee-role">Role</label><select id="employee-role" required value={employeeForm.roleId} onChange={(event) => setEmployeeForm({ ...employeeForm, roleId: event.target.value })}><option value="">Select role</option>{roles.map((role) => <option key={role._id} value={role._id}>{role.name}</option>)}</select></div>
+                <div className="form-field">
+                  <label htmlFor="employee-role">Role</label>
+                  <select id="employee-role" required value={employeeForm.roleId} onChange={(event) => setEmployeeForm({ ...employeeForm, roleId: event.target.value })}>
+                    {roles.length === 0
+                      ? <option value="" disabled style={{ color: '#b45309' }}>No roles yet — add one in Manage Roles first</option>
+                      : <option value="">Select role</option>}
+                    {roles.map((role) => <option key={role._id} value={role._id}>{role.name}</option>)}
+                  </select>
+                  {roles.length === 0 ? (
+                    <button type="button" className="inline-link-button" onClick={() => setTab('roles')}>
+                      → Open Manage Roles
+                    </button>
+                  ) : null}
+                </div>
                 <div className="form-field"><label htmlFor="employee-salary">Monthly salary (₹)</label><input id="employee-salary" type="number" min="0" required value={employeeForm.monthlySalary} onChange={(event) => setEmployeeForm({ ...employeeForm, monthlySalary: event.target.value })} /></div>
                 <div className="form-field"><label htmlFor="employee-joining">Joining date</label><input id="employee-joining" type="date" required value={employeeForm.joiningDate} onChange={(event) => setEmployeeForm({ ...employeeForm, joiningDate: event.target.value })} /></div>
                 <div className="form-field"><label htmlFor="employee-address">Address</label><input id="employee-address" value={employeeForm.address} onChange={(event) => setEmployeeForm({ ...employeeForm, address: event.target.value })} /></div>
@@ -471,7 +490,6 @@ export function OwnerStaffPage() {
                   <button className="btn btn-brand" type="submit" disabled={isSaving || roles.length === 0}>{isSaving ? 'Saving...' : editingEmployee ? 'Save changes' : 'Add employee'}</button>
                   {editingEmployee ? <button className="btn btn-line" type="button" onClick={() => { setEditingEmployee(null); setEmployeeForm({ name: '', phone: '', email: '', roleId: '', monthlySalary: '', joiningDate: today(), address: '', notes: '' }) }}>Cancel edit</button> : null}
                 </div>
-                {roles.length === 0 ? <p className="section-sub span-all">Create a staff role below before adding employees.</p> : null}
               </form>
 
               <div className="panel spaced-top">
@@ -488,14 +506,24 @@ export function OwnerStaffPage() {
                 )}
               </div>
 
-              <form className="panel form-grid two-col spaced-top" onSubmit={(event) => void submitRole(event)}>
-                <h3 className="finance-title span-all">{editingRole ? 'Edit staff role' : 'Add staff role'}</h3>
+            </>
+          ) : null}
+
+          {tab === 'roles' ? (
+            <section className="panel form-grid two-col spaced-top">
+              <h3 className="finance-title span-all">Manage Roles</h3>
+              <form className="span-all form-grid two-col" onSubmit={(event) => void submitRole(event)}>
+                <h4 className="finance-title span-all">{editingRole ? 'Edit staff role' : 'Add staff role'}</h4>
                 <div className="form-field"><label htmlFor="role-name">Role name</label><input id="role-name" minLength={2} maxLength={60} required value={roleForm.name} onChange={(event) => setRoleForm({ ...roleForm, name: event.target.value })} /></div>
                 <div className="form-field"><label htmlFor="role-color">Label color</label><input id="role-color" type="color" value={roleForm.color} onChange={(event) => setRoleForm({ ...roleForm, color: event.target.value })} /></div>
                 <div className="table-action-row span-all"><button type="submit" className="btn btn-brand" disabled={isSaving}>{editingRole ? 'Save role' : 'Add role'}</button>{editingRole ? <button type="button" className="btn btn-line" onClick={() => { setEditingRole(null); setRoleForm({ name: '', color: '#6366f1' }) }}>Cancel</button> : null}</div>
-                <div className="span-all">{roles.map((role) => <span key={role._id} className="staff-role-chip" style={{ borderColor: role.color }}><span>{role.name}</span><button type="button" onClick={() => { setEditingRole(role); setRoleForm({ name: role.name, color: role.color }) }}>Edit</button><button type="button" onClick={() => void save(() => deleteStaffRole(role._id), 'Role deleted')}>Delete</button></span>)}</div>
               </form>
-            </>
+              <div className="span-all">
+                {roles.length === 0
+                  ? <p className="section-sub">No roles yet. Add a role to assign it to staff.</p>
+                  : roles.map((role) => <span key={role._id} className="staff-role-chip" style={{ borderColor: role.color }}><span>{role.name}</span><button type="button" onClick={() => { setEditingRole(role); setRoleForm({ name: role.name, color: role.color }) }}>Edit</button><button type="button" onClick={() => void save(() => deleteStaffRole(role._id), 'Role deleted')}>Delete</button></span>)}
+              </div>
+            </section>
           ) : null}
 
           {tab === 'attendance' ? (
