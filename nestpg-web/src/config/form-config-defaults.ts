@@ -12,6 +12,30 @@ export type FormConfig = {
 
 export const FORM_CONFIG_DEFAULTS: FormConfig[] = [
   {
+    formKey: 'auth.register',
+    title: 'Public Registration Form',
+    fields: [
+      { key: 'name', label: 'Name', required: true },
+      { key: 'phone', label: 'Phone', required: true },
+      { key: 'email', label: 'Email', required: true },
+      { key: 'password', label: 'Password', required: true },
+    ],
+  },
+  {
+    formKey: 'auth.ownerRegistration',
+    title: 'Public Owner Registration Details',
+    fields: [
+      { key: 'pgName', label: 'PG Name', required: true },
+      { key: 'area', label: 'Area', required: true },
+      { key: 'pgAddress', label: 'PG Address', required: true },
+      { key: 'rooms', label: 'Rooms', required: true },
+      { key: 'rent', label: 'Monthly rent', required: true },
+      { key: 'amenities', label: 'Amenities (comma separated)', required: false },
+      { key: 'photos', label: 'Photo URLs (comma separated)', required: false },
+      { key: 'description', label: 'Description', required: false },
+    ],
+  },
+  {
     formKey: 'admin.pgs',
     title: 'Admin PG Form',
     fields: [

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import { useFormConfig } from '@/hooks/use-form-config'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/lib/toast'
 
@@ -92,6 +93,8 @@ export function RegisterPage() {
   const { register } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const registerConfig = useFormConfig('auth.register')
+  const ownerRegisterConfig = useFormConfig('auth.ownerRegistration')
   const [role, setRole] = useState<'customer' | 'owner'>('customer')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -199,13 +202,13 @@ export function RegisterPage() {
 
         <div className="auth-input-grid two-col">
           <div>
-            <label>Name</label>
-            <input required value={name} onChange={(event) => setName(event.target.value)} />
+            <label>{registerConfig.getLabel('name', 'Name')}</label>
+            <input required={registerConfig.isRequired('name')} value={name} onChange={(event) => setName(event.target.value)} />
           </div>
           <div>
-            <label>Phone</label>
+            <label>{registerConfig.getLabel('phone', 'Phone')}</label>
             <input
-              required
+              required={registerConfig.isRequired('phone')}
               value={phone}
               maxLength={10}
               inputMode="numeric"
@@ -215,40 +218,53 @@ export function RegisterPage() {
           </div>
         </div>
 
-        <label>Email</label>
-        <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <label>Password</label>
-        <input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+        <label>{registerConfig.getLabel('email', 'Email')}</label>
+        <input required={registerConfig.isRequired('email')} type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <label>{registerConfig.getLabel('password', 'Password')}</label>
+        <input
+          required={registerConfig.isRequired('password')}
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
 
         {role === 'owner' ? (
           <>
             <div className="auth-input-grid two-col">
               <div>
-                <label>PG Name</label>
-                <input required value={pgName} onChange={(event) => setPgName(event.target.value)} />
+                <label>{ownerRegisterConfig.getLabel('pgName', 'PG Name')}</label>
+                <input
+                  required={ownerRegisterConfig.isRequired('pgName')}
+                  value={pgName}
+                  onChange={(event) => setPgName(event.target.value)}
+                />
               </div>
               <div>
-                <label>Area</label>
-                <input required value={area} onChange={(event) => setArea(event.target.value)} />
+                <label>{ownerRegisterConfig.getLabel('area', 'Area')}</label>
+                <input required={ownerRegisterConfig.isRequired('area')} value={area} onChange={(event) => setArea(event.target.value)} />
               </div>
             </div>
-            <label>PG Address</label>
-            <input required value={pgAddress} onChange={(event) => setPgAddress(event.target.value)} />
+            <label>{ownerRegisterConfig.getLabel('pgAddress', 'PG Address')}</label>
+            <input
+              required={ownerRegisterConfig.isRequired('pgAddress')}
+              value={pgAddress}
+              onChange={(event) => setPgAddress(event.target.value)}
+            />
 
             <div className="auth-input-grid two-col">
               <div>
-                <label>Rooms</label>
+                <label>{ownerRegisterConfig.getLabel('rooms', 'Rooms')}</label>
                 <input
-                  required
+                  required={ownerRegisterConfig.isRequired('rooms')}
                   type="number"
                   value={toNumberValue(rooms)}
                   onChange={(event) => setRooms(parseNumberInput(event.target.value))}
                 />
               </div>
               <div>
-                <label>Monthly rent</label>
+                <label>{ownerRegisterConfig.getLabel('rent', 'Monthly rent')}</label>
                 <input
-                  required
+                  required={ownerRegisterConfig.isRequired('rent')}
                   type="number"
                   value={toNumberValue(rent)}
                   onChange={(event) => setRent(parseNumberInput(event.target.value))}
@@ -256,12 +272,27 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <label>Amenities (comma separated)</label>
-            <input value={amenities} onChange={(event) => setAmenities(event.target.value)} placeholder="WiFi, Meals, Laundry" />
-            <label>Photo URLs (comma separated)</label>
-            <input value={photos} onChange={(event) => setPhotos(event.target.value)} placeholder="https://..." />
-            <label>Description</label>
-            <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} />
+            <label>{ownerRegisterConfig.getLabel('amenities', 'Amenities (comma separated)')}</label>
+            <input
+              required={ownerRegisterConfig.isRequired('amenities')}
+              value={amenities}
+              onChange={(event) => setAmenities(event.target.value)}
+              placeholder="WiFi, Meals, Laundry"
+            />
+            <label>{ownerRegisterConfig.getLabel('photos', 'Photo URLs (comma separated)')}</label>
+            <input
+              required={ownerRegisterConfig.isRequired('photos')}
+              value={photos}
+              onChange={(event) => setPhotos(event.target.value)}
+              placeholder="https://..."
+            />
+            <label>{ownerRegisterConfig.getLabel('description', 'Description')}</label>
+            <textarea
+              required={ownerRegisterConfig.isRequired('description')}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={3}
+            />
             <p className="auth-hint">Your owner account remains pending until admin reviews and approves it.</p>
           </>
         ) : null}
