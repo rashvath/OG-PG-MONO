@@ -2,7 +2,17 @@ import bcrypt from 'bcryptjs'
 import mongoose from 'mongoose'
 
 import { connectDb } from '../db/mongoose'
+import { CustomRoleModel } from '../models/CustomRole'
+import { ListingModel } from '../models/Listing'
 import { UserModel } from '../models/User'
+
+const defaultStaffRoles = [
+  { name: 'Manager', color: '#6366F1' },
+  { name: 'Chef', color: '#F59E0B' },
+  { name: 'Guard', color: '#3B82F6' },
+  { name: 'Cleaning Staff', color: '#10B981' },
+  { name: 'Maintenance', color: '#EF4444' },
+]
 
 const seedUsers = [
   {
@@ -46,6 +56,30 @@ async function seedLogins() {
       },
       { upsert: true, setDefaultsOnInsert: true },
     )
+  }
+
+  const demoOwner = await UserModel.findOne({ email: 'owner@nestpg.com' }).select('_id')
+  if (demoOwner) {
+    const demoPg = await ListingModel.findOne({ ownerId: demoOwner._id })
+      .sort({ createdAt: 1, _id: 1 })
+      .select('_id')
+
+    if (demoPg) {
+      for (const role of defaultStaffRoles) {
+        await CustomRoleModel.findOneAndUpdate(
+          { name: role.name, pgId: demoPg._id },
+          {
+            $set: {
+              color: role.color,
+              ownerId: demoOwner._id,
+              createdBy: demoOwner._id,
+            },
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true },
+        )
+      }
+      console.log(`Seeded ${defaultStaffRoles.length} default staff roles for ${demoPg._id}.`)
+    }
   }
 
   console.log('Seeded 3 login users:')

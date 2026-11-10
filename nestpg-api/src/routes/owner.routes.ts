@@ -1,4 +1,6 @@
 import { Router } from 'express'
+import ExcelJS from 'exceljs'
+import { Types } from 'mongoose'
 import { z } from 'zod'
 
 import { auth, type AuthedRequest } from '../middleware/auth'
@@ -250,13 +252,13 @@ const ownerDocumentSchema = z.object({
 
 function toDayStart(value: Date) {
   const next = new Date(value)
-  next.setHours(0, 0, 0, 0)
+  next.setUTCHours(0, 0, 0, 0)
   return next
 }
 
 function toDayEnd(value: Date) {
   const next = new Date(value)
-  next.setHours(23, 59, 59, 999)
+  next.setUTCHours(23, 59, 59, 999)
   return next
 }
 
@@ -264,14 +266,6 @@ function mapToSortedCategoryTotals(source: Map<string, number>) {
   return Array.from(source.entries())
     .sort((a, b) => b[1] - a[1])
     .map(([category, amount]) => ({ category, amount: Number(amount.toFixed(2)) }))
-}
-
-function csvEscape(value: string | number) {
-  const text = String(value ?? '')
-  if (/[,"\n]/.test(text)) {
-    return `"${text.replace(/"/g, '""')}"`
-  }
-  return text
 }
 
 async function computeBalanceSnapshot(ownerId: string, params: { pgId?: string; periodStart: Date; periodEnd: Date }) {
@@ -1499,48 +1493,192 @@ router.get('/balance-sheets/:id/export', auth('owner'), async (req: AuthedReques
   const item = await BalanceSheetModel.findOne({
     _id: req.params.id,
     ownerId,
-  } as Record<string, unknown>).populate('pgId', 'name area')
+  } as Record<string, unknown>).populate<{
+    pgId: { _id: Types.ObjectId; name: string; area?: string } | null
+  }>('pgId', 'name area')
 
   if (!item) {
     res.status(404).json({ message: 'Balance sheet not found' })
     return
   }
 
-  item.lastGeneratedAt = new Date() as unknown as never
+  const generatedAt = new Date()
+  item.lastGeneratedAt = generatedAt
   await item.save()
 
-  const pgName = (item.pgId as unknown as { name?: string } | undefined)?.name ?? 'All PGs'
-  const rows: string[] = []
-  rows.push('Balance Sheet')
-  rows.push(`Title,${csvEscape(item.title)}`)
-  rows.push(`PG,${csvEscape(pgName)}`)
-  rows.push(`Period Start,${csvEscape(item.periodStart.toISOString())}`)
-  rows.push(`Period End,${csvEscape(item.periodEnd.toISOString())}`)
-  rows.push(`Created At,${csvEscape(item.createdAt.toISOString())}`)
-  rows.push(`Last Generated At,${csvEscape(item.lastGeneratedAt.toISOString())}`)
-  rows.push('')
-  rows.push('Totals')
-  rows.push(`Total Income,${csvEscape(item.totalIncome)}`)
-  rows.push(`Total Expense,${csvEscape(item.totalExpense)}`)
-  rows.push(`Net Balance,${csvEscape(item.netBalance)}`)
-  rows.push(`Entries Count,${csvEscape(item.entriesCount)}`)
-  rows.push('')
-  rows.push('Income Breakdown')
-  rows.push('Category,Amount')
-  for (const entry of item.incomeByCategory) {
-    rows.push(`${csvEscape(entry.category)},${csvEscape(entry.amount)}`)
+  const pg = item.pgId
+  const pgName = pg?.name ?? 'All PGs'
+  const ledgerFilter: Record<string, unknown> = {
+    ownerId,
+    entryDate: { $gte: item.periodStart, $lte: item.periodEnd },
   }
-  rows.push('')
-  rows.push('Expense Breakdown')
-  rows.push('Category,Amount')
-  for (const entry of item.expenseByCategory) {
-    rows.push(`${csvEscape(entry.category)},${csvEscape(entry.amount)}`)
+  if (pg?._id) {
+    ledgerFilter.pgId = pg._id
+  }
+  const entries = await LedgerEntryModel.find(ledgerFilter).sort({ entryDate: 1, createdAt: 1 }).lean()
+  const incomeEntries = entries.filter((entry) => entry.entryType === 'income')
+  const expenseEntries = entries.filter((entry) => entry.entryType === 'expense')
+
+  const workbook = new ExcelJS.Workbook()
+  const sheet = workbook.addWorksheet('Balance Sheet')
+  sheet.columns = [
+    { width: 6 },
+    { width: 14 },
+    { width: 32 },
+    { width: 18 },
+    { width: 5 },
+    { width: 16 },
+  ]
+
+  const formatDate = (date: Date) => new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date)
+  const thinBorder: ExcelJS.Borders = {
+    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+    right: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+    diagonal: {},
+  }
+  const mediumBorder = (color: string): ExcelJS.Borders => ({
+    top: { style: 'medium', color: { argb: color } },
+    left: { style: 'medium', color: { argb: color } },
+    bottom: { style: 'medium', color: { argb: color } },
+    right: { style: 'medium', color: { argb: color } },
+    diagonal: {},
+  })
+  const applyThinBorders = (row: ExcelJS.Row) => {
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.border = thinBorder
+    })
+  }
+  const setSectionHeader = (rowNumber: number, title: string, fill: string, color: string) => {
+    sheet.mergeCells(`A${rowNumber}:F${rowNumber}`)
+    const row = sheet.getRow(rowNumber)
+    row.getCell(1).value = title
+    row.height = 23
+    row.getCell(1).font = { bold: true, color: { argb: color } }
+    row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } }
+      cell.border = {
+        bottom: { style: 'medium', color: { argb: color } },
+      }
+    })
+  }
+  const setTableHeader = (rowNumber: number, fill: string, borderColor: string) => {
+    const row = sheet.getRow(rowNumber)
+    row.values = ['#', 'Date', 'Description', 'Category', '', 'Amount (₹)']
+    row.height = 21
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } }
+      cell.font = { bold: true }
+      cell.alignment = { vertical: 'middle' }
+      cell.border = {
+        bottom: { style: 'medium', color: { argb: borderColor } },
+      }
+    })
+    row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }
+    row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' }
+    row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' }
+  }
+  const addEntryRows = (rows: typeof incomeEntries, firstRow: number) => {
+    rows.forEach((entry, index) => {
+      const row = sheet.getRow(firstRow + index)
+      row.values = [
+        index + 1,
+        formatDate(entry.entryDate),
+        entry.residentName || entry.notes || entry.category,
+        entry.category,
+        '',
+        entry.amount,
+      ]
+      applyThinBorders(row)
+      row.getCell(6).numFmt = '#,##0.00'
+      row.getCell(6).alignment = { horizontal: 'right' }
+    })
+    return firstRow + rows.length
+  }
+  const addTotalRow = (rowNumber: number, label: string, amount: number, fill: string, color: string) => {
+    sheet.mergeCells(`A${rowNumber}:E${rowNumber}`)
+    const row = sheet.getRow(rowNumber)
+    row.getCell(1).value = label
+    row.getCell(6).value = amount
+    row.getCell(6).numFmt = '#,##0.00'
+    row.getCell(6).alignment = { horizontal: 'right' }
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.font = { bold: true }
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } }
+      cell.border = {
+        top: { style: 'medium', color: { argb: color } },
+      }
+    })
   }
 
-  const csv = `${rows.join('\n')}\n`
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
-  res.setHeader('Content-Disposition', `attachment; filename=balance-sheet-${item.id}.csv`)
-  res.status(200).send(csv)
+  sheet.mergeCells('A1:F1')
+  sheet.getCell('A1').value = pgName
+  sheet.getCell('A1').font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } }
+  sheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' }
+  sheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } }
+  sheet.getRow(1).height = 30
+
+  sheet.mergeCells('A2:F2')
+  sheet.getCell('A2').value = 'Balance Sheet'
+  sheet.getCell('A2').font = { size: 13, bold: true, color: { argb: 'FFFFFFFF' } }
+  sheet.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' }
+  sheet.getCell('A2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }
+  sheet.getRow(2).height = 25
+
+  sheet.mergeCells('A3:F3')
+  sheet.getCell('A3').value = `Period: ${formatDate(item.periodStart)} – ${formatDate(item.periodEnd)}`
+  sheet.getCell('A3').font = { italic: true }
+  sheet.getCell('A3').alignment = { horizontal: 'center', vertical: 'middle' }
+  sheet.getCell('A3').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } }
+
+  sheet.mergeCells('A4:F4')
+  sheet.getCell('A4').value = `Generated on ${formatDate(generatedAt)}`
+  sheet.getCell('A4').font = { size: 9, color: { argb: 'FF6B7280' } }
+  sheet.getCell('A4').alignment = { horizontal: 'center', vertical: 'middle' }
+  sheet.getRow(5).height = 8
+
+  setSectionHeader(6, 'INCOME', 'FFDCFCE7', 'FF166534')
+  setTableHeader(7, 'FFF0FDF4', 'FF166534')
+  let nextRow = addEntryRows(incomeEntries, 8)
+  const incomeTotalRow = nextRow
+  addTotalRow(incomeTotalRow, 'Total Income', item.totalIncome, 'FFDCFCE7', 'FF166534')
+  nextRow = incomeTotalRow + 2
+
+  setSectionHeader(nextRow, 'EXPENSES', 'FFFEE2E2', 'FF991B1B')
+  setTableHeader(nextRow + 1, 'FFFFF1F2', 'FF991B1B')
+  nextRow = addEntryRows(expenseEntries, nextRow + 2)
+  const expenseTotalRow = nextRow
+  addTotalRow(expenseTotalRow, 'Total Expenses', item.totalExpense, 'FFFEE2E2', 'FF991B1B')
+  const netBalanceRow = expenseTotalRow + 2
+
+  sheet.mergeCells(`A${netBalanceRow}:E${netBalanceRow}`)
+  const netRow = sheet.getRow(netBalanceRow)
+  netRow.getCell(1).value = 'Net Balance'
+  netRow.getCell(6).value = item.netBalance
+  netRow.getCell(6).numFmt = '#,##0.00'
+  netRow.getCell(6).alignment = { horizontal: 'right' }
+  netRow.height = 25
+  const netFill = item.netBalance >= 0 ? 'FFD1FAE5' : 'FFFEE2E2'
+  const netColor = item.netBalance >= 0 ? 'FF065F46' : 'FF991B1B'
+  netRow.eachCell({ includeEmpty: true }, (cell) => {
+    cell.font = { size: 12, bold: true, color: { argb: netColor } }
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: netFill } }
+    cell.border = mediumBorder(netColor)
+  })
+
+  const pgSlug = pgName.trim().replace(/[^a-z\d-]+/gi, '-').replace(/^-+|-+$/g, '') || 'all-pgs'
+  const month = `${item.periodStart.getUTCFullYear()}-${String(item.periodStart.getUTCMonth() + 1).padStart(2, '0')}`
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  res.setHeader('Content-Disposition', `attachment; filename="balance-sheet-${pgSlug}-${month}.xlsx"`)
+  await workbook.xlsx.write(res)
+  res.end()
 })
 
 export default router

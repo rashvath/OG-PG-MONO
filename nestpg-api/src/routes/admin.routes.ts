@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { auth, type AuthedRequest } from '../middleware/auth'
 import { BalanceSheetModel } from '../models/BalanceSheet'
 import { EnquiryModel } from '../models/Enquiry'
+import { EmployeeExpenseModel } from '../models/EmployeeExpense'
+import { EmployeeModel } from '../models/Employee'
 import { BedModel } from '../models/Bed'
 import { LedgerEntryModel } from '../models/LedgerEntry'
 import { ListingModel } from '../models/Listing'
@@ -345,6 +347,55 @@ router.patch('/owners/:ownerId/limits', auth('admin'), async (req, res) => {
 router.get('/users', auth('admin'), async (_req, res) => {
   const items = await UserModel.find().select('-passwordHash').sort({ createdAt: -1 })
   res.json({ items })
+})
+
+router.get('/staff', auth('admin'), async (req, res) => {
+  const parsed = z.object({
+    pgId: z.string().regex(/^[a-f\d]{24}$/i).optional(),
+    ownerId: z.string().regex(/^[a-f\d]{24}$/i).optional(),
+  }).safeParse(req.query)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+  const filter: Record<string, unknown> = {}
+  if (parsed.data.pgId) filter.pgId = parsed.data.pgId
+  if (parsed.data.ownerId) filter.ownerId = parsed.data.ownerId
+  const items = await EmployeeModel.find(filter)
+    .populate('roleId', 'name color')
+    .populate('pgId', 'name area')
+    .populate('ownerId', 'name email')
+    .sort({ createdAt: -1 })
+  res.json({ items })
+})
+
+router.get('/staff/expenses', auth('admin'), async (req, res) => {
+  const parsed = z.object({
+    month: z.coerce.number().int().min(1).max(12).optional(),
+    year: z.coerce.number().int().min(2000).max(2200).optional(),
+  }).refine((value) => Boolean(value.month) === Boolean(value.year), {
+    message: 'Month and year must be provided together',
+  }).safeParse(req.query)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.flatten() })
+    return
+  }
+  const filter: Record<string, unknown> = {}
+  if (parsed.data.month && parsed.data.year) {
+    filter.expenseDate = {
+      $gte: new Date(Date.UTC(parsed.data.year, parsed.data.month - 1, 1)),
+      $lt: new Date(Date.UTC(parsed.data.year, parsed.data.month, 1)),
+    }
+  }
+  const items = await EmployeeExpenseModel.find(filter)
+    .populate('employeeId', 'name phone')
+    .populate('pgId', 'name area')
+    .populate('ownerId', 'name email')
+    .sort({ expenseDate: -1 })
+  res.json({
+    items,
+    totalAmount: items.reduce((total, item) => total + item.amount, 0),
+  })
 })
 
 router.get('/enquiries', auth('admin'), async (_req, res) => {

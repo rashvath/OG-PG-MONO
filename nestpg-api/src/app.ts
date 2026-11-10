@@ -6,6 +6,7 @@ import morgan from 'morgan'
 import adminRoutes from './routes/admin.routes'
 import authRoutes from './routes/auth.routes'
 import emailRoutes from './routes/email.routes'
+import employeeRoutes from './routes/employee.routes'
 import formConfigRoutes from './routes/form-config.routes'
 import listingsRoutes from './routes/listings.routes'
 import ownerInventoryRoutes from './routes/owner-inventory.routes'
@@ -28,6 +29,7 @@ app.use('/api/v1/listings', listingsRoutes)
 app.use('/api/v1/email', emailRoutes)
 app.use('/api/v1/form-configs', formConfigRoutes)
 app.use('/api/v1/owner', ownerInventoryRoutes)
+app.use('/api/v1/owner', employeeRoutes)
 app.use('/api/v1/owner', ownerRoutes)
 app.use('/api/v1/admin', adminRoutes)
 app.use('/api/v1/uploads', uploadsRoutes)
