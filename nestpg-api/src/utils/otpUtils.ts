@@ -25,6 +25,10 @@ export function getOtp(): string {
   return env.otpKeyword
 }
 
+export function getOtpLength(): number {
+  return env.sendOtp ? 6 : env.otpKeyword.length
+}
+
 export async function createAndSendOtp(email: string, purpose: OtpPurpose): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase()
   await OtpModel.deleteMany({ email: normalizedEmail, purpose })

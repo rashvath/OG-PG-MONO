@@ -11,7 +11,7 @@ import { OwnerProfileModel } from '../models/OwnerProfile'
 import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
 import { OtpModel } from '../models/Otp'
 import { UserModel } from '../models/User'
-import { createAndSendOtp, OtpDeliveryError, verifyOtp } from '../utils/otpUtils'
+import { createAndSendOtp, getOtpLength, OtpDeliveryError, verifyOtp } from '../utils/otpUtils'
 
 const router = Router()
 
@@ -210,7 +210,7 @@ router.post('/send-registration-otp', async (req, res) => {
   }
 
   await createAndSendOtp(email, 'registration')
-  res.json({ message: 'OTP sent' })
+  res.json({ message: 'OTP sent', otpLength: getOtpLength() })
 })
 
 router.post('/login', async (req, res) => {
@@ -269,7 +269,10 @@ router.post('/forgot-password', async (req, res) => {
       console.error('Unable to deliver password-reset OTP', error.message)
     }
   }
-  res.json({ message: 'If that email is registered, an OTP has been sent.' })
+  res.json({
+    message: 'If that email is registered, an OTP has been sent.',
+    otpLength: getOtpLength(),
+  })
 })
 
 router.post('/verify-reset-otp', async (req, res) => {
