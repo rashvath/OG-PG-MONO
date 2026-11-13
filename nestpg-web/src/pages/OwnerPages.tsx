@@ -1042,6 +1042,7 @@ export function OwnerResidentsPage() {
               </div>
               <div className="form-field">
                 <label>
+                  {/*  */}
                   {residentLeftConfig.getLabel('leavingDate', 'Leaving date')}
                   {residentLeftConfig.isRequired('leavingDate') ? <span className="required-mark"> *</span> : null}
                 </label>
