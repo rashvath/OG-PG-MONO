@@ -180,6 +180,114 @@ export const FORM_CONFIG_DEFAULTS: FormConfig[] = [
       { key: 'finalSettlementPaid', label: 'Settlement paid', required: false },
     ],
   },
+  {
+    formKey: 'tenant.complaint',
+    title: 'Tenant Complaint Form',
+    fields: [
+      { key: 'title', label: 'Title', required: true },
+      { key: 'description', label: 'Description', required: true },
+    ],
+  },
+  {
+    formKey: 'tenant.paymentProof',
+    title: 'Tenant Payment Proof Form',
+    fields: [
+      { key: 'amount', label: 'Amount', required: true },
+      { key: 'paidForMonth', label: 'Paid month', required: false },
+      { key: 'transactionRef', label: 'Transaction ref', required: false },
+      { key: 'screenshotUpload', label: 'Screenshot upload', required: true },
+      { key: 'notes', label: 'Notes', required: false },
+    ],
+  },
+  {
+    formKey: 'tenant.absence',
+    title: 'Tenant Absence Form',
+    fields: [
+      { key: 'fromDate', label: 'From date', required: true },
+      { key: 'toDate', label: 'To date', required: true },
+      { key: 'reason', label: 'Reason', required: true },
+    ],
+  },
+  {
+    formKey: 'tenant.profileUpdateRequest',
+    title: 'Tenant Profile Update Request Form',
+    fields: [
+      { key: 'name', label: 'Full Name', required: false },
+      { key: 'phone', label: 'Phone Number', required: false },
+      { key: 'email', label: 'Email Address', required: false },
+      { key: 'profileAddress', label: 'Current Address', required: false },
+      { key: 'emergencyContactName', label: 'Emergency Contact Name', required: false },
+      { key: 'emergencyContactPhone', label: 'Emergency Contact Phone', required: false },
+      { key: 'notes', label: 'Reason / Additional Notes', required: false },
+    ],
+  },
+  {
+    formKey: 'owner.staff.employee',
+    title: 'Owner Staff Employee Form',
+    fields: [
+      { key: 'name', label: 'Name', required: true },
+      { key: 'phone', label: 'Phone', required: true },
+      { key: 'email', label: 'Email', required: false },
+      { key: 'roleId', label: 'Role', required: true },
+      { key: 'monthlySalary', label: 'Monthly salary', required: true },
+      { key: 'joiningDate', label: 'Joining date', required: true },
+      { key: 'address', label: 'Address', required: false },
+      { key: 'notes', label: 'Notes', required: false },
+    ],
+  },
+  {
+    formKey: 'owner.staff.role',
+    title: 'Owner Staff Role Form',
+    fields: [
+      { key: 'name', label: 'Role name', required: true },
+      { key: 'color', label: 'Role color', required: true },
+    ],
+  },
+  {
+    formKey: 'owner.staff.attendance',
+    title: 'Owner Staff Attendance Form',
+    fields: [
+      { key: 'date', label: 'Attendance date', required: true },
+      { key: 'status', label: 'Status', required: true },
+      { key: 'checkIn', label: 'Check in', required: false },
+      { key: 'checkOut', label: 'Check out', required: false },
+    ],
+  },
+  {
+    formKey: 'owner.staff.expense',
+    title: 'Owner Staff Expense Form',
+    fields: [
+      { key: 'employeeId', label: 'Employee', required: true },
+      { key: 'amount', label: 'Amount', required: true },
+      { key: 'description', label: 'Description', required: true },
+      { key: 'category', label: 'Category', required: true },
+      { key: 'expenseDate', label: 'Expense date', required: true },
+    ],
+  },
+  {
+    formKey: 'owner.staff.leave',
+    title: 'Owner Staff Leave Form',
+    fields: [
+      { key: 'employeeId', label: 'Employee', required: true },
+      { key: 'startDate', label: 'Start date', required: true },
+      { key: 'endDate', label: 'End date', required: true },
+      { key: 'leaveType', label: 'Leave type', required: true },
+      { key: 'reason', label: 'Reason', required: false },
+    ],
+  },
+  {
+    formKey: 'owner.staff.salary',
+    title: 'Owner Staff Salary Form',
+    fields: [
+      { key: 'employeeId', label: 'Employee', required: true },
+      { key: 'month', label: 'Month', required: true },
+      { key: 'year', label: 'Year', required: true },
+      { key: 'deductions', label: 'Deductions', required: false },
+      { key: 'bonuses', label: 'Bonuses', required: false },
+      { key: 'paidAt', label: 'Paid at', required: true },
+      { key: 'paymentMode', label: 'Payment mode', required: true },
+    ],
+  },
 ]
 
 export function getDefaultFormConfig(formKey: string) {
