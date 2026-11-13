@@ -11,6 +11,7 @@ import formConfigRoutes from './routes/form-config.routes'
 import listingsRoutes from './routes/listings.routes'
 import ownerInventoryRoutes from './routes/owner-inventory.routes'
 import ownerRoutes from './routes/owner.routes'
+import tenantRoutes from './routes/tenant.routes'
 import uploadsRoutes from './routes/uploads.routes'
 
 const app: Express = express()
@@ -33,5 +34,6 @@ app.use('/api/v1/owner', employeeRoutes)
 app.use('/api/v1/owner', ownerRoutes)
 app.use('/api/v1/admin', adminRoutes)
 app.use('/api/v1/uploads', uploadsRoutes)
+app.use('/api/v1', tenantRoutes)
 
 export default app

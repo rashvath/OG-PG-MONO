@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'owner' | 'admin'
+export type Role = 'customer' | 'owner' | 'admin' | 'tenant'
 
 export type ListingStatus = 'pending' | 'live' | 'suspended' | 'rejected'
 

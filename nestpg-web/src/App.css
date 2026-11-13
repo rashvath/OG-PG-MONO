@@ -182,3 +182,19 @@
     border-right-color: var(--border);
   }
 }
+
+.tenant-portal {
+  display: grid;
+  gap: 24px;
+}
+
+.tenant-form-card {
+  display: grid;
+  gap: 10px;
+}
+
+.tenant-inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

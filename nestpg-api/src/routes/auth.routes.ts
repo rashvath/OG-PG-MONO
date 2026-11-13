@@ -5,8 +5,10 @@ import { z } from 'zod'
 
 import { env } from '../config/env'
 import { auth, type AuthedRequest } from '../middleware/auth'
+import { ListingModel } from '../models/Listing'
 import { OwnerApplicationModel } from '../models/OwnerApplication'
 import { OwnerProfileModel } from '../models/OwnerProfile'
+import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
 import { UserModel } from '../models/User'
 
 const router = Router()
@@ -50,7 +52,8 @@ const registerSchema = z.object({
   email: z.string().email(),
   phone: z.string().regex(PHONE_10_REGEX, 'Mobile number must be exactly 10 digits'),
   password: z.string().min(6),
-  role: z.enum(['customer', 'owner']).default('customer'),
+  role: z.enum(['customer', 'owner', 'tenant']).default('customer'),
+  pgId: z.string().optional(),
   pgName: z.string().optional(),
   pgAddress: z.string().optional(),
   area: z.string().optional(),
@@ -137,6 +140,41 @@ router.post('/register', async (req, res) => {
     return
   }
 
+  if (parsed.data.role === 'tenant') {
+    if (!parsed.data.pgId) {
+      await UserModel.findByIdAndDelete(user.id)
+      res.status(400).json({ message: 'PG selection is required for tenant registration' })
+      return
+    }
+
+    const listing = await ListingModel.findOne({ _id: parsed.data.pgId, status: 'live' }).select('name').lean()
+    if (!listing) {
+      await UserModel.findByIdAndDelete(user.id)
+      res.status(404).json({ message: 'Selected PG not found' })
+      return
+    }
+
+    const assignment = await PgOwnerAssignmentModel.findOne({ pgId: parsed.data.pgId }).select('ownerId').lean()
+    if (!assignment?.ownerId) {
+      await UserModel.findByIdAndDelete(user.id)
+      res.status(400).json({ message: 'Selected PG is not assigned to an owner yet' })
+      return
+    }
+
+    user.role = 'tenant'
+    user.set('tenantApprovalStatus', 'pending')
+    user.set('tenantPgId', parsed.data.pgId)
+    user.set('tenantOwnerId', assignment.ownerId)
+    await user.save()
+
+    res.status(201).json({
+      id: user.id,
+      status: 'pending_approval',
+      message: `Tenant registration submitted for ${listing.name}. Awaiting owner/admin approval.`,
+    })
+    return
+  }
+
   const token = jwt.sign({ sub: user.id, role: user.role }, env.jwtSecret, { expiresIn: '1h' })
   res.status(201).json({
     id: user.id,
@@ -171,6 +209,11 @@ router.post('/login', async (req, res) => {
       res.status(403).json({ message: 'Owner account is pending admin approval.' })
       return
     }
+  }
+
+  if (user.role === 'tenant' && user.get('tenantApprovalStatus') !== 'approved') {
+    res.status(403).json({ message: 'Tenant account is pending approval by owner/admin.' })
+    return
   }
 
   const token = jwt.sign({ sub: user.id, role: user.role }, env.jwtSecret, { expiresIn: '1h' })

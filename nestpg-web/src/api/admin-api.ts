@@ -38,7 +38,7 @@ export type AdminUser = {
   _id: string
   name: string
   email: string
-  role: 'customer' | 'owner' | 'admin'
+  role: 'customer' | 'owner' | 'admin' | 'tenant'
   status: 'active' | 'blocked'
 }
 

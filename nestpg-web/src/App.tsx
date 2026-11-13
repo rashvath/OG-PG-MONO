@@ -18,6 +18,28 @@ const ListingsPage = lazy(() => import('@/pages/ListingsPage').then((m) => ({ de
 const PgDetailPage = lazy(() => import('@/pages/PgDetailPage').then((m) => ({ default: m.PgDetailPage })))
 const LoginPage = lazy(() => import('@/pages/AuthPages').then((m) => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() => import('@/pages/AuthPages').then((m) => ({ default: m.RegisterPage })))
+const TenantOverviewPage = lazy(() => import('./pages/tenant/TenantOverviewPage').then((m) => ({ default: m.TenantOverviewPage })))
+const TenantComplaintsPage = lazy(() => import('./pages/tenant/TenantComplaintsPage').then((m) => ({ default: m.TenantComplaintsPage })))
+const TenantPaymentsPage = lazy(() => import('./pages/tenant/TenantPaymentsPage').then((m) => ({ default: m.TenantPaymentsPage })))
+const TenantAbsencesPage = lazy(() => import('./pages/tenant/TenantAbsencesPage').then((m) => ({ default: m.TenantAbsencesPage })))
+const TenantProfileRequestsPage = lazy(() =>
+  import('@/pages/tenant/TenantProfileRequestsPage').then((m) => ({ default: m.TenantProfileRequestsPage })),
+)
+const TenantReviewApprovalsPage = lazy(() =>
+  import('./pages/tenant-review/TenantReviewApprovalsPage').then((m) => ({ default: m.TenantReviewApprovalsPage })),
+)
+const TenantReviewComplaintsPage = lazy(() =>
+  import('./pages/tenant-review/TenantReviewComplaintsPage').then((m) => ({ default: m.TenantReviewComplaintsPage })),
+)
+const TenantReviewPaymentsPage = lazy(() =>
+  import('./pages/tenant-review/TenantReviewPaymentsPage').then((m) => ({ default: m.TenantReviewPaymentsPage })),
+)
+const TenantReviewAbsencesPage = lazy(() =>
+  import('./pages/tenant-review/TenantReviewAbsencesPage').then((m) => ({ default: m.TenantReviewAbsencesPage })),
+)
+const TenantReviewProfilesPage = lazy(() =>
+  import('@/pages/tenant-review/TenantReviewProfilesPage').then((m) => ({ default: m.TenantReviewProfilesPage })),
+)
 
 const OwnerOverviewPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerOverviewPage })))
 const OwnerAddPgPage = lazy(() => import('@/pages/OwnerPages').then((m) => ({ default: m.OwnerAddPgPage })))
@@ -76,6 +98,11 @@ function App() {
                             { label: 'Balance Sheet', to: '/owner/balance-sheet' },
                             { label: 'Documents', to: '/owner/documents' },
                             { label: 'Staff', to: '/owner/staff' },
+                            { label: 'Tenant Approvals', to: '/owner/tenant-review/approvals' },
+                            { label: 'Tenant Complaints', to: '/owner/tenant-review/complaints' },
+                            { label: 'Tenant Payments', to: '/owner/tenant-review/payments' },
+                            { label: 'Tenant Absences', to: '/owner/tenant-review/absences' },
+                            { label: 'Tenant Profile Updates', to: '/owner/tenant-review/profiles' },
                           ]}
                         />
                       }
@@ -88,6 +115,39 @@ function App() {
                       <Route path="balance-sheet" element={<OwnerBalanceSheetPage />} />
                       <Route path="documents" element={<OwnerDocumentsPage />} />
                       <Route path="staff" element={<OwnerStaffPage />} />
+                      <Route path="tenant-review">
+                        <Route index element={<Navigate to="approvals" replace />} />
+                        <Route path="approvals" element={<TenantReviewApprovalsPage />} />
+                        <Route path="complaints" element={<TenantReviewComplaintsPage />} />
+                        <Route path="payments" element={<TenantReviewPaymentsPage />} />
+                        <Route path="absences" element={<TenantReviewAbsencesPage />} />
+                        <Route path="profiles" element={<TenantReviewProfilesPage />} />
+                      </Route>
+                    </Route>
+                  </Route>
+
+                  <Route element={<ProtectedRoute allow="tenant" />}>
+                    <Route
+                      path="/tenant"
+                      element={
+                        <DashboardLayout
+                          title="Tenant"
+                          links={[
+                            { label: 'Overview', to: '/tenant/overview' },
+                            { label: 'Complaints', to: '/tenant/complaints' },
+                            { label: 'Rent Payments', to: '/tenant/payments' },
+                            { label: 'Absences', to: '/tenant/absences' },
+                            { label: 'Profile Requests', to: '/tenant/profile-requests' },
+                          ]}
+                        />
+                      }
+                    >
+                      <Route index element={<Navigate to="overview" replace />} />
+                      <Route path="overview" element={<TenantOverviewPage />} />
+                      <Route path="complaints" element={<TenantComplaintsPage />} />
+                      <Route path="payments" element={<TenantPaymentsPage />} />
+                      <Route path="absences" element={<TenantAbsencesPage />} />
+                      <Route path="profile-requests" element={<TenantProfileRequestsPage />} />
                     </Route>
                   </Route>
 
@@ -107,6 +167,11 @@ function App() {
                             { label: 'Users', to: '/admin/users' },
                             { label: 'Form Config', to: '/admin/form-config' },
                             { label: 'Balance Sheet', to: '/admin/balance-sheet' },
+                            { label: 'Tenant Approvals', to: '/admin/tenant-review/approvals' },
+                            { label: 'Tenant Complaints', to: '/admin/tenant-review/complaints' },
+                            { label: 'Tenant Payments', to: '/admin/tenant-review/payments' },
+                            { label: 'Tenant Absences', to: '/admin/tenant-review/absences' },
+                            { label: 'Tenant Profile Updates', to: '/admin/tenant-review/profiles' },
                           ]}
                         />
                       }
@@ -120,6 +185,14 @@ function App() {
                       <Route path="users" element={<AdminUsersPage />} />
                       <Route path="form-config" element={<AdminFormConfigPage />} />
                       <Route path="balance-sheet" element={<AdminBalanceSheetPage />} />
+                      <Route path="tenant-review">
+                        <Route index element={<Navigate to="approvals" replace />} />
+                        <Route path="approvals" element={<TenantReviewApprovalsPage />} />
+                        <Route path="complaints" element={<TenantReviewComplaintsPage />} />
+                        <Route path="payments" element={<TenantReviewPaymentsPage />} />
+                        <Route path="absences" element={<TenantReviewAbsencesPage />} />
+                        <Route path="profiles" element={<TenantReviewProfilesPage />} />
+                      </Route>
                     </Route>
                   </Route>
 

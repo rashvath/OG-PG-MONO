@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'owner' | 'admin'
+export type Role = 'customer' | 'owner' | 'admin' | 'tenant'
 
 export interface JwtPayload {
   sub: string

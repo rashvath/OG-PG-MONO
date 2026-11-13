@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import { Router } from 'express'
 import { z } from 'zod'
 
+import { env } from '../config/env'
 import { auth, type AuthedRequest } from '../middleware/auth'
 import { BedModel } from '../models/Bed'
 import { FloorModel } from '../models/Floor'
@@ -11,6 +12,7 @@ import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
 import { ResidentActivityModel } from '../models/ResidentActivity'
 import { ResidentModel } from '../models/Resident'
 import { RoomModel } from '../models/Room'
+import { sendEmailReusable } from '../shared/email/send-email-reusable'
 
 const router = Router()
 
@@ -108,6 +110,30 @@ async function syncListingInventory(pgId: string) {
     totalFloors,
     availabilityBySharing,
   })
+}
+
+async function sendTenantRegistrationInvite(payload: {
+  email: string
+  fullName: string
+  pgName: string
+}) {
+  if (!env.gmailUser || !env.gmailAppPassword) {
+    return
+  }
+
+  await sendEmailReusable(
+    {
+      to: payload.email,
+      subject: `Complete your tenant registration for ${payload.pgName}`,
+      text: `Hi ${payload.fullName},\n\nYou have been added as a tenant for ${payload.pgName}. Please register at the tenant portal using this same email and select this PG. Your tenant login is enabled after owner/admin approval.\n\n- OG PG Team`,
+      html: `<p>Hi ${payload.fullName},</p><p>You have been added as a tenant for <strong>${payload.pgName}</strong>.</p><p>Please register at the tenant portal using this same email and select this PG.</p><p>Your tenant login is enabled after owner/admin approval.</p><p>- OG PG Team</p>`,
+    },
+    {
+      user: env.gmailUser,
+      appPassword: env.gmailAppPassword,
+      ...(env.gmailFrom ? { from: env.gmailFrom } : {}),
+    },
+  )
 }
 
 async function buildInventoryPayload(pgId: string, filters?: {
@@ -963,6 +989,16 @@ router.post('/pgs/:pgId/beds/:bedId/assign-tenant', auth('owner'), async (req: A
     await syncListingInventory(pgId)
 
     const resident = await ResidentModel.findById(createdResidentId)
+
+    if (parsed.data.email) {
+      const listing = await ListingModel.findById(pgId).select('name').lean()
+      await sendTenantRegistrationInvite({
+        email: parsed.data.email,
+        fullName: parsed.data.fullName,
+        pgName: listing?.name ?? 'your selected PG',
+      })
+    }
+
     res.status(201).json(resident)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to assign tenant'

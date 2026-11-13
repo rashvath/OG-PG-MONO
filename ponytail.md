@@ -128,6 +128,118 @@ No unused imports or dead code.
 Edge cases have been considered.
 10. Final AI Agent Execution Rule
 
+
+## 11. Form Presentation & Dialog-Based Forms
+
+All forms across the application must follow a consistent, clean, and user-friendly presentation.
+
+### Mandatory Rules
+
+1. **Forms must open inside dialogs or modals.**
+   - Do not display forms directly across the entire page or stretch them to full-screen width unnecessarily.
+   - Use properly sized dialogs with appropriate padding, spacing, and alignment.
+   - Keep forms centered and responsive.
+   - Use a maximum width appropriate to the number of fields and complexity of the form.
+
+2. **Consistent Form Structure**
+   - Organize related fields into logical sections.
+   - Maintain consistent spacing between labels, inputs, and form groups.
+   - Use clear field labels and meaningful placeholders.
+   - Required fields must display a `*` indicator.
+   - Keep submit and cancel actions clearly visible.
+   - Long forms should have a scrollable dialog body while keeping the footer actions accessible.
+
+3. **Dialog Behavior**
+   - Open forms only when the user triggers an Add, Edit, Create, or similar action.
+   - Support closing through the close icon and cancel button.
+   - Prevent accidental closing when unsaved changes exist, where appropriate.
+   - Ensure dialogs appear above other UI elements with correct z-index management.
+   - Do not allow dialogs to overlap with navigation, headers, or other modal elements.
+   - On mobile devices, dialogs must adapt to the available screen size.
+
+4. **Form Validation & Error Handling**
+   - Display validation errors directly below the corresponding input.
+   - Use clear, user-friendly error messages.
+   - Do not display raw API errors or technical error messages to users.
+   - Highlight invalid fields without breaking the form layout.
+   - Clear or update validation errors when the user corrects the input.
+   - Prevent duplicate submissions.
+   - Display loading indicators during submission.
+   - Show meaningful success and failure notifications.
+
+5. **Avoid Poor Form Experiences**
+   - Never render unstyled, stretched, or full-page forms when a dialog is appropriate.
+   - Avoid excessive fields in a single section.
+   - Do not allow validation messages to overlap other fields.
+   - Do not hide submit buttons below inaccessible content.
+   - Do not reset entered values unnecessarily when validation fails.
+
+---
+
+## 12. UI Cleanliness, Layout Consistency & Visual Quality
+
+The application must maintain a professional, clean, organized, and visually consistent interface after every implementation or modification.
+
+### Mandatory UI Rules
+
+1. **No Overlapping Elements**
+   - No text, headings, navigation items, buttons, cards, dialogs, dropdowns, or other components should overlap.
+   - Ensure sufficient spacing between all elements.
+   - Prevent content from being clipped, hidden, or rendered outside its container.
+   - Check positioning and stacking contexts carefully.
+
+2. **Prevent UI Congestion**
+   - Do not squeeze too many elements into a single section.
+   - Avoid unnecessary borders, dividers, cards, and decorative elements.
+   - Maintain appropriate whitespace throughout the application.
+   - Use logical grouping and visual hierarchy.
+   - Keep layouts easy to understand, even for non-technical users.
+
+3. **Consistent Design**
+   - Maintain consistent typography, font sizes, colors, spacing, border radius, shadows, and component dimensions.
+   - Reuse existing design system components.
+   - Ensure all pages follow the same visual language.
+   - Avoid introducing unrelated styles or inconsistent UI patterns.
+
+4. **Responsive Layout**
+   - Verify the interface on mobile, tablet, laptop, and desktop.
+   - Ensure forms, tables, cards, navigation, and dialogs adapt properly.
+   - Prevent horizontal scrolling unless specifically required.
+   - Handle long text, empty states, and dynamic content gracefully.
+
+5. **After Every UI Modification**
+   - Inspect the entire affected page, not just the newly implemented component.
+   - Check whether existing components have shifted, overlapped, or become misaligned.
+   - Verify that headers, navigation, sidebars, page sections, and content containers remain properly positioned.
+   - Fix any visual regressions introduced by the changes.
+   - Ensure the final interface looks intentional and production-ready.
+
+6. **User Experience**
+   - Make every interaction intuitive and predictable.
+   - Use clear button labels and appropriate action placement.
+   - Provide loading, empty, success, and error states.
+   - Avoid unnecessary visual complexity.
+   - Ensure users can understand and complete workflows without technical knowledge.
+
+### Mandatory UI Review Checklist
+
+Before completing any UI-related task, verify:
+
+- No overlapping or clipped elements.
+- No congested or excessively crowded sections.
+- All forms open in appropriately sized dialogs.
+- No stretched or poorly positioned form layouts.
+- No validation errors overlapping inputs or other content.
+- Consistent spacing and alignment.
+- Proper responsive behavior.
+- Correct modal and dropdown positioning.
+- No broken navigation or page layouts.
+- All buttons and interactions work correctly.
+- Existing pages and components remain visually consistent.
+
+**FINAL RULE:**
+
+Every UI implementation must look clean, organized, responsive, and production-ready. Never consider a UI task complete simply because the functionality works. The visual layout, spacing, alignment, responsiveness, form behavior, and overall user experience must also be verified and corrected before reporting completion.
 For every development task, follow this sequence:
 
 Understand the existing project structure.

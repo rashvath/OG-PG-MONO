@@ -65,7 +65,6 @@ main {
   margin: 0 auto;
   padding: 0 16px;
 }
-
 .site-header {
   position: sticky;
   top: 0;
@@ -76,8 +75,8 @@ main {
 }
 
 .nav-row {
-  min-height: 78px;
   display: flex;
+  min-height: 78px;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -258,6 +257,101 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.tenant-section-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.tenant-form-card {
+  display: grid;
+  gap: 10px;
+}
+
+.tenant-profile-field-row {
+  border: 1px solid color-mix(in srgb, var(--line) 76%, white);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--warm-white) 90%, white);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.tenant-profile-select-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--soft-black);
+  font-size: 0.96rem;
+}
+
+.tenant-profile-select-label input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--terracotta-deep);
+  flex: 0 0 auto;
+}
+
+.tenant-profile-field-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tenant-profile-field-grid > div {
+  display: grid;
+  gap: 6px;
+}
+
+.tenant-profile-field-grid > div > label {
+  color: var(--warm-gray);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tenant-profile-field-grid input[disabled] {
+  color: var(--warm-gray);
+  background: color-mix(in srgb, var(--warm-white) 80%, white);
+}
+
+.tenant-history-lines {
+  display: grid;
+  gap: 4px;
+}
+
+.tenant-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.tenant-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 920px) {
+  .tenant-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-profile-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-inline-actions {
+    width: 100%;
+  }
+
+  .tenant-inline-actions .btn {
+    flex: 1 1 140px;
+  }
 }
 
 .btn {
@@ -1021,6 +1115,12 @@ textarea {
   font: 500 0.9rem Inter, system-ui, sans-serif;
 }
 
+input[type='checkbox'],
+input[type='radio'] {
+  width: auto;
+  padding: 0;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -1035,6 +1135,7 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 input[type='number'] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
@@ -2119,12 +2220,13 @@ body.dashboard-lock-scroll .dashboard-content {
 }
 
 .dashboard-content {
-  padding: 22px 10px 30px;
+  padding: 24px 16px 34px;
   overflow-x: hidden;
 }
 
 .dashboard-content-inner {
   width: 100%;
+  max-width: 1460px;
   margin: 0 auto;
 }
 
@@ -2188,6 +2290,105 @@ body.dashboard-lock-scroll .side-menu {
 .side-menu-links a.active svg,
 .side-menu-links a:hover svg {
   color: var(--terracotta-deep);
+}
+
+.dashboard-content .panel {
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--line) 78%, white);
+  background: color-mix(in srgb, var(--warm-white) 94%, white);
+  box-shadow: 0 8px 22px rgba(24, 19, 13, 0.04);
+  padding: 18px 18px;
+}
+
+.dashboard-content .table-wrap {
+  border: 1px solid color-mix(in srgb, var(--line) 68%, white);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.dashboard-content th,
+.dashboard-content td {
+  padding: 12px 12px;
+}
+
+.dashboard-content th {
+  background: color-mix(in srgb, var(--warm-white) 88%, white);
+}
+
+.tenant-page-shell {
+  display: grid;
+  gap: 16px;
+}
+
+.tenant-page-header {
+  display: grid;
+  gap: 12px;
+}
+
+.tenant-page-title {
+  margin: 0;
+  font: 600 clamp(1.5rem, 2.3vw, 2rem) Inter, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--soft-black);
+}
+
+.tenant-page-description {
+  margin: 0;
+  color: var(--warm-gray);
+  font-size: 0.98rem;
+}
+
+.tenant-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tenant-history-card {
+  display: grid;
+  gap: 10px;
+}
+
+.tenant-history-title {
+  margin: 0;
+  font: 600 1.18rem Inter, system-ui, sans-serif;
+  color: var(--soft-black);
+}
+
+.tenant-table {
+  min-width: 680px;
+}
+
+.tenant-empty-state {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  border: 1px dashed color-mix(in srgb, var(--line) 78%, white);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warm-white) 80%, white);
+  padding: 18px;
+}
+
+.tenant-empty-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--terracotta-deep);
+  background: color-mix(in srgb, var(--terracotta) 14%, white);
+}
+
+.tenant-empty-title {
+  margin: 0;
+  font: 600 1rem Inter, system-ui, sans-serif;
+}
+
+.tenant-empty-description {
+  margin: 0;
+  color: var(--warm-gray);
+  font-size: 0.92rem;
 }
 
 .page-heading {
@@ -2876,13 +3077,12 @@ body.dashboard-lock-scroll .side-menu {
 
 .inventory-filter-drawer-head,
 .app-filter-drawer-head {
-  padding: 16px 16px 14px;
+  padding: 24px 16px 34px;
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-
 .inventory-filter-drawer-head h3,
 .app-filter-drawer-head h3 {
   margin: 0;
@@ -2895,6 +3095,7 @@ body.dashboard-lock-scroll .side-menu {
   display: grid;
   gap: 12px;
   align-content: start;
+  background: color-mix(in srgb, var(--warm-white) 96%, white);
 }
 
 .inventory-filter-drawer-foot,
@@ -2902,20 +3103,20 @@ body.dashboard-lock-scroll .side-menu {
   border-top: 1px solid var(--line);
   padding: 12px 16px;
   display: flex;
-  justify-content: space-between;
   gap: 10px;
   background: #fff;
 }
 
 .inventory-filter-drawer .inventory-vacancy-toggle,
 .app-filter-drawer .inventory-vacancy-toggle {
-  min-height: 42px;
+  padding: 11px 12px;
 }
 
 @keyframes inventory-drawer-in {
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -3661,6 +3862,19 @@ th {
 
   .dashboard-content-inner {
     width: 100%;
+  }
+
+  .tenant-page-title {
+    font-size: 1.38rem;
+  }
+
+  .dashboard-content .panel {
+    padding: 14px 12px;
+  }
+
+  .dashboard-content th,
+  .dashboard-content td {
+    padding: 10px 8px;
   }
 
   .side-menu {

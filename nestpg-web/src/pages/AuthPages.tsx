@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import { fetchLiveListings } from '@/api/listings-api'
 import { useFormConfig } from '@/hooks/use-form-config'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/lib/toast'
@@ -34,7 +35,15 @@ export function LoginPage() {
     try {
       const user = await login(email, password)
       toast.success(`Welcome back, ${user.name}`)
-      navigate(user.role === 'owner' ? '/owner' : user.role === 'admin' ? '/admin' : '/listings')
+      navigate(
+        user.role === 'owner'
+          ? '/owner'
+          : user.role === 'admin'
+            ? '/admin'
+            : user.role === 'tenant'
+              ? '/tenant'
+              : '/listings',
+      )
     } catch (requestError) {
       const message = requestError instanceof Error ? requestError.message : 'Unable to log in'
       setError(message)
@@ -95,7 +104,7 @@ export function RegisterPage() {
   const navigate = useNavigate()
   const registerConfig = useFormConfig('auth.register')
   const ownerRegisterConfig = useFormConfig('auth.ownerRegistration')
-  const [role, setRole] = useState<'customer' | 'owner'>('customer')
+  const [role, setRole] = useState<'customer' | 'owner' | 'tenant'>('customer')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -108,8 +117,20 @@ export function RegisterPage() {
   const [amenities, setAmenities] = useState('')
   const [photos, setPhotos] = useState('')
   const [description, setDescription] = useState('')
+  const [tenantListings, setTenantListings] = useState<Array<{ id: string; name: string; area: string }>>([])
+  const [selectedTenantPgId, setSelectedTenantPgId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetchLiveListings()
+      .then((items) => {
+        setTenantListings(items.map((item) => ({ id: item.id, name: item.name, area: item.area })))
+      })
+      .catch(() => {
+        setTenantListings([])
+      })
+  }, [])
 
   const toNumberValue = (value: number) => (value === 0 ? '' : String(value))
   const parseNumberInput = (value: string) => {
@@ -132,6 +153,7 @@ export function RegisterPage() {
         email,
         password,
         role,
+        ...(role === 'tenant' ? { pgId: selectedTenantPgId } : {}),
         ...(role === 'owner'
           ? {
               pgName,
@@ -154,7 +176,9 @@ export function RegisterPage() {
       toast.success(
         role === 'owner'
           ? 'Application submitted. Wait for admin approval before owner login.'
-          : 'Account created successfully. Please log in.',
+          : role === 'tenant'
+            ? 'Tenant request submitted. Wait for owner/admin approval before login.'
+            : 'Account created successfully. Please log in.',
       )
       navigate('/login')
     } catch (requestError) {
@@ -170,7 +194,7 @@ export function RegisterPage() {
     <section className="auth-shell app-wrap">
       <aside className="auth-showcase panel">
         <p className="eyebrow">Join OG PG</p>
-        <h2>Create a customer account or apply as a PG owner.</h2>
+        <h2>Create a customer account, apply as owner, or request tenant access.</h2>
         <p className="section-sub">
           Owner applications go to admin approval. Only approved owners can manage assigned PGs.
         </p>
@@ -197,6 +221,13 @@ export function RegisterPage() {
             onClick={() => setRole('owner')}
           >
             PG Owner
+          </button>
+          <button
+            type="button"
+            className={`auth-role-btn ${role === 'tenant' ? 'active' : ''}`}
+            onClick={() => setRole('tenant')}
+          >
+            Tenant
           </button>
         </div>
 
@@ -227,6 +258,25 @@ export function RegisterPage() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
+
+        {role === 'tenant' ? (
+          <>
+            <label>Select PG name</label>
+            <select
+              required
+              value={selectedTenantPgId}
+              onChange={(event) => setSelectedTenantPgId(event.target.value)}
+            >
+              <option value="">Select a PG</option>
+              {tenantListings.map((listing) => (
+                <option key={listing.id} value={listing.id}>
+                  {listing.name} - {listing.area}
+                </option>
+              ))}
+            </select>
+            <p className="auth-hint">Your tenant account will be activated after owner/admin approval.</p>
+          </>
+        ) : null}
 
         {role === 'owner' ? (
           <>
@@ -300,7 +350,7 @@ export function RegisterPage() {
         {error ? <p className="form-error">{error}</p> : null}
 
         <button className="btn btn-brand auth-submit" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : role === 'owner' ? 'Submit application' : 'Create account'}
+          {isSubmitting ? 'Creating account...' : role === 'owner' ? 'Submit application' : role === 'tenant' ? 'Request tenant access' : 'Create account'}
         </button>
 
         <p className="auth-switch">

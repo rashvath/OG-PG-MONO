@@ -24,12 +24,14 @@ export function Header() {
       items.push({ to: '/owner', label: 'Owner' })
     } else if (role === 'admin') {
       items.push({ to: '/admin', label: 'Admin' })
+    } else if (role === 'tenant') {
+      items.push({ to: '/tenant', label: 'Tenant' })
     }
 
     return items
   }, [role])
 
-  const ctaTarget = role === 'owner' ? '/owner/add' : '/register'
+  const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register'
 
   return (
     <header className="site-header">

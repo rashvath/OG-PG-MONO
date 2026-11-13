@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs'
 import { Types } from 'mongoose'
 import { z } from 'zod'
 
+import { env } from '../config/env'
 import { auth, type AuthedRequest } from '../middleware/auth'
 import { BalanceSheetModel } from '../models/BalanceSheet'
 import { BedModel } from '../models/Bed'
@@ -16,6 +17,7 @@ import { ResidentActivityModel } from '../models/ResidentActivity'
 import { ResidentModel } from '../models/Resident'
 import { RoomModel } from '../models/Room'
 import { validateRequiredFields } from '../services/form-config.service'
+import { sendEmailReusable } from '../shared/email/send-email-reusable'
 
 const router = Router()
 
@@ -266,6 +268,30 @@ function mapToSortedCategoryTotals(source: Map<string, number>) {
   return Array.from(source.entries())
     .sort((a, b) => b[1] - a[1])
     .map(([category, amount]) => ({ category, amount: Number(amount.toFixed(2)) }))
+}
+
+async function sendTenantRegistrationInvite(payload: {
+  email: string
+  fullName: string
+  pgName: string
+}) {
+  if (!env.gmailUser || !env.gmailAppPassword) {
+    return
+  }
+
+  await sendEmailReusable(
+    {
+      to: payload.email,
+      subject: `Complete your tenant registration for ${payload.pgName}`,
+      text: `Hi ${payload.fullName},\n\nYou have been added as a tenant for ${payload.pgName}. Please register at the tenant portal with the same email and select this PG during signup. Your account will be activated after owner/admin approval.\n\n- OG PG Team`,
+      html: `<p>Hi ${payload.fullName},</p><p>You have been added as a tenant for <strong>${payload.pgName}</strong>.</p><p>Please register at the tenant portal with the same email and select this PG during signup.</p><p>Your account will be activated after owner/admin approval.</p><p>- OG PG Team</p>`,
+    },
+    {
+      user: env.gmailUser,
+      appPassword: env.gmailAppPassword,
+      ...(env.gmailFrom ? { from: env.gmailFrom } : {}),
+    },
+  )
 }
 
 async function computeBalanceSnapshot(ownerId: string, params: { pgId?: string; periodStart: Date; periodEnd: Date }) {
@@ -885,6 +911,16 @@ router.post('/residents', auth('owner'), async (req: AuthedRequest, res) => {
       bedId,
     },
   })
+
+  if (parsed.data.email) {
+    const listing = await ListingModel.findById(parsed.data.pgId).select('name').lean()
+    const pgName = listing?.name ?? 'your selected PG'
+    await sendTenantRegistrationInvite({
+      email: parsed.data.email,
+      fullName: parsed.data.fullName,
+      pgName,
+    })
+  }
 
   res.status(201).json(resident)
 })
