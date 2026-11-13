@@ -10,4 +10,6 @@ export const env = {
   gmailUser: process.env.GMAIL_USER?.trim() ?? '',
   gmailAppPassword: process.env.GMAIL_APP_PASSWORD?.trim() ?? '',
   gmailFrom: process.env.GMAIL_FROM?.trim() ?? '',
+  sendOtp: process.env.SEND_OTP === 'true',
+  otpKeyword: process.env.OTP_KEYWORD ?? '1234',
 }
