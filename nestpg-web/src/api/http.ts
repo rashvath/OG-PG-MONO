@@ -1,17 +1,14 @@
 import axios, { AxiosError } from 'axios'
 
+import { clearSession, getStoredToken } from '@/lib/session'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1'
-const TOKEN_STORAGE_KEY = 'nestpg-token'
 
 type FieldErrorValue = string[] | string
 
 type ErrorEnvelope = {
   message?: string | { formErrors?: string[]; fieldErrors?: Record<string, FieldErrorValue> }
   error?: string
-}
-
-function getToken() {
-  return localStorage.getItem(TOKEN_STORAGE_KEY)
 }
 
 function extractErrorMessage(data: ErrorEnvelope, fallback: string) {
@@ -63,10 +60,27 @@ export const apiClient = axios.create({
 })
 
 apiClient.interceptors.request.use((config) => {
-  const token = getToken()
+  const token = getStoredToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
 
   return config
 })
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 401 &&
+      !error.config?.url?.replace(/^\//, '').startsWith('auth/login')
+    ) {
+      clearSession()
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.location.replace('/')
+      }
+    }
+    return Promise.reject(error)
+  },
+)

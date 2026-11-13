@@ -3,9 +3,7 @@ import type { ReactNode } from 'react'
 
 import { apiClient, toApiError } from '@/api/http'
 import type { Role } from './types'
-
-const TOKEN_STORAGE_KEY = 'nestpg-token'
-const USER_STORAGE_KEY = 'nestpg-user'
+import { clearSession, getStoredToken, isTokenValid, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from './session'
 
 type AuthUser = {
   id: string
@@ -43,8 +41,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const raw = localStorage.getItem(USER_STORAGE_KEY)
-    if (!raw) {
+    const raw = localStorage.getItem(USER_STORAGE_KEY) ?? sessionStorage.getItem(USER_STORAGE_KEY)
+    if (!raw || !isTokenValid(getStoredToken())) {
       return null
     }
 
@@ -89,8 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       logout: () => {
-        localStorage.removeItem(TOKEN_STORAGE_KEY)
-        localStorage.removeItem(USER_STORAGE_KEY)
+        clearSession()
         setUser(null)
       },
     }),

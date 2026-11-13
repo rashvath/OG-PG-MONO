@@ -4,6 +4,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 import { apiClient, toApiError } from '@/api/http'
+import { AuthLayout } from '@/components/layout/AuthLayout'
+import { Input } from '@/components/ui/Input'
+import { OtpInput } from '@/components/ui/OtpInput'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { useToast } from '@/lib/toast'
 
@@ -15,6 +18,7 @@ export function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>(1)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
+  const [otpLength, setOtpLength] = useState(4)
   const [resetToken, setResetToken] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -33,7 +37,8 @@ export function ForgotPasswordPage() {
   }, [resendSeconds])
 
   const requestOtp = async () => {
-    await apiClient.post('/auth/forgot-password', { email })
+    const { data } = await apiClient.post<{ otpLength?: number }>('/auth/forgot-password', { email })
+    setOtpLength(data.otpLength ?? 4)
     setStep(2)
     setResendSeconds(30)
     setError('')
@@ -41,6 +46,10 @@ export function ForgotPasswordPage() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (step === 2 && otp.length !== otpLength) {
+      setError(`Enter all ${otpLength} OTP digits`)
+      return
+    }
     setIsSubmitting(true)
     setError('')
 
@@ -85,53 +94,44 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <section className="auth-shell app-wrap">
-      <aside className="auth-showcase panel">
-        <p className="eyebrow">Account security</p>
-        <h2>Get back to your NestPG account.</h2>
-        <p className="section-sub">Verify your email address and choose a new password.</p>
-      </aside>
-
-      <form className="auth-card" onSubmit={submit}>
-        <div className="auth-head">
-          <h2>{step === 1 ? 'Reset your password' : step === 2 ? 'Enter your OTP' : 'Set a new password'}</h2>
+    <AuthLayout>
+      <form className="auth-form" onSubmit={submit}>
+        <div className="auth-heading">
+          <h1>{step === 1 ? 'Reset your password' : step === 2 ? 'Enter your code' : 'Set new password'}</h1>
           <p>
             {step === 1
-              ? "We'll send an OTP to your registered email."
+              ? "Enter your registered email and we'll send you a code."
               : step === 2
-                ? `Check your inbox for the code we sent to ${email}.`
-                : 'Choose a new password with at least 8 characters.'}
+                ? <>We sent a {otpLength}-digit code to <strong>{email}</strong></>
+                : 'Choose a strong password for your account.'}
           </p>
         </div>
 
         {step === 1 ? (
-          <>
-            <label htmlFor="reset-email">Email</label>
-            <input
-              id="reset-email"
-              required
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </>
+          <Input
+            id="reset-email"
+            label="Email address"
+            required
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
         ) : null}
 
         {step === 2 ? (
           <>
-            <PasswordInput
-              required
-              label="One-Time Password"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
+            <OtpInput
+              length={otpLength}
               value={otp}
-              onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 8))}
+              onChange={setOtp}
+              error={error && otp.length !== otpLength ? error : undefined}
+              label="Enter your OTP"
+              disabled={isSubmitting}
             />
             <button
               type="button"
-              className="text-xs text-text-2 underline underline-offset-2 disabled:cursor-not-allowed disabled:no-underline"
+              className="auth-inline-action"
               disabled={resendSeconds > 0 || isSubmitting}
               onClick={async () => {
                 setIsSubmitting(true)
@@ -173,16 +173,14 @@ export function ForgotPasswordPage() {
           </>
         ) : null}
 
-        {error ? <p className="form-error" role="alert">{error}</p> : null}
+        {error && !(step === 2 && otp.length !== otpLength) ? <p className="auth-error" role="alert">⚠ {error}</p> : null}
         {sessionExpired ? (
-          <button type="button" className="btn btn-line" onClick={startOver}>
+          <button type="button" className="auth-action auth-action-secondary" onClick={startOver}>
             Start over
           </button>
         ) : (
-          <button className="btn btn-brand auth-submit" type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? step === 1 ? 'Sending OTP...' : step === 2 ? 'Verifying...' : 'Resetting password...'
-              : step === 1 ? 'Send OTP' : step === 2 ? 'Verify OTP' : 'Reset Password'}
+          <button className="btn btn-brand auth-action" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Please wait...' : step === 1 ? 'Send OTP' : step === 2 ? 'Verify Code' : 'Reset Password'}
           </button>
         )}
 
@@ -190,6 +188,6 @@ export function ForgotPasswordPage() {
           <Link to="/auth/login">← Back to Login</Link>
         </p>
       </form>
-    </section>
+    </AuthLayout>
   )
 }

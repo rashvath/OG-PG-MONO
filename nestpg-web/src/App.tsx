@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -9,6 +9,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { RouteSpinner } from '@/components/ui/RouteSpinner'
 import { AppToaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/lib/auth'
+import { clearSession, getStoredToken, isTokenValid } from '@/lib/session'
 import { StoreProvider } from '@/lib/store'
 import { ThemeProvider } from '@/lib/theme'
 import { AboutPage } from '@/pages/AboutPage'
@@ -68,6 +69,14 @@ const AdminUsersPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ de
 const AdminFormConfigPage = lazy(() => import('@/pages/FormConfigPage').then((m) => ({ default: m.AdminFormConfigPage })))
 
 function App() {
+  useEffect(() => {
+    const token = getStoredToken()
+    if (token && !isTokenValid(token)) {
+      clearSession()
+      window.location.replace('/')
+    }
+  }, [])
+
   return (
     <ThemeProvider>
       <AuthProvider>

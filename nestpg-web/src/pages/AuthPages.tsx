@@ -4,7 +4,12 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { fetchLiveListings } from '@/api/listings-api'
 import { apiClient, toApiError } from '@/api/http'
+import { AuthLayout } from '@/components/layout/AuthLayout'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { OtpInput } from '@/components/ui/OtpInput'
 import { PasswordInput } from '@/components/ui/PasswordInput'
+import { Select } from '@/components/ui/Select'
 import { useFormConfig } from '@/hooks/use-form-config'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/lib/toast'
@@ -56,33 +61,14 @@ export function LoginPage() {
   }
 
   return (
-    <section className="auth-shell app-wrap">
-      <aside className="auth-showcase panel">
-        <p className="eyebrow">OG PG Access</p>
-        <h2>Welcome back to your control desk.</h2>
-        <p className="section-sub">Access admin tools, approvals, assignments, and owner dashboards from one secure login.</p>
-        <div className="auth-demo-grid">
-          {demoUsers.map((account) => (
-            <button
-              key={account.email}
-              type="button"
-              className="auth-demo-chip"
-              onClick={() => selectDemoAccount(account.email, account.password)}
-            >
-              {account.label}
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      <form className="auth-card" onSubmit={submit}>
-        <div className="auth-head">
-          <h2>Sign in</h2>
-          <p>Use your OG PG credentials.</p>
+    <AuthLayout>
+      <form className="auth-form" onSubmit={submit}>
+        <div className="auth-heading">
+          <h1>Sign in</h1>
+          <p>Welcome back. Enter your credentials to continue.</p>
         </div>
 
-        <label>Email</label>
-        <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <Input label="Email address" required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} />
         <PasswordInput
           required
           label="Password"
@@ -90,23 +76,35 @@ export function LoginPage() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
-        <div className="-mt-2 mb-2 self-end text-xs text-text-2">
-          <Link to="/auth/forgot-password" className="underline underline-offset-2 hover:text-accent">
+        <div className="auth-forgot-link">
+          <Link to="/auth/forgot-password">
             Forgot password?
           </Link>
         </div>
 
-        {error ? <p className="form-error">{error}</p> : null}
+        {error ? <p className="auth-error" role="alert">⚠ {error}</p> : null}
 
-        <button className="btn btn-brand auth-submit" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Signing in...' : 'Log in'}
-        </button>
+        <Button type="submit" variant="brand" className="auth-action" loading={isSubmitting}>
+          Sign in
+        </Button>
 
         <p className="auth-switch">
-          New here? <Link to="/register">Create an account</Link>
+          Don&apos;t have an account? <Link to="/auth/register">Register</Link>
         </p>
       </form>
-    </section>
+      <div className="auth-demo-grid">
+        {demoUsers.map((account) => (
+          <button
+            key={account.email}
+            type="button"
+            className="auth-demo-chip"
+            onClick={() => selectDemoAccount(account.email, account.password)}
+          >
+            Use demo {account.label} account
+          </button>
+        ))}
+      </div>
+    </AuthLayout>
   )
 }
 
@@ -137,6 +135,7 @@ export function RegisterPage() {
   const [error, setError] = useState('')
   const [step, setStep] = useState<1 | 2>(1)
   const [resendSeconds, setResendSeconds] = useState(0)
+  const [otpLength, setOtpLength] = useState(4)
 
   useEffect(() => {
     if (resendSeconds === 0) {
@@ -172,13 +171,18 @@ export function RegisterPage() {
       setError('Passwords do not match')
       return
     }
+    if (step === 2 && otpCode.length !== otpLength) {
+      setError(`Enter all ${otpLength} OTP digits`)
+      return
+    }
 
     setIsSubmitting(true)
     setError('')
 
     try {
       if (step === 1) {
-        await apiClient.post('/auth/send-registration-otp', { email })
+        const { data } = await apiClient.post<{ otpLength?: number }>('/auth/send-registration-otp', { email })
+        setOtpLength(data.otpLength ?? 4)
         setStep(2)
         setResendSeconds(30)
         return
@@ -218,7 +222,7 @@ export function RegisterPage() {
             ? 'Tenant request submitted. Wait for owner/admin approval before login.'
             : 'Account created successfully. Please log in.',
       )
-      navigate('/login')
+      navigate('/auth/login')
     } catch (requestError) {
       const message = toApiError(requestError, 'Unable to register')
       setError(message)
@@ -229,19 +233,15 @@ export function RegisterPage() {
   }
 
   return (
-    <section className="auth-shell app-wrap">
-      <aside className="auth-showcase panel">
-        <p className="eyebrow">Join OG PG</p>
-        <h2>Create a customer account, apply as owner, or request tenant access.</h2>
-        <p className="section-sub">
-          Owner applications go to admin approval. Only approved owners can manage assigned PGs.
-        </p>
-      </aside>
-
-      <form className="auth-card" onSubmit={submit}>
-        <div className="auth-head">
-          <h2>{step === 1 ? 'Create account' : 'Verify your email'}</h2>
-          <p>{step === 1 ? 'Start your OG PG journey.' : `Enter the OTP sent to ${email}.`}</p>
+    <AuthLayout>
+      <form className="auth-form" onSubmit={submit}>
+        <div className="auth-progress" aria-label={`Step ${step} of 2`}>
+          <span className="active" />
+          <span className={step === 2 ? 'active' : ''} />
+        </div>
+        <div className="auth-heading">
+          <h1>{step === 1 ? 'Create account' : 'Verify your email'}</h1>
+          <p>{step === 1 ? 'Step 1 of 2 — Your details' : <>We sent a code to <strong>{email}</strong></>}</p>
         </div>
 
         {step === 1 ? (
@@ -271,7 +271,7 @@ export function RegisterPage() {
           </button>
         </div>
 
-        <div className="auth-input-grid two-col">
+        <div className="auth-fields-grid">
           <div>
             <label>{registerConfig.getLabel('name', 'Name')}</label>
             <input required={registerConfig.isRequired('name')} value={name} onChange={(event) => setName(event.target.value)} />
@@ -289,8 +289,7 @@ export function RegisterPage() {
           </div>
         </div>
 
-        <label>{registerConfig.getLabel('email', 'Email')}</label>
-        <input required={registerConfig.isRequired('email')} type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <Input label={registerConfig.getLabel('email', 'Email')} required={registerConfig.isRequired('email')} type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} />
         <PasswordInput
           required={registerConfig.isRequired('password')}
           label={registerConfig.getLabel('password', 'Password')}
@@ -310,8 +309,8 @@ export function RegisterPage() {
 
         {role === 'tenant' ? (
           <>
-            <label>Select PG name</label>
-            <select
+            <Select
+              label="Select PG name"
               required
               value={selectedTenantPgId}
               onChange={(event) => setSelectedTenantPgId(event.target.value)}
@@ -322,14 +321,14 @@ export function RegisterPage() {
                   {listing.name} - {listing.area}
                 </option>
               ))}
-            </select>
+            </Select>
             <p className="auth-hint">Your tenant account will be activated after owner/admin approval.</p>
           </>
         ) : null}
 
         {role === 'owner' ? (
           <>
-            <div className="auth-input-grid two-col">
+            <div className="auth-fields-grid">
               <div>
                 <label>{ownerRegisterConfig.getLabel('pgName', 'PG Name')}</label>
                 <input
@@ -350,7 +349,7 @@ export function RegisterPage() {
               onChange={(event) => setPgAddress(event.target.value)}
             />
 
-            <div className="auth-input-grid two-col">
+            <div className="auth-fields-grid">
               <div>
                 <label>{ownerRegisterConfig.getLabel('rooms', 'Rooms')}</label>
                 <input
@@ -398,18 +397,17 @@ export function RegisterPage() {
           </>
         ) : (
           <>
-            <PasswordInput
-              required
-              label="One-Time Password (OTP)"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
+            <OtpInput
               value={otpCode}
-              onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 8))}
+              onChange={setOtpCode}
+              length={otpLength}
+              error={error && otpCode.length !== otpLength ? error : undefined}
+              label="Enter your OTP"
+              disabled={isSubmitting}
             />
             <button
               type="button"
-              className="text-xs text-text-2 underline underline-offset-2 disabled:cursor-not-allowed disabled:no-underline"
+              className="auth-inline-action"
               disabled={resendSeconds > 0 || isSubmitting}
               onClick={async () => {
                 setIsSubmitting(true)
@@ -428,26 +426,22 @@ export function RegisterPage() {
             >
               {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : 'Resend OTP'}
             </button>
-            <button type="button" className="text-xs text-text-2 underline underline-offset-2" onClick={() => setStep(1)}>
+            <button type="button" className="auth-inline-action" onClick={() => setStep(1)}>
               Back to account details
             </button>
           </>
         )}
 
-        {error ? <p className="form-error">{error}</p> : null}
+        {error && !(step === 2 && otpCode.length !== otpLength) ? <p className="auth-error" role="alert">⚠ {error}</p> : null}
 
-        <button className="btn btn-brand auth-submit" type="submit" disabled={isSubmitting}>
-          {isSubmitting
-            ? step === 1 ? 'Sending OTP...' : 'Creating account...'
-            : step === 1
-              ? 'Continue'
-              : 'Verify & Create Account'}
-        </button>
+        <Button type="submit" variant="brand" className="auth-action" loading={isSubmitting}>
+          {step === 1 ? 'Continue' : 'Verify & Create Account'}
+        </Button>
 
         <p className="auth-switch">
-          Already registered? <Link to="/login">Sign in</Link>
+          Already registered? <Link to="/auth/login">Sign in</Link>
         </p>
       </form>
-    </section>
+    </AuthLayout>
   )
 }

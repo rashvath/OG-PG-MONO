@@ -32,6 +32,10 @@ export function Header() {
   }, [role])
 
   const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register'
+  const handleLogout = () => {
+    logout()
+    window.location.replace('/')
+  }
 
   return (
     <header className="site-header">
@@ -60,7 +64,7 @@ export function Header() {
           </Link>
 
           {role ? (
-            <button type="button" className="nav-link-button" onClick={logout}>
+            <button type="button" className="nav-link-button" onClick={handleLogout}>
               Log out
             </button>
           ) : (
@@ -104,7 +108,7 @@ export function Header() {
           </Link>
 
           {role ? (
-            <button type="button" className="mobile-nav-link mobile-nav-logout" onClick={logout}>
+            <button type="button" className="mobile-nav-link mobile-nav-logout" onClick={handleLogout}>
               Log out
             </button>
           ) : (
