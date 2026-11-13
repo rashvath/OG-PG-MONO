@@ -1,0 +1,84 @@
+:root {
+  /* ── TESTBNB canonical tokens ────────────────── */
+  --font-stack: "Airbnb Cereal VF", Circular, -apple-system,
+                BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  --font-xs:   14px;
+  --font-sm:   16px;
+  --font-md:   28px;
+  --lh-base:   20.02px;
+
+  --space-1:   2px;
+  --space-2:   4px;
+  --space-4:   8px;
+  --space-6:   12px;
+  --space-8:   48px;    /* control height */
+
+  --radius-xs: 8px;
+  --radius-sm: 20px;
+  --radius-lg: 50px;
+
+  --shadow-1:  0 0 0 1px rgb(0 0 0/.02),
+               0 2px 6px rgb(0 0 0/.04),
+               0 4px 8px rgb(0 0 0/.1);
+
+  --dur-instant: 200ms;
+  --dur-fast:    250ms;
+
+  /* ── Light mode ──────────────────────────────── */
+  --c-text:         #222;
+  --c-text-2:       #717171;   /* secondary — light surfaces only */
+  --c-accent:       #ff385c;
+  --c-surface:      #fff;
+  --c-muted:        #f2f2f2;
+  --c-border:       #c1c1c1;
+  --c-error:        #c13515;
+  --c-focus:        #222;
+  --c-neutral-bg:   #222;
+  --c-neutral-label:#fff;
+
+  /* ── Status semantic ─────────────────────────── */
+  --c-success:      #008a05;
+  --c-warning:      #c47d00;
+  --c-info:         #0066cc;
+
+  box-sizing: border-box;
+  padding-top:    env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Dark mode — auto */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-text:          #fff;
+    --c-text-2:        #c1c1c1;
+    --c-surface:       #000;
+    --c-muted:         #222;
+    --c-border:        #3a3a3a;
+    --c-error:         #ff7a5c;
+    --c-focus:         #fff;
+    --c-neutral-bg:    #fff;
+    --c-neutral-label: #222;
+    --shadow-1: 0 0 0 1px rgb(255 255 255/.12);
+  }
+}
+/* Dark mode — explicit override */
+:root[data-theme="dark"] {
+  --c-text:          #fff;
+  --c-text-2:        #c1c1c1;
+  --c-surface:       #000;
+  --c-muted:         #222;
+  --c-border:        #3a3a3a;
+  --c-error:         #ff7a5c;
+  --c-focus:         #fff;
+  --c-neutral-bg:    #fff;
+  --c-neutral-label: #222;
+  --shadow-1: 0 0 0 1px rgb(255 255 255/.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+  .spin { border-right-color: currentColor; }
+}

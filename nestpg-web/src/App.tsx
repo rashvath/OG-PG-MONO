@@ -18,6 +18,7 @@ const ListingsPage = lazy(() => import('@/pages/ListingsPage').then((m) => ({ de
 const PgDetailPage = lazy(() => import('@/pages/PgDetailPage').then((m) => ({ default: m.PgDetailPage })))
 const LoginPage = lazy(() => import('@/pages/AuthPages').then((m) => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() => import('@/pages/AuthPages').then((m) => ({ default: m.RegisterPage })))
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })))
 const TenantOverviewPage = lazy(() => import('./pages/tenant/TenantOverviewPage').then((m) => ({ default: m.TenantOverviewPage })))
 const TenantComplaintsPage = lazy(() => import('./pages/tenant/TenantComplaintsPage').then((m) => ({ default: m.TenantComplaintsPage })))
 const TenantPaymentsPage = lazy(() => import('./pages/tenant/TenantPaymentsPage').then((m) => ({ default: m.TenantPaymentsPage })))
@@ -81,7 +82,10 @@ function App() {
                   <Route path="/listings" element={<ListingsPage />} />
                   <Route path="/pg/:id" element={<PgDetailPage />} />
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/auth/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/auth/register" element={<RegisterPage />} />
+                  <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
 
                   <Route element={<ProtectedRoute allow="owner" />}>
                     <Route

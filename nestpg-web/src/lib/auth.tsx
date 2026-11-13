@@ -26,6 +26,7 @@ type RegisterPayload = {
   email: string
   phone: string
   password: string
+  otpCode: string
   role: Exclude<Role, 'admin'>
   pgId?: string
   pgName?: string

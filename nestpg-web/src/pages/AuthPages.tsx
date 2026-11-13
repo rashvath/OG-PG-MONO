@@ -3,6 +3,8 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { fetchLiveListings } from '@/api/listings-api'
+import { apiClient, toApiError } from '@/api/http'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 import { useFormConfig } from '@/hooks/use-form-config'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/lib/toast'
@@ -22,7 +24,7 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const useDemo = (emailValue: string, passwordValue: string) => {
+  const selectDemoAccount = (emailValue: string, passwordValue: string) => {
     setEmail(emailValue)
     setPassword(passwordValue)
   }
@@ -65,7 +67,7 @@ export function LoginPage() {
               key={account.email}
               type="button"
               className="auth-demo-chip"
-              onClick={() => useDemo(account.email, account.password)}
+              onClick={() => selectDemoAccount(account.email, account.password)}
             >
               {account.label}
             </button>
@@ -81,8 +83,18 @@ export function LoginPage() {
 
         <label>Email</label>
         <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <label>Password</label>
-        <input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+        <PasswordInput
+          required
+          label="Password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+        <div className="-mt-2 mb-2 self-end text-xs text-text-2">
+          <Link to="/auth/forgot-password" className="underline underline-offset-2 hover:text-accent">
+            Forgot password?
+          </Link>
+        </div>
 
         {error ? <p className="form-error">{error}</p> : null}
 
@@ -109,6 +121,8 @@ export function RegisterPage() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [otpCode, setOtpCode] = useState('')
   const [pgName, setPgName] = useState('')
   const [pgAddress, setPgAddress] = useState('')
   const [area, setArea] = useState('')
@@ -121,6 +135,17 @@ export function RegisterPage() {
   const [selectedTenantPgId, setSelectedTenantPgId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [step, setStep] = useState<1 | 2>(1)
+  const [resendSeconds, setResendSeconds] = useState(0)
+
+  useEffect(() => {
+    if (resendSeconds === 0) {
+      return
+    }
+
+    const timer = window.setTimeout(() => setResendSeconds((seconds) => Math.max(0, seconds - 1)), 1000)
+    return () => window.clearTimeout(timer)
+  }, [resendSeconds])
 
   useEffect(() => {
     fetchLiveListings()
@@ -143,15 +168,28 @@ export function RegisterPage() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (step === 1 && password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
     setIsSubmitting(true)
     setError('')
 
     try {
+      if (step === 1) {
+        await apiClient.post('/auth/send-registration-otp', { email })
+        setStep(2)
+        setResendSeconds(30)
+        return
+      }
+
       await register({
         name,
         phone,
         email,
         password,
+        otpCode,
         role,
         ...(role === 'tenant' ? { pgId: selectedTenantPgId } : {}),
         ...(role === 'owner'
@@ -182,7 +220,7 @@ export function RegisterPage() {
       )
       navigate('/login')
     } catch (requestError) {
-      const message = requestError instanceof Error ? requestError.message : 'Unable to register'
+      const message = toApiError(requestError, 'Unable to register')
       setError(message)
       toast.error(message)
     } finally {
@@ -202,10 +240,12 @@ export function RegisterPage() {
 
       <form className="auth-card" onSubmit={submit}>
         <div className="auth-head">
-          <h2>Create account</h2>
-          <p>Start your OG PG journey.</p>
+          <h2>{step === 1 ? 'Create account' : 'Verify your email'}</h2>
+          <p>{step === 1 ? 'Start your OG PG journey.' : `Enter the OTP sent to ${email}.`}</p>
         </div>
 
+        {step === 1 ? (
+          <>
         <label>Register as</label>
         <div className="auth-role-switch">
           <button
@@ -251,12 +291,21 @@ export function RegisterPage() {
 
         <label>{registerConfig.getLabel('email', 'Email')}</label>
         <input required={registerConfig.isRequired('email')} type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <label>{registerConfig.getLabel('password', 'Password')}</label>
-        <input
+        <PasswordInput
           required={registerConfig.isRequired('password')}
-          type="password"
+          label={registerConfig.getLabel('password', 'Password')}
+          autoComplete="new-password"
+          minLength={6}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+        />
+        <PasswordInput
+          required
+          label="Confirm password"
+          autoComplete="new-password"
+          minLength={6}
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
         />
 
         {role === 'tenant' ? (
@@ -346,11 +395,53 @@ export function RegisterPage() {
             <p className="auth-hint">Your owner account remains pending until admin reviews and approves it.</p>
           </>
         ) : null}
+          </>
+        ) : (
+          <>
+            <PasswordInput
+              required
+              label="One-Time Password (OTP)"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={otpCode}
+              onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 8))}
+            />
+            <button
+              type="button"
+              className="text-xs text-text-2 underline underline-offset-2 disabled:cursor-not-allowed disabled:no-underline"
+              disabled={resendSeconds > 0 || isSubmitting}
+              onClick={async () => {
+                setIsSubmitting(true)
+                setError('')
+                try {
+                  await apiClient.post('/auth/send-registration-otp', { email })
+                  setResendSeconds(30)
+                } catch (requestError) {
+                  const message = toApiError(requestError, 'Unable to resend OTP')
+                  setError(message)
+                  toast.error(message)
+                } finally {
+                  setIsSubmitting(false)
+                }
+              }}
+            >
+              {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : 'Resend OTP'}
+            </button>
+            <button type="button" className="text-xs text-text-2 underline underline-offset-2" onClick={() => setStep(1)}>
+              Back to account details
+            </button>
+          </>
+        )}
 
         {error ? <p className="form-error">{error}</p> : null}
 
         <button className="btn btn-brand auth-submit" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : role === 'owner' ? 'Submit application' : role === 'tenant' ? 'Request tenant access' : 'Create account'}
+          {isSubmitting
+            ? step === 1 ? 'Sending OTP...' : 'Creating account...'
+            : step === 1
+              ? 'Continue'
+              : 'Verify & Create Account'}
         </button>
 
         <p className="auth-switch">
