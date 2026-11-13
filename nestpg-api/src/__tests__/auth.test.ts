@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import app from '../app'
 import { env } from '../config/env'
+import { OtpModel } from '../models/Otp'
 import {
   clearTestData,
   seedTestData,
@@ -18,6 +19,8 @@ describe('authentication API', () => {
   let context: TestContext
 
   beforeAll(async () => {
+    env.sendOtp = false
+    env.otpKeyword = '1234'
     await startTestDatabase()
     context = await seedTestData()
   })
@@ -27,12 +30,18 @@ describe('authentication API', () => {
   })
 
   it('registers a customer and returns a usable token', async () => {
+    const otpResponse = await request(app)
+      .post('/api/v1/auth/send-registration-otp')
+      .send({ email: 'new-customer@nestpg.test' })
+    expect(otpResponse.status).toBe(200)
+
     const response = await request(app).post('/api/v1/auth/register').send({
       name: 'New Customer',
       email: 'new-customer@nestpg.test',
       phone: '9000000010',
       password: TEST_PASSWORD,
       role: 'customer',
+      otpCode: '1234',
     })
 
     expect(response.status).toBe(201)
@@ -53,9 +62,73 @@ describe('authentication API', () => {
       phone: '9000000011',
       password: TEST_PASSWORD,
       role: 'customer',
+      otpCode: '1234',
     })
-
     expect(response.status).toBe(409)
+  })
+
+  it('requires and validates an OTP before registration', async () => {
+    await request(app).post('/api/v1/auth/send-registration-otp').send({ email: 'otp-user@nestpg.test' })
+    const invalid = await request(app).post('/api/v1/auth/register').send({
+      name: 'OTP User',
+      email: 'otp-user@nestpg.test',
+      phone: '9000000012',
+      password: TEST_PASSWORD,
+      role: 'customer',
+      otpCode: '0000',
+    })
+    expect(invalid.status).toBe(400)
+
+    const valid = await request(app).post('/api/v1/auth/register').send({
+      name: 'OTP User',
+      email: 'otp-user@nestpg.test',
+      phone: '9000000012',
+      password: TEST_PASSWORD,
+      role: 'customer',
+      otpCode: '1234',
+    })
+    expect(valid.status).toBe(201)
+    expect(await OtpModel.countDocuments({ email: 'otp-user@nestpg.test' })).toBe(0)
+  })
+
+  it('sends a generic forgot-password response and completes reset via OTP', async () => {
+    const unknownEmail = await request(app)
+      .post('/api/v1/auth/forgot-password')
+      .send({ email: 'unknown@nestpg.test' })
+    expect(unknownEmail.status).toBe(200)
+    expect(unknownEmail.body.message).toBe('If that email is registered, an OTP has been sent.')
+    expect(await OtpModel.countDocuments({ email: 'unknown@nestpg.test' })).toBe(0)
+
+    const requestOtp = await request(app)
+      .post('/api/v1/auth/forgot-password')
+      .send({ email: 'customer@nestpg.test' })
+    expect(requestOtp.status).toBe(200)
+
+    const wrongOtp = await request(app)
+      .post('/api/v1/auth/verify-reset-otp')
+      .send({ email: 'customer@nestpg.test', otp: '0000' })
+    expect(wrongOtp.status).toBe(400)
+
+    const verify = await request(app)
+      .post('/api/v1/auth/verify-reset-otp')
+      .send({ email: 'customer@nestpg.test', otp: '1234' })
+    expect(verify.status).toBe(200)
+    expect(typeof verify.body.resetToken).toBe('string')
+
+    const reset = await request(app)
+      .post('/api/v1/auth/reset-password')
+      .send({ resetToken: verify.body.resetToken, newPassword: 'new-password-123' })
+    expect(reset.status).toBe(200)
+
+    const login = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ email: 'customer@nestpg.test', password: 'new-password-123' })
+    expect(login.status).toBe(200)
+
+    const reusedToken = await request(app)
+      .post('/api/v1/auth/reset-password')
+      .send({ resetToken: verify.body.resetToken, newPassword: 'another-password-123' })
+    expect(reusedToken.status).toBe(400)
   })
 
   it('rejects missing registration fields', async () => {
