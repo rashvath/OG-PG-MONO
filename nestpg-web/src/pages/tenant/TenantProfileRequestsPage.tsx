@@ -9,6 +9,7 @@ import {
   type TenantProfileUpdateRequest,
   type TenantSelf,
 } from '@/api/tenant-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 import { useToast } from '@/lib/toast'
 
 type ProfileFieldKey = 'name' | 'phone' | 'email' | 'profileAddress' | 'emergencyContactName' | 'emergencyContactPhone'
@@ -105,6 +106,7 @@ function getRequestHistoryDetails(item: TenantProfileUpdateRequest) {
 
 export function TenantProfileRequestsPage() {
   const toast = useToast()
+  const profileRequestConfig = useFormConfig('tenant.profileUpdateRequest')
   const [self, setSelf] = useState<TenantSelf | null>(null)
   const [items, setItems] = useState<TenantProfileUpdateRequest[]>([])
   const [selectedFields, setSelectedFields] = useState<Record<ProfileFieldKey, boolean>>({
@@ -225,8 +227,12 @@ export function TenantProfileRequestsPage() {
       const currentValue = getTenantFieldValue(self, field.key)
       const proposedValue = proposedValues[field.key].trim()
 
-      if (!proposedValue) {
+      if (profileRequestConfig.isRequired(field.key) && !proposedValue) {
         nextErrors[field.key] = `${field.label} is required.`
+        continue
+      }
+
+      if (!proposedValue) {
         continue
       }
 
@@ -265,7 +271,11 @@ export function TenantProfileRequestsPage() {
       if (!selectedFields[field.key]) {
         continue
       }
-      changes[field.key] = proposedValues[field.key].trim()
+      const nextValue = proposedValues[field.key].trim()
+      if (!nextValue) {
+        continue
+      }
+      changes[field.key] = nextValue
     }
 
     setSubmitting(true)
@@ -335,7 +345,7 @@ export function TenantProfileRequestsPage() {
                           {detail.requestedFields.length
                             ? detail.requestedFields.map((fieldKey) => {
                                 const meta = PROFILE_FIELDS.find((field) => field.key === fieldKey)
-                                return <span key={`${item._id}-field-${fieldKey}`}>{meta?.label ?? fieldKey}</span>
+                                return <span key={`${item._id}-field-${fieldKey}`}>{profileRequestConfig.getLabel(fieldKey, meta?.label ?? fieldKey)}</span>
                               })
                             : '-'}
                         </div>
@@ -347,7 +357,7 @@ export function TenantProfileRequestsPage() {
                                 const meta = PROFILE_FIELDS.find((field) => field.key === fieldKey)
                                 return (
                                   <span key={`${item._id}-current-${fieldKey}`}>
-                                    {meta?.label ?? fieldKey}: {detail.currentValues[fieldKey] || '-'}
+                                    {profileRequestConfig.getLabel(fieldKey, meta?.label ?? fieldKey)}: {detail.currentValues[fieldKey] || '-'}
                                   </span>
                                 )
                               })
@@ -361,7 +371,7 @@ export function TenantProfileRequestsPage() {
                                 const meta = PROFILE_FIELDS.find((field) => field.key === fieldKey)
                                 return (
                                   <span key={`${item._id}-proposed-${fieldKey}`}>
-                                    {meta?.label ?? fieldKey}: {detail.proposedValues[fieldKey] || '-'}
+                                    {profileRequestConfig.getLabel(fieldKey, meta?.label ?? fieldKey)}: {detail.proposedValues[fieldKey] || '-'}
                                   </span>
                                 )
                               })
@@ -410,7 +420,7 @@ export function TenantProfileRequestsPage() {
                     checked={isSelected}
                     onChange={(event) => onToggleField(field.key, event.target.checked)}
                   />
-                  <span>{field.label}</span>
+                  <span>{profileRequestConfig.getLabel(field.key, field.label)}</span>
                 </label>
 
                 {isSelected ? (
@@ -442,7 +452,10 @@ export function TenantProfileRequestsPage() {
             )
           })}
 
-          <label>Reason / Additional Notes</label>
+          <label>
+            {profileRequestConfig.getLabel('notes', 'Reason / Additional Notes')}
+            {profileRequestConfig.isRequired('notes') ? ' *' : ''}
+          </label>
           <textarea
             value={notes}
             onChange={(event) => setNotes(event.target.value)}

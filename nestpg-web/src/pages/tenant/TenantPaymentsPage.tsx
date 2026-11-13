@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 
 import { AppDialog } from '@/components/ui/AppDialog'
 import { createTenantPaymentProof, getTenantPaymentProofs, type TenantPaymentProof } from '@/api/tenant-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 import { uploadPgImages } from '@/api/upload-api'
 import { useToast } from '@/lib/toast'
 
 export function TenantPaymentsPage() {
   const toast = useToast()
+  const paymentConfig = useFormConfig('tenant.paymentProof')
   const [items, setItems] = useState<TenantPaymentProof[]>([])
   const [amount, setAmount] = useState('')
   const [paidForMonth, setPaidForMonth] = useState('')
@@ -38,11 +40,11 @@ export function TenantPaymentsPage() {
   const validate = () => {
     const nextErrors: { amount?: string; screenshotFile?: string } = {}
     const parsedAmount = Number(amount)
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    if (paymentConfig.isRequired('amount') && (!Number.isFinite(parsedAmount) || parsedAmount <= 0)) {
       nextErrors.amount = 'Amount must be greater than 0.'
     }
 
-    if (!screenshotFile && !uploadedScreenshotUrl) {
+    if (paymentConfig.isRequired('screenshotUpload') && !screenshotFile && !uploadedScreenshotUrl) {
       nextErrors.screenshotFile = 'Screenshot image is required.'
     }
 
@@ -162,7 +164,10 @@ export function TenantPaymentsPage() {
         )}
       >
         <div className="tenant-form-card">
-          <label>Amount *</label>
+          <label>
+            {paymentConfig.getLabel('amount', 'Amount')}
+            {paymentConfig.isRequired('amount') ? ' *' : ''}
+          </label>
           <input
             type="number"
             min={1}
@@ -174,13 +179,16 @@ export function TenantPaymentsPage() {
           />
           {errors.amount ? <p className="form-error">{errors.amount}</p> : null}
 
-          <label>Paid month</label>
+          <label>{paymentConfig.getLabel('paidForMonth', 'Paid month')}</label>
           <input value={paidForMonth} onChange={(event) => setPaidForMonth(event.target.value)} maxLength={40} placeholder="Nov 2026" />
 
-          <label>Transaction ref</label>
+          <label>{paymentConfig.getLabel('transactionRef', 'Transaction ref')}</label>
           <input value={transactionRef} onChange={(event) => setTransactionRef(event.target.value)} maxLength={80} />
 
-          <label>Screenshot Upload *</label>
+          <label>
+            {paymentConfig.getLabel('screenshotUpload', 'Screenshot Upload')}
+            {paymentConfig.isRequired('screenshotUpload') ? ' *' : ''}
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -194,7 +202,7 @@ export function TenantPaymentsPage() {
           {screenshotFile ? <p className="section-sub">Selected: {screenshotFile.name}</p> : null}
           {errors.screenshotFile ? <p className="form-error">{errors.screenshotFile}</p> : null}
 
-          <label>Notes</label>
+          <label>{paymentConfig.getLabel('notes', 'Notes')}</label>
           <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} maxLength={500} />
         </div>
       </AppDialog>

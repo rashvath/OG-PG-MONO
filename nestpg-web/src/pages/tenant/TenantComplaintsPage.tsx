@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 
 import { AppDialog } from '@/components/ui/AppDialog'
 import { createTenantComplaint, getTenantComplaints, type TenantComplaint } from '@/api/tenant-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 import { useToast } from '@/lib/toast'
 
 export function TenantComplaintsPage() {
   const toast = useToast()
+  const complaintConfig = useFormConfig('tenant.complaint')
   const [items, setItems] = useState<TenantComplaint[]>([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -32,10 +34,10 @@ export function TenantComplaintsPage() {
 
   const validate = () => {
     const nextErrors: { title?: string; description?: string } = {}
-    if (title.trim().length < 3) {
+    if (complaintConfig.isRequired('title') && title.trim().length < 3) {
       nextErrors.title = 'Title must be at least 3 characters.'
     }
-    if (description.trim().length < 5) {
+    if (complaintConfig.isRequired('description') && description.trim().length < 5) {
       nextErrors.description = 'Description must be at least 5 characters.'
     }
     setErrors(nextErrors)
@@ -130,7 +132,10 @@ export function TenantComplaintsPage() {
         )}
       >
         <div className="tenant-form-card">
-          <label>Title *</label>
+          <label>
+            {complaintConfig.getLabel('title', 'Title')}
+            {complaintConfig.isRequired('title') ? ' *' : ''}
+          </label>
           <input
             value={title}
             onChange={(event) => {
@@ -142,7 +147,10 @@ export function TenantComplaintsPage() {
           />
           {errors.title ? <p className="form-error">{errors.title}</p> : null}
 
-          <label>Description *</label>
+          <label>
+            {complaintConfig.getLabel('description', 'Description')}
+            {complaintConfig.isRequired('description') ? ' *' : ''}
+          </label>
           <textarea
             value={description}
             onChange={(event) => {

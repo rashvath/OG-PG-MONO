@@ -3,10 +3,12 @@ import { CalendarClock } from 'lucide-react'
 
 import { AppDialog } from '@/components/ui/AppDialog'
 import { createTenantAbsenceRequest, getTenantAbsenceRequests, type TenantAbsenceRequest } from '@/api/tenant-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 import { useToast } from '@/lib/toast'
 
 export function TenantAbsencesPage() {
   const toast = useToast()
+  const absenceConfig = useFormConfig('tenant.absence')
   const [items, setItems] = useState<TenantAbsenceRequest[]>([])
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
@@ -34,16 +36,16 @@ export function TenantAbsencesPage() {
 
   const validate = () => {
     const nextErrors: { fromDate?: string; toDate?: string; reason?: string } = {}
-    if (!fromDate) {
+    if (absenceConfig.isRequired('fromDate') && !fromDate) {
       nextErrors.fromDate = 'From date is required.'
     }
-    if (!toDate) {
+    if (absenceConfig.isRequired('toDate') && !toDate) {
       nextErrors.toDate = 'To date is required.'
     }
     if (fromDate && toDate && new Date(toDate) < new Date(fromDate)) {
       nextErrors.toDate = 'To date must be on or after from date.'
     }
-    if (reason.trim().length < 3) {
+    if (absenceConfig.isRequired('reason') && reason.trim().length < 3) {
       nextErrors.reason = 'Reason must be at least 3 characters.'
     }
     setErrors(nextErrors)
@@ -154,7 +156,10 @@ export function TenantAbsencesPage() {
         )}
       >
         <div className="tenant-form-card">
-          <label>From date *</label>
+          <label>
+            {absenceConfig.getLabel('fromDate', 'From date')}
+            {absenceConfig.isRequired('fromDate') ? ' *' : ''}
+          </label>
           <input
             type="date"
             value={fromDate}
@@ -165,7 +170,10 @@ export function TenantAbsencesPage() {
           />
           {errors.fromDate ? <p className="form-error">{errors.fromDate}</p> : null}
 
-          <label>To date *</label>
+          <label>
+            {absenceConfig.getLabel('toDate', 'To date')}
+            {absenceConfig.isRequired('toDate') ? ' *' : ''}
+          </label>
           <input
             type="date"
             value={toDate}
@@ -176,7 +184,10 @@ export function TenantAbsencesPage() {
           />
           {errors.toDate ? <p className="form-error">{errors.toDate}</p> : null}
 
-          <label>Reason *</label>
+          <label>
+            {absenceConfig.getLabel('reason', 'Reason')}
+            {absenceConfig.isRequired('reason') ? ' *' : ''}
+          </label>
           <textarea
             value={reason}
             onChange={(event) => {

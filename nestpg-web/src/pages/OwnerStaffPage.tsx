@@ -32,6 +32,7 @@ import {
   type StaffRole,
   type StaffSalary,
 } from '@/api/staff-api'
+import { useFormConfig } from '@/hooks/use-form-config'
 import { useToast } from '@/lib/toast'
 
 type Tab = 'employees' | 'roles' | 'attendance' | 'expenses' | 'leaves' | 'salary'
@@ -63,6 +64,12 @@ function csvCell(value: unknown) {
 
 export function OwnerStaffPage() {
   const toast = useToast()
+  const employeeConfig = useFormConfig('owner.staff.employee')
+  const roleConfig = useFormConfig('owner.staff.role')
+  const attendanceConfig = useFormConfig('owner.staff.attendance')
+  const expenseConfig = useFormConfig('owner.staff.expense')
+  const leaveConfig = useFormConfig('owner.staff.leave')
+  const salaryConfig = useFormConfig('owner.staff.salary')
   const [pgs, setPgs] = useState<OwnerPg[]>([])
   const [pgId, setPgId] = useState('')
   const [tab, setTab] = useState<Tab>('employees')
@@ -98,6 +105,14 @@ export function OwnerStaffPage() {
   const [salaryForm, setSalaryForm] = useState({
     employeeId: '', deductions: '0', bonuses: '0', paidAt: today(), paymentMode: 'cash',
   })
+
+  const formLabel = (
+    config: ReturnType<typeof useFormConfig>,
+    key: string,
+    fallback: string,
+  ) => config.getLabel(key, fallback)
+
+  const requiredMarker = (config: ReturnType<typeof useFormConfig>, key: string) => (config.isRequired(key) ? ' *' : '')
 
   const activeEmployees = useMemo(() => employees.filter((employee) => employee.status === 'active'), [employees])
   const monthlyAttendanceSummary = useMemo(() => {
@@ -222,8 +237,28 @@ export function OwnerStaffPage() {
 
   const submitEmployee = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!pgId || !employeeForm.roleId) {
-      toast.warning('Select a PG and employee role')
+    if (!pgId) {
+      toast.warning('Select a PG first')
+      return
+    }
+    if (employeeConfig.isRequired('name') && employeeForm.name.trim().length < 2) {
+      toast.warning(`${formLabel(employeeConfig, 'name', 'Name')} is required`)
+      return
+    }
+    if (employeeConfig.isRequired('phone') && !/^\d{10}$/.test(employeeForm.phone.trim())) {
+      toast.warning(`${formLabel(employeeConfig, 'phone', 'Phone')} must be 10 digits`)
+      return
+    }
+    if (employeeConfig.isRequired('roleId') && !employeeForm.roleId) {
+      toast.warning(`Select ${formLabel(employeeConfig, 'roleId', 'Role').toLowerCase()}`)
+      return
+    }
+    if (employeeConfig.isRequired('monthlySalary') && (!employeeForm.monthlySalary || Number(employeeForm.monthlySalary) < 0)) {
+      toast.warning(`${formLabel(employeeConfig, 'monthlySalary', 'Monthly salary')} is required`)
+      return
+    }
+    if (employeeConfig.isRequired('joiningDate') && !employeeForm.joiningDate) {
+      toast.warning(`${formLabel(employeeConfig, 'joiningDate', 'Joining date')} is required`)
       return
     }
     const payload = {
@@ -265,6 +300,14 @@ export function OwnerStaffPage() {
   const submitRole = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!pgId) return
+    if (roleConfig.isRequired('name') && roleForm.name.trim().length < 2) {
+      toast.warning(`${formLabel(roleConfig, 'name', 'Role name')} is required`)
+      return
+    }
+    if (roleConfig.isRequired('color') && !roleForm.color) {
+      toast.warning(`${formLabel(roleConfig, 'color', 'Role color')} is required`)
+      return
+    }
     const done = await save(
       () => editingRole
         ? updateStaffRole(editingRole._id, roleForm)
@@ -279,6 +322,10 @@ export function OwnerStaffPage() {
 
   const submitAttendance = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (attendanceConfig.isRequired('date') && !attendanceDate) {
+      toast.warning(`${formLabel(attendanceConfig, 'date', 'Attendance date')} is required`)
+      return
+    }
     void save(() => saveStaffAttendance({
       pgId,
       date: attendanceDate,
@@ -293,6 +340,22 @@ export function OwnerStaffPage() {
 
   const submitExpense = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (expenseConfig.isRequired('employeeId') && !expenseForm.employeeId) {
+      toast.warning(`${formLabel(expenseConfig, 'employeeId', 'Employee')} is required`)
+      return
+    }
+    if (expenseConfig.isRequired('amount') && (!expenseForm.amount || Number(expenseForm.amount) <= 0)) {
+      toast.warning(`${formLabel(expenseConfig, 'amount', 'Amount')} must be greater than 0`)
+      return
+    }
+    if (expenseConfig.isRequired('description') && expenseForm.description.trim().length < 2) {
+      toast.warning(`${formLabel(expenseConfig, 'description', 'Description')} is required`)
+      return
+    }
+    if (expenseConfig.isRequired('expenseDate') && !expenseForm.expenseDate) {
+      toast.warning(`${formLabel(expenseConfig, 'expenseDate', 'Expense date')} is required`)
+      return
+    }
     const payload = {
       employeeId: expenseForm.employeeId,
       amount: Number(expenseForm.amount),
@@ -312,6 +375,26 @@ export function OwnerStaffPage() {
 
   const submitLeave = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (leaveConfig.isRequired('employeeId') && !leaveForm.employeeId) {
+      toast.warning(`${formLabel(leaveConfig, 'employeeId', 'Employee')} is required`)
+      return
+    }
+    if (leaveConfig.isRequired('startDate') && !leaveForm.startDate) {
+      toast.warning(`${formLabel(leaveConfig, 'startDate', 'Start date')} is required`)
+      return
+    }
+    if (leaveConfig.isRequired('endDate') && !leaveForm.endDate) {
+      toast.warning(`${formLabel(leaveConfig, 'endDate', 'End date')} is required`)
+      return
+    }
+    if (leaveConfig.isRequired('leaveType') && !leaveForm.leaveType) {
+      toast.warning(`${formLabel(leaveConfig, 'leaveType', 'Leave type')} is required`)
+      return
+    }
+    if (leaveConfig.isRequired('reason') && !leaveForm.reason.trim()) {
+      toast.warning(`${formLabel(leaveConfig, 'reason', 'Reason')} is required`)
+      return
+    }
     void save(() => createStaffLeave({
       ...leaveForm,
       pgId,
@@ -323,6 +406,26 @@ export function OwnerStaffPage() {
 
   const submitSalary = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (salaryConfig.isRequired('employeeId') && !salaryForm.employeeId) {
+      toast.warning(`${formLabel(salaryConfig, 'employeeId', 'Employee')} is required`)
+      return
+    }
+    if (salaryConfig.isRequired('month') && !month) {
+      toast.warning(`${formLabel(salaryConfig, 'month', 'Month')} is required`)
+      return
+    }
+    if (salaryConfig.isRequired('year') && !year) {
+      toast.warning(`${formLabel(salaryConfig, 'year', 'Year')} is required`)
+      return
+    }
+    if (salaryConfig.isRequired('paidAt') && !salaryForm.paidAt) {
+      toast.warning(`${formLabel(salaryConfig, 'paidAt', 'Paid at')} is required`)
+      return
+    }
+    if (salaryConfig.isRequired('paymentMode') && !salaryForm.paymentMode) {
+      toast.warning(`${formLabel(salaryConfig, 'paymentMode', 'Payment mode')} is required`)
+      return
+    }
     void save(() => createStaffSalary({
       pgId,
       employeeId: salaryForm.employeeId,
@@ -465,12 +568,12 @@ export function OwnerStaffPage() {
             <>
               <form className="panel form-grid two-col spaced-top" onSubmit={(event) => void submitEmployee(event)}>
                 <h3 className="finance-title span-all">{editingEmployee ? 'Edit employee' : 'Add employee'}</h3>
-                <div className="form-field"><label htmlFor="employee-name">Name</label><input id="employee-name" required minLength={2} value={employeeForm.name} onChange={(event) => setEmployeeForm({ ...employeeForm, name: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="employee-phone">Phone</label><input id="employee-phone" required pattern="[0-9]{10}" value={employeeForm.phone} onChange={(event) => setEmployeeForm({ ...employeeForm, phone: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="employee-email">Email</label><input id="employee-email" type="email" value={employeeForm.email} onChange={(event) => setEmployeeForm({ ...employeeForm, email: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="employee-name">{formLabel(employeeConfig, 'name', 'Name')}{requiredMarker(employeeConfig, 'name')}</label><input id="employee-name" required={employeeConfig.isRequired('name')} minLength={2} value={employeeForm.name} onChange={(event) => setEmployeeForm({ ...employeeForm, name: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="employee-phone">{formLabel(employeeConfig, 'phone', 'Phone')}{requiredMarker(employeeConfig, 'phone')}</label><input id="employee-phone" required={employeeConfig.isRequired('phone')} pattern="[0-9]{10}" value={employeeForm.phone} onChange={(event) => setEmployeeForm({ ...employeeForm, phone: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="employee-email">{formLabel(employeeConfig, 'email', 'Email')}{requiredMarker(employeeConfig, 'email')}</label><input id="employee-email" type="email" required={employeeConfig.isRequired('email')} value={employeeForm.email} onChange={(event) => setEmployeeForm({ ...employeeForm, email: event.target.value })} /></div>
                 <div className="form-field">
-                  <label htmlFor="employee-role">Role</label>
-                  <select id="employee-role" required value={employeeForm.roleId} onChange={(event) => setEmployeeForm({ ...employeeForm, roleId: event.target.value })}>
+                  <label htmlFor="employee-role">{formLabel(employeeConfig, 'roleId', 'Role')}{requiredMarker(employeeConfig, 'roleId')}</label>
+                  <select id="employee-role" required={employeeConfig.isRequired('roleId')} value={employeeForm.roleId} onChange={(event) => setEmployeeForm({ ...employeeForm, roleId: event.target.value })}>
                     {roles.length === 0
                       ? <option value="" disabled style={{ color: '#b45309' }}>No roles yet — add one in Manage Roles first</option>
                       : <option value="">Select role</option>}
@@ -482,10 +585,10 @@ export function OwnerStaffPage() {
                     </button>
                   ) : null}
                 </div>
-                <div className="form-field"><label htmlFor="employee-salary">Monthly salary (₹)</label><input id="employee-salary" type="number" min="0" required value={employeeForm.monthlySalary} onChange={(event) => setEmployeeForm({ ...employeeForm, monthlySalary: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="employee-joining">Joining date</label><input id="employee-joining" type="date" required value={employeeForm.joiningDate} onChange={(event) => setEmployeeForm({ ...employeeForm, joiningDate: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="employee-address">Address</label><input id="employee-address" value={employeeForm.address} onChange={(event) => setEmployeeForm({ ...employeeForm, address: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="employee-notes">Notes</label><input id="employee-notes" value={employeeForm.notes} onChange={(event) => setEmployeeForm({ ...employeeForm, notes: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="employee-salary">{formLabel(employeeConfig, 'monthlySalary', 'Monthly salary (₹)')}{requiredMarker(employeeConfig, 'monthlySalary')}</label><input id="employee-salary" type="number" min="0" required={employeeConfig.isRequired('monthlySalary')} value={employeeForm.monthlySalary} onChange={(event) => setEmployeeForm({ ...employeeForm, monthlySalary: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="employee-joining">{formLabel(employeeConfig, 'joiningDate', 'Joining date')}{requiredMarker(employeeConfig, 'joiningDate')}</label><input id="employee-joining" type="date" required={employeeConfig.isRequired('joiningDate')} value={employeeForm.joiningDate} onChange={(event) => setEmployeeForm({ ...employeeForm, joiningDate: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="employee-address">{formLabel(employeeConfig, 'address', 'Address')}{requiredMarker(employeeConfig, 'address')}</label><input id="employee-address" required={employeeConfig.isRequired('address')} value={employeeForm.address} onChange={(event) => setEmployeeForm({ ...employeeForm, address: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="employee-notes">{formLabel(employeeConfig, 'notes', 'Notes')}{requiredMarker(employeeConfig, 'notes')}</label><input id="employee-notes" required={employeeConfig.isRequired('notes')} value={employeeForm.notes} onChange={(event) => setEmployeeForm({ ...employeeForm, notes: event.target.value })} /></div>
                 <div className="table-action-row span-all">
                   <button className="btn btn-brand" type="submit" disabled={isSaving || roles.length === 0}>{isSaving ? 'Saving...' : editingEmployee ? 'Save changes' : 'Add employee'}</button>
                   {editingEmployee ? <button className="btn btn-line" type="button" onClick={() => { setEditingEmployee(null); setEmployeeForm({ name: '', phone: '', email: '', roleId: '', monthlySalary: '', joiningDate: today(), address: '', notes: '' }) }}>Cancel edit</button> : null}
@@ -514,8 +617,8 @@ export function OwnerStaffPage() {
               <h3 className="finance-title span-all">Manage Roles</h3>
               <form className="span-all form-grid two-col" onSubmit={(event) => void submitRole(event)}>
                 <h4 className="finance-title span-all">{editingRole ? 'Edit staff role' : 'Add staff role'}</h4>
-                <div className="form-field"><label htmlFor="role-name">Role name</label><input id="role-name" minLength={2} maxLength={60} required value={roleForm.name} onChange={(event) => setRoleForm({ ...roleForm, name: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="role-color">Label color</label><input id="role-color" type="color" value={roleForm.color} onChange={(event) => setRoleForm({ ...roleForm, color: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="role-name">{formLabel(roleConfig, 'name', 'Role name')}{requiredMarker(roleConfig, 'name')}</label><input id="role-name" minLength={2} maxLength={60} required={roleConfig.isRequired('name')} value={roleForm.name} onChange={(event) => setRoleForm({ ...roleForm, name: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="role-color">{formLabel(roleConfig, 'color', 'Label color')}{requiredMarker(roleConfig, 'color')}</label><input id="role-color" type="color" required={roleConfig.isRequired('color')} value={roleForm.color} onChange={(event) => setRoleForm({ ...roleForm, color: event.target.value })} /></div>
                 <div className="table-action-row span-all"><button type="submit" className="btn btn-brand" disabled={isSaving}>{editingRole ? 'Save role' : 'Add role'}</button>{editingRole ? <button type="button" className="btn btn-line" onClick={() => { setEditingRole(null); setRoleForm({ name: '', color: '#6366f1' }) }}>Cancel</button> : null}</div>
               </form>
               <div className="span-all">
@@ -528,7 +631,7 @@ export function OwnerStaffPage() {
 
           {tab === 'attendance' ? (
             <form className="panel spaced-top" onSubmit={submitAttendance}>
-              <div className="admin-hero-row"><div><h3 className="finance-title">Daily attendance</h3><p className="section-sub">{attendance.length} saved record(s) for the selected date.</p></div><div className="form-field"><label htmlFor="attendance-date">Date</label><input id="attendance-date" type="date" value={attendanceDate} onChange={(event) => setAttendanceDate(event.target.value)} /></div></div>
+              <div className="admin-hero-row"><div><h3 className="finance-title">Daily attendance</h3><p className="section-sub">{attendance.length} saved record(s) for the selected date.</p></div><div className="form-field"><label htmlFor="attendance-date">{formLabel(attendanceConfig, 'date', 'Date')}{requiredMarker(attendanceConfig, 'date')}</label><input id="attendance-date" type="date" required={attendanceConfig.isRequired('date')} value={attendanceDate} onChange={(event) => setAttendanceDate(event.target.value)} /></div></div>
               {activeEmployees.length === 0 ? <p className="section-sub">No active employees to mark.</p> : (
                 <div className="table-wrap"><table><thead><tr><th>Employee</th><th>Status</th><th>Check in</th><th>Check out</th></tr></thead>
                   <tbody>{activeEmployees.map((employee) => {
@@ -559,11 +662,11 @@ export function OwnerStaffPage() {
               <div className="stats-grid spaced-top"><article className="panel"><span className="section-sub">Expenses this month</span><strong>{money(expenseTotal)}</strong></article></div>
               <form className="panel form-grid two-col spaced-top" onSubmit={submitExpense}>
                 <h3 className="finance-title span-all">{editingExpense ? 'Edit employee expense' : 'Record employee expense'}</h3>
-                <div className="form-field"><label htmlFor="expense-employee">Employee</label><select id="expense-employee" required value={expenseForm.employeeId} onChange={(event) => setExpenseForm({ ...expenseForm, employeeId: event.target.value })}><option value="">Select employee</option>{employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.name}</option>)}</select></div>
-                <div className="form-field"><label htmlFor="expense-amount">Amount (₹)</label><input id="expense-amount" type="number" min="0.01" step="0.01" required value={expenseForm.amount} onChange={(event) => setExpenseForm({ ...expenseForm, amount: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="expense-description">Description</label><input id="expense-description" minLength={2} required value={expenseForm.description} onChange={(event) => setExpenseForm({ ...expenseForm, description: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="expense-category">Category</label><select id="expense-category" value={expenseForm.category} onChange={(event) => setExpenseForm({ ...expenseForm, category: event.target.value })}>{['food', 'supplies', 'maintenance', 'travel', 'utilities', 'other'].map((category) => <option key={category}>{category}</option>)}</select></div>
-                <div className="form-field"><label htmlFor="expense-date">Date</label><input id="expense-date" type="date" required value={expenseForm.expenseDate} onChange={(event) => setExpenseForm({ ...expenseForm, expenseDate: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="expense-employee">{formLabel(expenseConfig, 'employeeId', 'Employee')}{requiredMarker(expenseConfig, 'employeeId')}</label><select id="expense-employee" required={expenseConfig.isRequired('employeeId')} value={expenseForm.employeeId} onChange={(event) => setExpenseForm({ ...expenseForm, employeeId: event.target.value })}><option value="">Select employee</option>{employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.name}</option>)}</select></div>
+                <div className="form-field"><label htmlFor="expense-amount">{formLabel(expenseConfig, 'amount', 'Amount (₹)')}{requiredMarker(expenseConfig, 'amount')}</label><input id="expense-amount" type="number" min="0.01" step="0.01" required={expenseConfig.isRequired('amount')} value={expenseForm.amount} onChange={(event) => setExpenseForm({ ...expenseForm, amount: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="expense-description">{formLabel(expenseConfig, 'description', 'Description')}{requiredMarker(expenseConfig, 'description')}</label><input id="expense-description" minLength={2} required={expenseConfig.isRequired('description')} value={expenseForm.description} onChange={(event) => setExpenseForm({ ...expenseForm, description: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="expense-category">{formLabel(expenseConfig, 'category', 'Category')}{requiredMarker(expenseConfig, 'category')}</label><select id="expense-category" required={expenseConfig.isRequired('category')} value={expenseForm.category} onChange={(event) => setExpenseForm({ ...expenseForm, category: event.target.value })}>{['food', 'supplies', 'maintenance', 'travel', 'utilities', 'other'].map((category) => <option key={category}>{category}</option>)}</select></div>
+                <div className="form-field"><label htmlFor="expense-date">{formLabel(expenseConfig, 'expenseDate', 'Date')}{requiredMarker(expenseConfig, 'expenseDate')}</label><input id="expense-date" type="date" required={expenseConfig.isRequired('expenseDate')} value={expenseForm.expenseDate} onChange={(event) => setExpenseForm({ ...expenseForm, expenseDate: event.target.value })} /></div>
                 <div className="table-action-row span-all"><button className="btn btn-brand" type="submit" disabled={isSaving || employees.length === 0}>{editingExpense ? 'Save expense' : 'Add expense'}</button>{editingExpense ? <button className="btn btn-line" type="button" onClick={() => { setEditingExpense(null); setExpenseForm({ employeeId: '', amount: '', description: '', category: 'supplies', expenseDate: today() }) }}>Cancel</button> : null}</div>
               </form>
               <div className="panel spaced-top"><h3 className="finance-title">Expenses</h3>{expenses.length === 0 ? <p className="section-sub">No expenses recorded this month.</p> : <div className="table-wrap"><table><thead><tr><th>Date</th><th>Employee</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead><tbody>{expenses.map((item) => <tr key={item._id}><td>{item.expenseDate.slice(0, 10)}</td><td>{personName(item.employeeId)}</td><td>{item.category}</td><td>{item.description}</td><td>{money(item.amount)}</td><td><div className="table-action-row"><button type="button" className="btn btn-line" onClick={() => { setEditingExpense(item); setExpenseForm({ employeeId: typeof item.employeeId === 'string' ? item.employeeId : item.employeeId._id, amount: String(item.amount), description: item.description, category: item.category, expenseDate: item.expenseDate.slice(0, 10) }) }}>Edit</button><button type="button" className="btn btn-line" onClick={() => void save(() => deleteStaffExpense(item._id), 'Expense deleted')}>Delete</button></div></td></tr>)}</tbody></table></div>}</div>
@@ -574,11 +677,11 @@ export function OwnerStaffPage() {
             <>
               <form className="panel form-grid two-col spaced-top" onSubmit={submitLeave}>
                 <h3 className="finance-title span-all">Record leave request</h3>
-                <div className="form-field"><label htmlFor="leave-employee">Employee</label><select id="leave-employee" required value={leaveForm.employeeId} onChange={(event) => setLeaveForm({ ...leaveForm, employeeId: event.target.value })}><option value="">Select employee</option>{employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.name}</option>)}</select></div>
-                <div className="form-field"><label htmlFor="leave-type">Leave type</label><select id="leave-type" value={leaveForm.leaveType} onChange={(event) => setLeaveForm({ ...leaveForm, leaveType: event.target.value })}>{['sick', 'casual', 'annual', 'unpaid', 'emergency'].map((type) => <option key={type}>{type}</option>)}</select></div>
-                <div className="form-field"><label htmlFor="leave-start">Start date</label><input id="leave-start" type="date" required value={leaveForm.startDate} onChange={(event) => setLeaveForm({ ...leaveForm, startDate: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="leave-end">End date</label><input id="leave-end" type="date" min={leaveForm.startDate} required value={leaveForm.endDate} onChange={(event) => setLeaveForm({ ...leaveForm, endDate: event.target.value })} /></div>
-                <div className="form-field span-all"><label htmlFor="leave-reason">Reason</label><input id="leave-reason" value={leaveForm.reason} onChange={(event) => setLeaveForm({ ...leaveForm, reason: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="leave-employee">{formLabel(leaveConfig, 'employeeId', 'Employee')}{requiredMarker(leaveConfig, 'employeeId')}</label><select id="leave-employee" required={leaveConfig.isRequired('employeeId')} value={leaveForm.employeeId} onChange={(event) => setLeaveForm({ ...leaveForm, employeeId: event.target.value })}><option value="">Select employee</option>{employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.name}</option>)}</select></div>
+                <div className="form-field"><label htmlFor="leave-type">{formLabel(leaveConfig, 'leaveType', 'Leave type')}{requiredMarker(leaveConfig, 'leaveType')}</label><select id="leave-type" required={leaveConfig.isRequired('leaveType')} value={leaveForm.leaveType} onChange={(event) => setLeaveForm({ ...leaveForm, leaveType: event.target.value })}>{['sick', 'casual', 'annual', 'unpaid', 'emergency'].map((type) => <option key={type}>{type}</option>)}</select></div>
+                <div className="form-field"><label htmlFor="leave-start">{formLabel(leaveConfig, 'startDate', 'Start date')}{requiredMarker(leaveConfig, 'startDate')}</label><input id="leave-start" type="date" required={leaveConfig.isRequired('startDate')} value={leaveForm.startDate} onChange={(event) => setLeaveForm({ ...leaveForm, startDate: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="leave-end">{formLabel(leaveConfig, 'endDate', 'End date')}{requiredMarker(leaveConfig, 'endDate')}</label><input id="leave-end" type="date" min={leaveForm.startDate} required={leaveConfig.isRequired('endDate')} value={leaveForm.endDate} onChange={(event) => setLeaveForm({ ...leaveForm, endDate: event.target.value })} /></div>
+                <div className="form-field span-all"><label htmlFor="leave-reason">{formLabel(leaveConfig, 'reason', 'Reason')}{requiredMarker(leaveConfig, 'reason')}</label><input id="leave-reason" required={leaveConfig.isRequired('reason')} value={leaveForm.reason} onChange={(event) => setLeaveForm({ ...leaveForm, reason: event.target.value })} /></div>
                 <div className="table-action-row span-all"><button className="btn btn-brand" type="submit" disabled={isSaving || employees.length === 0}>Add leave</button></div>
               </form>
               <div className="panel spaced-top"><h3 className="finance-title">Leave requests</h3>{leaves.length === 0 ? <p className="section-sub">No leave records.</p> : <div className="table-wrap"><table><thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>{leaves.map((item) => <tr key={item._id}><td>{personName(item.employeeId)}</td><td>{item.leaveType}</td><td>{item.startDate.slice(0, 10)} – {item.endDate.slice(0, 10)}</td><td>{item.totalDays}</td><td>{item.reason ?? '-'}</td><td>{item.status}</td><td>{item.status === 'pending' ? <div className="table-action-row"><button type="button" className="btn btn-line" onClick={() => void save(() => updateStaffLeaveStatus(item._id, 'approve'), 'Leave approved')}>Approve</button><button type="button" className="btn btn-line" onClick={() => void save(() => updateStaffLeaveStatus(item._id, 'reject'), 'Leave rejected')}>Reject</button><button type="button" className="btn btn-line" onClick={() => void save(() => deleteStaffLeave(item._id), 'Leave deleted')}>Delete</button></div> : '-'}</td></tr>)}</tbody></table></div>}</div>
@@ -590,11 +693,11 @@ export function OwnerStaffPage() {
               <div className="stats-grid spaced-top"><article className="panel"><span className="section-sub">Salary paid</span><strong>{money(salary.reduce((sum, item) => sum + item.netPaid, 0))}</strong></article></div>
               <form className="panel form-grid two-col spaced-top" onSubmit={submitSalary}>
                 <h3 className="finance-title span-all">Record salary payment</h3>
-                <div className="form-field"><label htmlFor="salary-employee">Employee</label><select id="salary-employee" required value={salaryForm.employeeId} onChange={(event) => setSalaryForm({ ...salaryForm, employeeId: event.target.value })}><option value="">Select employee</option>{employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.name} · {money(employee.monthlySalary)}</option>)}</select></div>
-                <div className="form-field"><label htmlFor="salary-deductions">Deductions (₹)</label><input id="salary-deductions" type="number" min="0" step="0.01" value={salaryForm.deductions} onChange={(event) => setSalaryForm({ ...salaryForm, deductions: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="salary-bonus">Bonus (₹)</label><input id="salary-bonus" type="number" min="0" step="0.01" value={salaryForm.bonuses} onChange={(event) => setSalaryForm({ ...salaryForm, bonuses: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="salary-paid-at">Paid on</label><input id="salary-paid-at" type="date" required value={salaryForm.paidAt} onChange={(event) => setSalaryForm({ ...salaryForm, paidAt: event.target.value })} /></div>
-                <div className="form-field"><label htmlFor="salary-mode">Payment mode</label><select id="salary-mode" value={salaryForm.paymentMode} onChange={(event) => setSalaryForm({ ...salaryForm, paymentMode: event.target.value })}>{['cash', 'upi', 'bank'].map((mode) => <option key={mode}>{mode}</option>)}</select></div>
+                <div className="form-field"><label htmlFor="salary-employee">{formLabel(salaryConfig, 'employeeId', 'Employee')}{requiredMarker(salaryConfig, 'employeeId')}</label><select id="salary-employee" required={salaryConfig.isRequired('employeeId')} value={salaryForm.employeeId} onChange={(event) => setSalaryForm({ ...salaryForm, employeeId: event.target.value })}><option value="">Select employee</option>{employees.map((employee) => <option key={employee._id} value={employee._id}>{employee.name} · {money(employee.monthlySalary)}</option>)}</select></div>
+                <div className="form-field"><label htmlFor="salary-deductions">{formLabel(salaryConfig, 'deductions', 'Deductions (₹)')}{requiredMarker(salaryConfig, 'deductions')}</label><input id="salary-deductions" type="number" min="0" step="0.01" required={salaryConfig.isRequired('deductions')} value={salaryForm.deductions} onChange={(event) => setSalaryForm({ ...salaryForm, deductions: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="salary-bonus">{formLabel(salaryConfig, 'bonuses', 'Bonus (₹)')}{requiredMarker(salaryConfig, 'bonuses')}</label><input id="salary-bonus" type="number" min="0" step="0.01" required={salaryConfig.isRequired('bonuses')} value={salaryForm.bonuses} onChange={(event) => setSalaryForm({ ...salaryForm, bonuses: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="salary-paid-at">{formLabel(salaryConfig, 'paidAt', 'Paid on')}{requiredMarker(salaryConfig, 'paidAt')}</label><input id="salary-paid-at" type="date" required={salaryConfig.isRequired('paidAt')} value={salaryForm.paidAt} onChange={(event) => setSalaryForm({ ...salaryForm, paidAt: event.target.value })} /></div>
+                <div className="form-field"><label htmlFor="salary-mode">{formLabel(salaryConfig, 'paymentMode', 'Payment mode')}{requiredMarker(salaryConfig, 'paymentMode')}</label><select id="salary-mode" required={salaryConfig.isRequired('paymentMode')} value={salaryForm.paymentMode} onChange={(event) => setSalaryForm({ ...salaryForm, paymentMode: event.target.value })}>{['cash', 'upi', 'bank'].map((mode) => <option key={mode}>{mode}</option>)}</select></div>
                 <div className="table-action-row span-all"><button className="btn btn-brand" type="submit" disabled={isSaving || employees.length === 0}>Record payment</button></div>
               </form>
               <div className="panel spaced-top"><h3 className="finance-title">Salary history · {month}/{year}</h3>{salary.length === 0 ? <p className="section-sub">No salary payments recorded for this period.</p> : <div className="table-wrap"><table><thead><tr><th>Employee</th><th>Paid on</th><th>Base</th><th>Deductions</th><th>Bonus</th><th>Net paid</th><th>Mode</th><th></th></tr></thead><tbody>{salary.map((item) => <tr key={item._id}><td>{personName(item.employeeId)}</td><td>{item.paidAt.slice(0, 10)}</td><td>{money(item.baseSalary)}</td><td>{money(item.deductions)}</td><td>{money(item.bonuses)}</td><td>{money(item.netPaid)}</td><td>{item.paymentMode}</td><td><button type="button" className="btn btn-line" onClick={() => void save(() => deleteStaffSalary(item._id), 'Salary payment deleted')}>Delete</button></td></tr>)}</tbody></table></div>}</div>
