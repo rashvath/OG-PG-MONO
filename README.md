@@ -26,7 +26,8 @@ Open a terminal and navigate to the frontend directory:
 cd nestpg-web
 ```
 
-Create a `.env` file in the `nestpg-web` directory and configure the required environment variables.
+Create a `.env` file in the `nestpg-web` directory using `.env.example` as a
+template and set `VITE_API_BASE_URL`.
 
 Install dependencies:
 
@@ -48,7 +49,8 @@ Open a **second terminal** and navigate to the backend directory:
 cd nestpg-api
 ```
 
-Create a `.env` file in the `nestpg-api` directory and configure the required environment variables.
+Create a `.env` file in the `nestpg-api` directory using `.env.example` as a
+template and configure the database, JWT, email, and OTP settings.
 
 Install dependencies:
 
@@ -76,7 +78,8 @@ Keep both terminals running simultaneously.
 - `nestpg-web/.env` — Frontend environment variables.
 - `nestpg-api/.env` — Backend environment variables.
 
-Refer to the project configuration or ask the project maintainer for the required environment variable names and values.
+See [nestpg-web/README.md](./nestpg-web/README.md) and
+[nestpg-api/README.md](./nestpg-api/README.md) for setup details. Supporting
+project documentation is in [docs/](./docs/).
 
 **Important:** Do not commit `.env` files or expose API keys, database credentials, or other secrets in version control.
-
