@@ -24,6 +24,7 @@ export function LoginPage() {
   const { login } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const loginConfig = useFormConfig('auth.login')
   const [email, setEmail] = useState('customer@nestpg.com')
   const [password, setPassword] = useState('Nestpg@123')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -68,10 +69,17 @@ export function LoginPage() {
           <p>Welcome back. Enter your credentials to continue.</p>
         </div>
 
-        <Input label="Email address" required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <Input
+          label={loginConfig.getLabel('email', 'Email address')}
+          required={loginConfig.isRequired('email')}
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
         <PasswordInput
-          required
-          label="Password"
+          required={loginConfig.isRequired('password')}
+          label={loginConfig.getLabel('password', 'Password')}
           autoComplete="current-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -113,6 +121,7 @@ export function RegisterPage() {
   const toast = useToast()
   const navigate = useNavigate()
   const registerConfig = useFormConfig('auth.register')
+  const tenantRegisterConfig = useFormConfig('auth.tenantRegistration')
   const ownerRegisterConfig = useFormConfig('auth.ownerRegistration')
   const [role, setRole] = useState<'customer' | 'owner' | 'tenant'>('customer')
   const [name, setName] = useState('')
@@ -136,6 +145,7 @@ export function RegisterPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [resendSeconds, setResendSeconds] = useState(0)
   const [otpLength, setOtpLength] = useState(4)
+  const requiredMark = (required: boolean) => (required ? <span className="required-mark"> *</span> : null)
 
   useEffect(() => {
     if (resendSeconds === 0) {
@@ -241,7 +251,7 @@ export function RegisterPage() {
         </div>
         <div className="auth-heading">
           <h1>{step === 1 ? 'Create account' : 'Verify your email'}</h1>
-          <p>{step === 1 ? 'Step 1 of 2 — Your details' : <>We sent a code to <strong>{email}</strong></>}</p>
+          <p>{step === 1 ? 'Enter your details to continue.' : <>We sent a code to <strong>{email}</strong></>}</p>
         </div>
 
         {step === 1 ? (
@@ -273,11 +283,17 @@ export function RegisterPage() {
 
         <div className="auth-fields-grid">
           <div>
-            <label>{registerConfig.getLabel('name', 'Name')}</label>
+            <label>
+              {registerConfig.getLabel('name', 'Name')}
+              {requiredMark(registerConfig.isRequired('name'))}
+            </label>
             <input required={registerConfig.isRequired('name')} value={name} onChange={(event) => setName(event.target.value)} />
           </div>
           <div>
-            <label>{registerConfig.getLabel('phone', 'Phone')}</label>
+            <label>
+              {registerConfig.getLabel('phone', 'Phone')}
+              {requiredMark(registerConfig.isRequired('phone'))}
+            </label>
             <input
               required={registerConfig.isRequired('phone')}
               value={phone}
@@ -299,8 +315,8 @@ export function RegisterPage() {
           onChange={(event) => setPassword(event.target.value)}
         />
         <PasswordInput
-          required
-          label="Confirm password"
+          required={registerConfig.isRequired('confirmPassword')}
+          label={registerConfig.getLabel('confirmPassword', 'Confirm password')}
           autoComplete="new-password"
           minLength={6}
           value={confirmPassword}
@@ -310,8 +326,8 @@ export function RegisterPage() {
         {role === 'tenant' ? (
           <>
             <Select
-              label="Select PG name"
-              required
+              label={tenantRegisterConfig.getLabel('pgId', 'Select PG name')}
+              required={tenantRegisterConfig.isRequired('pgId')}
               value={selectedTenantPgId}
               onChange={(event) => setSelectedTenantPgId(event.target.value)}
             >
@@ -330,7 +346,10 @@ export function RegisterPage() {
           <>
             <div className="auth-fields-grid">
               <div>
-                <label>{ownerRegisterConfig.getLabel('pgName', 'PG Name')}</label>
+                <label>
+                  {ownerRegisterConfig.getLabel('pgName', 'PG Name')}
+                  {requiredMark(ownerRegisterConfig.isRequired('pgName'))}
+                </label>
                 <input
                   required={ownerRegisterConfig.isRequired('pgName')}
                   value={pgName}
@@ -338,11 +357,17 @@ export function RegisterPage() {
                 />
               </div>
               <div>
-                <label>{ownerRegisterConfig.getLabel('area', 'Area')}</label>
+                <label>
+                  {ownerRegisterConfig.getLabel('area', 'Area')}
+                  {requiredMark(ownerRegisterConfig.isRequired('area'))}
+                </label>
                 <input required={ownerRegisterConfig.isRequired('area')} value={area} onChange={(event) => setArea(event.target.value)} />
               </div>
             </div>
-            <label>{ownerRegisterConfig.getLabel('pgAddress', 'PG Address')}</label>
+            <label>
+              {ownerRegisterConfig.getLabel('pgAddress', 'PG Address')}
+              {requiredMark(ownerRegisterConfig.isRequired('pgAddress'))}
+            </label>
             <input
               required={ownerRegisterConfig.isRequired('pgAddress')}
               value={pgAddress}
@@ -351,7 +376,10 @@ export function RegisterPage() {
 
             <div className="auth-fields-grid">
               <div>
-                <label>{ownerRegisterConfig.getLabel('rooms', 'Rooms')}</label>
+                <label>
+                  {ownerRegisterConfig.getLabel('rooms', 'Rooms')}
+                  {requiredMark(ownerRegisterConfig.isRequired('rooms'))}
+                </label>
                 <input
                   required={ownerRegisterConfig.isRequired('rooms')}
                   type="number"
@@ -360,7 +388,10 @@ export function RegisterPage() {
                 />
               </div>
               <div>
-                <label>{ownerRegisterConfig.getLabel('rent', 'Monthly rent')}</label>
+                <label>
+                  {ownerRegisterConfig.getLabel('rent', 'Monthly rent')}
+                  {requiredMark(ownerRegisterConfig.isRequired('rent'))}
+                </label>
                 <input
                   required={ownerRegisterConfig.isRequired('rent')}
                   type="number"
@@ -370,21 +401,30 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <label>{ownerRegisterConfig.getLabel('amenities', 'Amenities (comma separated)')}</label>
+            <label>
+              {ownerRegisterConfig.getLabel('amenities', 'Amenities (comma separated)')}
+              {requiredMark(ownerRegisterConfig.isRequired('amenities'))}
+            </label>
             <input
               required={ownerRegisterConfig.isRequired('amenities')}
               value={amenities}
               onChange={(event) => setAmenities(event.target.value)}
               placeholder="WiFi, Meals, Laundry"
             />
-            <label>{ownerRegisterConfig.getLabel('photos', 'Photo URLs (comma separated)')}</label>
+            <label>
+              {ownerRegisterConfig.getLabel('photos', 'Photo URLs (comma separated)')}
+              {requiredMark(ownerRegisterConfig.isRequired('photos'))}
+            </label>
             <input
               required={ownerRegisterConfig.isRequired('photos')}
               value={photos}
               onChange={(event) => setPhotos(event.target.value)}
               placeholder="https://..."
             />
-            <label>{ownerRegisterConfig.getLabel('description', 'Description')}</label>
+            <label>
+              {ownerRegisterConfig.getLabel('description', 'Description')}
+              {requiredMark(ownerRegisterConfig.isRequired('description'))}
+            </label>
             <textarea
               required={ownerRegisterConfig.isRequired('description')}
               value={description}
@@ -405,30 +445,35 @@ export function RegisterPage() {
               label="Enter your OTP"
               disabled={isSubmitting}
             />
-            <button
-              type="button"
-              className="auth-inline-action"
-              disabled={resendSeconds > 0 || isSubmitting}
-              onClick={async () => {
-                setIsSubmitting(true)
-                setError('')
-                try {
-                  await apiClient.post('/auth/send-registration-otp', { email })
-                  setResendSeconds(30)
-                } catch (requestError) {
-                  const message = toApiError(requestError, 'Unable to resend OTP')
-                  setError(message)
-                  toast.error(message)
-                } finally {
-                  setIsSubmitting(false)
-                }
-              }}
-            >
-              {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : 'Resend OTP'}
-            </button>
-            <button type="button" className="auth-inline-action" onClick={() => setStep(1)}>
-              Back to account details
-            </button>
+            <div className="auth-step-actions">
+              <button
+                type="button"
+                className="auth-inline-action"
+                disabled={resendSeconds > 0 || isSubmitting}
+                onClick={async () => {
+                  setIsSubmitting(true)
+                  setError('')
+                  try {
+                    await apiClient.post('/auth/send-registration-otp', { email })
+                    setResendSeconds(30)
+                  } catch (requestError) {
+                    const message = toApiError(requestError, 'Unable to resend OTP')
+                    setError(message)
+                    toast.error(message)
+                  } finally {
+                    setIsSubmitting(false)
+                  }
+                }}
+              >
+                {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : 'Resend OTP'}
+              </button>
+              <button type="button" className="auth-inline-action" onClick={() => setStep(1)}>
+                Back to account details
+              </button>
+              <Link to="/auth/login" className="auth-inline-action">
+                Back to login
+              </Link>
+            </div>
           </>
         )}
 

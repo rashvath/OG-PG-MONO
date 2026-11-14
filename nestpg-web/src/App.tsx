@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Footer } from '@/components/layout/Footer'
@@ -68,6 +68,151 @@ const AdminResidentsPage = lazy(() => import('@/pages/AdminPages').then((m) => (
 const AdminUsersPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminUsersPage })))
 const AdminFormConfigPage = lazy(() => import('@/pages/FormConfigPage').then((m) => ({ default: m.AdminFormConfigPage })))
 
+function AppFrame() {
+  const location = useLocation()
+  const authPaths = new Set(['/login', '/register', '/auth/login', '/auth/register', '/auth/forgot-password'])
+  const hideShellChrome = authPaths.has(location.pathname)
+
+  return (
+    <>
+      {!hideShellChrome ? <Header /> : null}
+      <main>
+        <Suspense fallback={<RouteSpinner label="Loading page..." />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/listings" element={<ListingsPage />} />
+            <Route path="/pg/:id" element={<PgDetailPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/auth/register" element={<RegisterPage />} />
+            <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+
+            <Route element={<ProtectedRoute allow="owner" />}>
+              <Route
+                path="/owner"
+                element={
+                  <DashboardLayout
+                    title="Owner"
+                    links={[
+                      { label: 'Overview', to: '/owner' },
+                      { label: 'PGs', to: '/owner/add' },
+                      { label: 'People', to: '/owner/residents' },
+                      { label: 'Rooms & Beds', to: '/owner/inventory' },
+                      { label: 'Enquiries', to: '/owner/enquiries' },
+                      { label: 'Balance Sheet', to: '/owner/balance-sheet' },
+                      { label: 'Documents', to: '/owner/documents' },
+                      { label: 'Staff', to: '/owner/staff' },
+                      { label: 'Tenant Approvals', to: '/owner/tenant-review/approvals' },
+                      { label: 'Tenant Complaints', to: '/owner/tenant-review/complaints' },
+                      { label: 'Tenant Payments', to: '/owner/tenant-review/payments' },
+                      { label: 'Tenant Absences', to: '/owner/tenant-review/absences' },
+                      { label: 'Tenant Profile Updates', to: '/owner/tenant-review/profiles' },
+                    ]}
+                  />
+                }
+              >
+                <Route index element={<OwnerOverviewPage />} />
+                <Route path="add" element={<OwnerAddPgPage />} />
+                <Route path="residents" element={<OwnerResidentsPage />} />
+                <Route path="inventory" element={<OwnerInventoryPage />} />
+                <Route path="enquiries" element={<OwnerEnquiriesPage />} />
+                <Route path="balance-sheet" element={<OwnerBalanceSheetPage />} />
+                <Route path="documents" element={<OwnerDocumentsPage />} />
+                <Route path="staff" element={<OwnerStaffPage />} />
+                <Route path="tenant-review">
+                  <Route index element={<Navigate to="approvals" replace />} />
+                  <Route path="approvals" element={<TenantReviewApprovalsPage />} />
+                  <Route path="complaints" element={<TenantReviewComplaintsPage />} />
+                  <Route path="payments" element={<TenantReviewPaymentsPage />} />
+                  <Route path="absences" element={<TenantReviewAbsencesPage />} />
+                  <Route path="profiles" element={<TenantReviewProfilesPage />} />
+                </Route>
+              </Route>
+            </Route>
+
+            <Route element={<ProtectedRoute allow="tenant" />}>
+              <Route
+                path="/tenant"
+                element={
+                  <DashboardLayout
+                    title="Tenant"
+                    links={[
+                      { label: 'Overview', to: '/tenant/overview' },
+                      { label: 'Complaints', to: '/tenant/complaints' },
+                      { label: 'Rent Payments', to: '/tenant/payments' },
+                      { label: 'Absences', to: '/tenant/absences' },
+                      { label: 'Profile Requests', to: '/tenant/profile-requests' },
+                    ]}
+                  />
+                }
+              >
+                <Route index element={<Navigate to="overview" replace />} />
+                <Route path="overview" element={<TenantOverviewPage />} />
+                <Route path="complaints" element={<TenantComplaintsPage />} />
+                <Route path="payments" element={<TenantPaymentsPage />} />
+                <Route path="absences" element={<TenantAbsencesPage />} />
+                <Route path="profile-requests" element={<TenantProfileRequestsPage />} />
+              </Route>
+            </Route>
+
+            <Route element={<ProtectedRoute allow="admin" />}>
+              <Route
+                path="/admin"
+                element={
+                  <DashboardLayout
+                    title="Admin"
+                    links={[
+                      { label: 'Overview', to: '/admin' },
+                      { label: 'PGs', to: '/admin/pgs' },
+                      { label: 'Owners', to: '/admin/owners' },
+                      { label: 'Residents', to: '/admin/residents' },
+                      { label: 'Approvals', to: '/admin/approvals' },
+                      { label: 'Enquiries', to: '/admin/enquiries' },
+                      { label: 'Users', to: '/admin/users' },
+                      { label: 'Form Config', to: '/admin/form-config' },
+                      { label: 'Balance Sheet', to: '/admin/balance-sheet' },
+                      { label: 'Tenant Approvals', to: '/admin/tenant-review/approvals' },
+                      { label: 'Tenant Complaints', to: '/admin/tenant-review/complaints' },
+                      { label: 'Tenant Payments', to: '/admin/tenant-review/payments' },
+                      { label: 'Tenant Absences', to: '/admin/tenant-review/absences' },
+                      { label: 'Tenant Profile Updates', to: '/admin/tenant-review/profiles' },
+                    ]}
+                  />
+                }
+              >
+                <Route index element={<AdminOverviewPage />} />
+                <Route path="pgs" element={<AdminPgsPage />} />
+                <Route path="owners" element={<AdminOwnersPage />} />
+                <Route path="residents" element={<AdminResidentsPage />} />
+                <Route path="approvals" element={<AdminOwnerApprovalsPage />} />
+                <Route path="enquiries" element={<AdminEnquiriesPage />} />
+                <Route path="users" element={<AdminUsersPage />} />
+                <Route path="form-config" element={<AdminFormConfigPage />} />
+                <Route path="balance-sheet" element={<AdminBalanceSheetPage />} />
+                <Route path="tenant-review">
+                  <Route index element={<Navigate to="approvals" replace />} />
+                  <Route path="approvals" element={<TenantReviewApprovalsPage />} />
+                  <Route path="complaints" element={<TenantReviewComplaintsPage />} />
+                  <Route path="payments" element={<TenantReviewPaymentsPage />} />
+                  <Route path="absences" element={<TenantReviewAbsencesPage />} />
+                  <Route path="profiles" element={<TenantReviewProfilesPage />} />
+                </Route>
+              </Route>
+            </Route>
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </main>
+      {!hideShellChrome ? <ModuleHelpButton /> : null}
+      {!hideShellChrome ? <Footer /> : null}
+      <AppToaster />
+    </>
+  )
+}
+
 function App() {
   useEffect(() => {
     const token = getStoredToken()
@@ -82,140 +227,7 @@ function App() {
       <AuthProvider>
         <StoreProvider>
           <BrowserRouter>
-            <Header />
-            <main>
-              <Suspense fallback={<RouteSpinner label="Loading page..." />}>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/listings" element={<ListingsPage />} />
-                  <Route path="/pg/:id" element={<PgDetailPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/auth/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/auth/register" element={<RegisterPage />} />
-                  <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-
-                  <Route element={<ProtectedRoute allow="owner" />}>
-                    <Route
-                      path="/owner"
-                      element={
-                        <DashboardLayout
-                          title="Owner"
-                          links={[
-                            { label: 'Overview', to: '/owner' },
-                            { label: 'PGs', to: '/owner/add' },
-                            { label: 'People', to: '/owner/residents' },
-                            { label: 'Rooms & Beds', to: '/owner/inventory' },
-                            { label: 'Enquiries', to: '/owner/enquiries' },
-                            { label: 'Balance Sheet', to: '/owner/balance-sheet' },
-                            { label: 'Documents', to: '/owner/documents' },
-                            { label: 'Staff', to: '/owner/staff' },
-                            { label: 'Tenant Approvals', to: '/owner/tenant-review/approvals' },
-                            { label: 'Tenant Complaints', to: '/owner/tenant-review/complaints' },
-                            { label: 'Tenant Payments', to: '/owner/tenant-review/payments' },
-                            { label: 'Tenant Absences', to: '/owner/tenant-review/absences' },
-                            { label: 'Tenant Profile Updates', to: '/owner/tenant-review/profiles' },
-                          ]}
-                        />
-                      }
-                    >
-                      <Route index element={<OwnerOverviewPage />} />
-                      <Route path="add" element={<OwnerAddPgPage />} />
-                      <Route path="residents" element={<OwnerResidentsPage />} />
-                      <Route path="inventory" element={<OwnerInventoryPage />} />
-                      <Route path="enquiries" element={<OwnerEnquiriesPage />} />
-                      <Route path="balance-sheet" element={<OwnerBalanceSheetPage />} />
-                      <Route path="documents" element={<OwnerDocumentsPage />} />
-                      <Route path="staff" element={<OwnerStaffPage />} />
-                      <Route path="tenant-review">
-                        <Route index element={<Navigate to="approvals" replace />} />
-                        <Route path="approvals" element={<TenantReviewApprovalsPage />} />
-                        <Route path="complaints" element={<TenantReviewComplaintsPage />} />
-                        <Route path="payments" element={<TenantReviewPaymentsPage />} />
-                        <Route path="absences" element={<TenantReviewAbsencesPage />} />
-                        <Route path="profiles" element={<TenantReviewProfilesPage />} />
-                      </Route>
-                    </Route>
-                  </Route>
-
-                  <Route element={<ProtectedRoute allow="tenant" />}>
-                    <Route
-                      path="/tenant"
-                      element={
-                        <DashboardLayout
-                          title="Tenant"
-                          links={[
-                            { label: 'Overview', to: '/tenant/overview' },
-                            { label: 'Complaints', to: '/tenant/complaints' },
-                            { label: 'Rent Payments', to: '/tenant/payments' },
-                            { label: 'Absences', to: '/tenant/absences' },
-                            { label: 'Profile Requests', to: '/tenant/profile-requests' },
-                          ]}
-                        />
-                      }
-                    >
-                      <Route index element={<Navigate to="overview" replace />} />
-                      <Route path="overview" element={<TenantOverviewPage />} />
-                      <Route path="complaints" element={<TenantComplaintsPage />} />
-                      <Route path="payments" element={<TenantPaymentsPage />} />
-                      <Route path="absences" element={<TenantAbsencesPage />} />
-                      <Route path="profile-requests" element={<TenantProfileRequestsPage />} />
-                    </Route>
-                  </Route>
-
-                  <Route element={<ProtectedRoute allow="admin" />}>
-                    <Route
-                      path="/admin"
-                      element={
-                        <DashboardLayout
-                          title="Admin"
-                          links={[
-                            { label: 'Overview', to: '/admin' },
-                            { label: 'PGs', to: '/admin/pgs' },
-                            { label: 'Owners', to: '/admin/owners' },
-                            { label: 'Residents', to: '/admin/residents' },
-                            { label: 'Approvals', to: '/admin/approvals' },
-                            { label: 'Enquiries', to: '/admin/enquiries' },
-                            { label: 'Users', to: '/admin/users' },
-                            { label: 'Form Config', to: '/admin/form-config' },
-                            { label: 'Balance Sheet', to: '/admin/balance-sheet' },
-                            { label: 'Tenant Approvals', to: '/admin/tenant-review/approvals' },
-                            { label: 'Tenant Complaints', to: '/admin/tenant-review/complaints' },
-                            { label: 'Tenant Payments', to: '/admin/tenant-review/payments' },
-                            { label: 'Tenant Absences', to: '/admin/tenant-review/absences' },
-                            { label: 'Tenant Profile Updates', to: '/admin/tenant-review/profiles' },
-                          ]}
-                        />
-                      }
-                    >
-                      <Route index element={<AdminOverviewPage />} />
-                      <Route path="pgs" element={<AdminPgsPage />} />
-                      <Route path="owners" element={<AdminOwnersPage />} />
-                      <Route path="residents" element={<AdminResidentsPage />} />
-                      <Route path="approvals" element={<AdminOwnerApprovalsPage />} />
-                      <Route path="enquiries" element={<AdminEnquiriesPage />} />
-                      <Route path="users" element={<AdminUsersPage />} />
-                      <Route path="form-config" element={<AdminFormConfigPage />} />
-                      <Route path="balance-sheet" element={<AdminBalanceSheetPage />} />
-                      <Route path="tenant-review">
-                        <Route index element={<Navigate to="approvals" replace />} />
-                        <Route path="approvals" element={<TenantReviewApprovalsPage />} />
-                        <Route path="complaints" element={<TenantReviewComplaintsPage />} />
-                        <Route path="payments" element={<TenantReviewPaymentsPage />} />
-                        <Route path="absences" element={<TenantReviewAbsencesPage />} />
-                        <Route path="profiles" element={<TenantReviewProfilesPage />} />
-                      </Route>
-                    </Route>
-                  </Route>
-
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Suspense>
-            </main>
-            <ModuleHelpButton />
-            <Footer />
-            <AppToaster />
+            <AppFrame />
           </BrowserRouter>
         </StoreProvider>
       </AuthProvider>

@@ -10,7 +10,18 @@ export function AdminFormConfigPage() {
   const [items, setItems] = useState<FormConfig[]>([])
   const [savingKey, setSavingKey] = useState('')
 
-  const sorted = useMemo(() => [...items].sort((a, b) => a.title.localeCompare(b.title)), [items])
+  const orderedSections = useMemo(() => {
+    const byKey = new Map(items.map((item) => [item.formKey, item]))
+    const authOrder = ['auth.register', 'auth.tenantRegistration', 'auth.ownerRegistration', 'auth.login']
+    const authItems = authOrder.map((key) => byKey.get(key)).filter((item): item is FormConfig => Boolean(item))
+    const authKeys = new Set(authItems.map((item) => item.formKey))
+    const otherItems = items.filter((item) => !authKeys.has(item.formKey)).sort((a, b) => a.title.localeCompare(b.title))
+
+    return {
+      authItems,
+      otherItems,
+    }
+  }, [items])
 
   const load = () => {
     getAdminFormConfigs()
@@ -67,7 +78,16 @@ export function AdminFormConfigPage() {
       </div>
 
       <div className="spaced-top" style={{ display: 'grid', gap: 12 }}>
-        {sorted.map((form) => (
+        {orderedSections.authItems.length > 0 ? (
+          <section className="panel finance-panel" style={{ paddingBottom: 16 }}>
+            <h3 style={{ marginBottom: 6 }}>Authentication forms</h3>
+            <p className="section-sub" style={{ marginBottom: 0 }}>
+              Order: Registration forms first, then Login form.
+            </p>
+          </section>
+        ) : null}
+
+        {[...orderedSections.authItems, ...orderedSections.otherItems].map((form) => (
           <section key={form.formKey} className="panel finance-panel">
             <div className="admin-table-head" style={{ marginBottom: 8 }}>
               <div>

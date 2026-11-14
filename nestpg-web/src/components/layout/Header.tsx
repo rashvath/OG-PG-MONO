@@ -33,6 +33,11 @@ export function Header() {
 
   const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register'
   const handleLogout = () => {
+    const shouldLogout = window.confirm('Are you sure you want to log out?')
+    if (!shouldLogout) {
+      return
+    }
+
     logout()
     window.location.replace('/')
   }

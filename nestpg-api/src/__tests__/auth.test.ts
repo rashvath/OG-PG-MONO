@@ -91,18 +91,19 @@ describe('authentication API', () => {
     expect(await OtpModel.countDocuments({ email: 'otp-user@nestpg.test' })).toBe(0)
   })
 
-  it('sends a generic forgot-password response and completes reset via OTP', async () => {
+  it('validates forgot-password email existence and completes reset via OTP', async () => {
     const unknownEmail = await request(app)
       .post('/api/v1/auth/forgot-password')
       .send({ email: 'unknown@nestpg.test' })
-    expect(unknownEmail.status).toBe(200)
-    expect(unknownEmail.body.message).toBe('If that email is registered, an OTP has been sent.')
+    expect(unknownEmail.status).toBe(404)
+    expect(unknownEmail.body.message).toBe('Email not found. Please register first.')
     expect(await OtpModel.countDocuments({ email: 'unknown@nestpg.test' })).toBe(0)
 
     const requestOtp = await request(app)
       .post('/api/v1/auth/forgot-password')
       .send({ email: 'customer@nestpg.test' })
     expect(requestOtp.status).toBe(200)
+    expect(requestOtp.body.message).toBe('OTP sent to your registered email.')
 
     const wrongOtp = await request(app)
       .post('/api/v1/auth/verify-reset-otp')

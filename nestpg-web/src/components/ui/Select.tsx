@@ -19,6 +19,7 @@ export function Select({ className, label, hint, error, id, children, ...props }
       {label ? (
         <label htmlFor={inputId} className="mb-[var(--space-2)] block text-xs font-semibold text-text">
           {label}
+          {props.required ? <span className="required-mark"> *</span> : null}
         </label>
       ) : null}
       <select

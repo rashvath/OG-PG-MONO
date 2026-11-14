@@ -259,18 +259,22 @@ router.post('/forgot-password', async (req, res) => {
 
   const email = parsed.data.email.trim().toLowerCase()
   const user = await UserModel.findOne({ email }).select('_id').lean()
-  if (user) {
-    try {
-      await createAndSendOtp(email, 'forgot-password')
-    } catch (error) {
-      if (!(error instanceof OtpDeliveryError)) {
-        throw error
-      }
-      console.error('Unable to deliver password-reset OTP', error.message)
-    }
+  if (!user) {
+    res.status(404).json({ message: 'Email not found. Please register first.' })
+    return
   }
+
+  try {
+    await createAndSendOtp(email, 'forgot-password')
+  } catch (error) {
+    if (!(error instanceof OtpDeliveryError)) {
+      throw error
+    }
+    console.error('Unable to deliver password-reset OTP', error.message)
+  }
+
   res.json({
-    message: 'If that email is registered, an OTP has been sent.',
+    message: 'OTP sent to your registered email.',
     otpLength: getOtpLength(),
   })
 })

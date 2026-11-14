@@ -21,6 +21,7 @@ export function Input({ className, label, hint, error, rightElement, inputRef, i
       {label ? (
         <label htmlFor={inputId} className="mb-[var(--space-2)] block text-xs font-semibold text-text">
           {label}
+          {props.required ? <span className="required-mark"> *</span> : null}
         </label>
       ) : null}
       <div className="relative">

@@ -1,11 +1,10 @@
 import { Router } from 'express'
 
-import { auth } from '../middleware/auth'
 import { listMergedFormConfigs } from '../services/form-config.service'
 
 const router = Router()
 
-router.get('/', auth(), async (req, res) => {
+router.get('/', async (req, res) => {
   const rawKeys = typeof req.query.keys === 'string' ? req.query.keys : ''
   const formKeys = rawKeys
     .split(',')

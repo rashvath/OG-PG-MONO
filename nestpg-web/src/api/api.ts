@@ -37,6 +37,14 @@ function withQueryParams(url: string, params?: ApiQueryParams) {
 }
 
 async function request<T>(config: AxiosRequestConfig): Promise<T> {
+  const method = String(config.method ?? 'GET').toUpperCase()
+  if (method === 'DELETE') {
+    const shouldDelete = window.confirm('Are you sure you want to delete this item?')
+    if (!shouldDelete) {
+      throw new Error('Delete cancelled')
+    }
+  }
+
   try {
     const response = await apiClient.request<T>(config)
     return response.data

@@ -8,8 +8,34 @@ type StoredFormConfig = {
   updatedAt?: Date
 }
 
+const FORM_KEY_ALIASES: Record<string, string> = {
+  'auth.tenantRegistertion': 'auth.tenantRegistration',
+}
+
+function normalizeFormKey(formKey: string) {
+  return FORM_KEY_ALIASES[formKey] ?? formKey
+}
+
+function getQueryKeys(formKeys: string[]) {
+  const keys = new Set<string>()
+
+  for (const key of formKeys) {
+    const normalized = normalizeFormKey(key)
+    keys.add(normalized)
+
+    for (const [alias, canonical] of Object.entries(FORM_KEY_ALIASES)) {
+      if (canonical === normalized) {
+        keys.add(alias)
+      }
+    }
+  }
+
+  return [...keys]
+}
+
 function byFormKey(formKey: string) {
-  return FORM_CONFIG_DEFAULTS.find((item) => item.formKey === formKey)
+  const normalizedKey = normalizeFormKey(formKey)
+  return FORM_CONFIG_DEFAULTS.find((item) => item.formKey === normalizedKey)
 }
 
 export function listDefaultFormConfigs() {
@@ -17,12 +43,17 @@ export function listDefaultFormConfigs() {
 }
 
 export async function listMergedFormConfigs(formKeys?: string[]) {
-  const filter = formKeys && formKeys.length > 0 ? { formKey: { $in: formKeys } } : {}
-  const stored = (await FormConfigModel.find(filter).lean()) as StoredFormConfig[]
+  const normalizedKeys = formKeys?.map((key) => normalizeFormKey(key))
+  const filter = normalizedKeys && normalizedKeys.length > 0 ? { formKey: { $in: getQueryKeys(normalizedKeys) } } : {}
+  const storedRaw = (await FormConfigModel.find(filter).lean()) as StoredFormConfig[]
+  const stored = storedRaw.map((item) => ({
+    ...item,
+    formKey: normalizeFormKey(item.formKey),
+  }))
   const storedMap = new Map(stored.map((item) => [item.formKey, item]))
 
-  const defaults = formKeys && formKeys.length > 0
-    ? FORM_CONFIG_DEFAULTS.filter((item) => formKeys.includes(item.formKey))
+  const defaults = normalizedKeys && normalizedKeys.length > 0
+    ? FORM_CONFIG_DEFAULTS.filter((item) => normalizedKeys.includes(item.formKey))
     : FORM_CONFIG_DEFAULTS
 
   const merged = defaults.map((item) => {
@@ -60,14 +91,15 @@ export async function listMergedFormConfigs(formKeys?: string[]) {
 }
 
 export async function getMergedFormConfig(formKey: string): Promise<FormConfigDefault | null> {
-  const [result] = await listMergedFormConfigs([formKey])
+  const [result] = await listMergedFormConfigs([normalizeFormKey(formKey)])
   return result ?? null
 }
 
 export async function upsertFormConfig(formKey: string, payload: { title?: string; fields: Array<{ key: string; label: string; required: boolean }> }, updatedBy?: string) {
-  const fallback = byFormKey(formKey)
+  const normalizedKey = normalizeFormKey(formKey)
+  const fallback = byFormKey(normalizedKey)
 
-  const title = payload.title?.trim() || fallback?.title || formKey
+  const title = payload.title?.trim() || fallback?.title || normalizedKey
   const fields = payload.fields
     .map((field) => ({
       key: field.key.trim(),
@@ -77,9 +109,9 @@ export async function upsertFormConfig(formKey: string, payload: { title?: strin
     .filter((field) => field.key.length > 0 && field.label.length > 0)
 
   const next = await FormConfigModel.findOneAndUpdate(
-    { formKey },
+    { formKey: normalizedKey },
     {
-      formKey,
+      formKey: normalizedKey,
       title,
       fields,
       ...(updatedBy ? { updatedBy } : {}),

@@ -12,6 +12,14 @@ export type FormConfig = {
 
 export const FORM_CONFIG_DEFAULTS: FormConfig[] = [
   {
+    formKey: 'auth.login',
+    title: 'Public Login Form',
+    fields: [
+      { key: 'email', label: 'Email address', required: true },
+      { key: 'password', label: 'Password', required: true },
+    ],
+  },
+  {
     formKey: 'auth.register',
     title: 'Public Registration Form',
     fields: [
@@ -19,6 +27,14 @@ export const FORM_CONFIG_DEFAULTS: FormConfig[] = [
       { key: 'phone', label: 'Phone', required: true },
       { key: 'email', label: 'Email', required: true },
       { key: 'password', label: 'Password', required: true },
+      { key: 'confirmPassword', label: 'Confirm password', required: true },
+    ],
+  },
+  {
+    formKey: 'auth.tenantRegistration',
+    title: 'Public Tenant Registration Details',
+    fields: [
+      { key: 'pgId', label: 'Select PG name', required: true },
     ],
   },
   {

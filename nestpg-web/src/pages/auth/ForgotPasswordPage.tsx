@@ -37,7 +37,9 @@ export function ForgotPasswordPage() {
   }, [resendSeconds])
 
   const requestOtp = async () => {
-    const { data } = await apiClient.post<{ otpLength?: number }>('/auth/forgot-password', { email })
+    const normalizedEmail = email.trim().toLowerCase()
+    setEmail(normalizedEmail)
+    const { data } = await apiClient.post<{ otpLength?: number }>('/auth/forgot-password', { email: normalizedEmail })
     setOtpLength(data.otpLength ?? 4)
     setStep(2)
     setResendSeconds(30)
@@ -57,7 +59,7 @@ export function ForgotPasswordPage() {
       if (step === 1) {
         await requestOtp()
       } else if (step === 2) {
-        const { data } = await apiClient.post<{ resetToken: string }>('/auth/verify-reset-otp', { email, otp })
+        const { data } = await apiClient.post<{ resetToken: string }>('/auth/verify-reset-otp', { email: email.trim().toLowerCase(), otp })
         setResetToken(data.resetToken)
         setStep(3)
       } else {
@@ -94,8 +96,8 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout>
-      <form className="auth-form" onSubmit={submit}>
+    <AuthLayout compactCard>
+      <form className="auth-form auth-form-forgot" onSubmit={submit}>
         <div className="auth-heading">
           <h1>{step === 1 ? 'Reset your password' : step === 2 ? 'Enter your code' : 'Set new password'}</h1>
           <p>
@@ -129,26 +131,34 @@ export function ForgotPasswordPage() {
               label="Enter your OTP"
               disabled={isSubmitting}
             />
-            <button
-              type="button"
-              className="auth-inline-action"
-              disabled={resendSeconds > 0 || isSubmitting}
-              onClick={async () => {
-                setIsSubmitting(true)
-                setError('')
-                try {
-                  await requestOtp()
-                } catch (requestError) {
-                  const message = toApiError(requestError, 'Unable to resend OTP')
-                  setError(message)
-                  toast.error(message)
-                } finally {
-                  setIsSubmitting(false)
-                }
-              }}
-            >
-              {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : 'Resend OTP'}
-            </button>
+            <div className="auth-step-actions">
+              <button
+                type="button"
+                className="auth-inline-action"
+                disabled={resendSeconds > 0 || isSubmitting}
+                onClick={async () => {
+                  setIsSubmitting(true)
+                  setError('')
+                  try {
+                    await requestOtp()
+                  } catch (requestError) {
+                    const message = toApiError(requestError, 'Unable to resend OTP')
+                    setError(message)
+                    toast.error(message)
+                  } finally {
+                    setIsSubmitting(false)
+                  }
+                }}
+              >
+                {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : 'Resend OTP'}
+              </button>
+              <button type="button" className="auth-inline-action" onClick={startOver}>
+                Back to email
+              </button>
+              <Link to="/auth/login" className="auth-inline-action">
+                Back to login
+              </Link>
+            </div>
           </>
         ) : null}
 
@@ -170,6 +180,9 @@ export function ForgotPasswordPage() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
             />
+            <button type="button" className="auth-inline-action" onClick={() => setStep(2)}>
+              Back to OTP verification
+            </button>
           </>
         ) : null}
 
