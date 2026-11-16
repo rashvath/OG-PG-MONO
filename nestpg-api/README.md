@@ -63,3 +63,24 @@ npm test
 npm run test:coverage
 npm run build
 ```
+
+## Deploy On Vercel
+
+This API can run on Vercel as a Node.js serverless function.
+
+1. Import `nestpg-api` as a project in Vercel.
+2. Keep the root directory as `nestpg-api`.
+3. Add these environment variables in Vercel Project Settings:
+	- `MONGO_URI`
+	- `JWT_SECRET`
+	- `CLOUDINARY_URL` (if uploads are used)
+	- `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `GMAIL_FROM` (if email OTP is used)
+	- `SEND_OTP`
+	- `OTP_KEYWORD` (optional)
+4. Deploy.
+
+Health check after deploy:
+
+```bash
+curl https://<your-vercel-domain>/api/v1/health
+```
