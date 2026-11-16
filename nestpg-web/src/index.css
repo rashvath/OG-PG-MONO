@@ -3864,6 +3864,10 @@ th {
   font-size: 0.78rem;
 }
 
+.editorial-stats > div {
+  text-align: center;
+}
+
 .site-footer {
   position: fixed;
   left: 0;
@@ -4124,7 +4128,7 @@ th {
   }
 
   .home-page .home-wrap {
-    padding-inline: 22px;
+    padding-inline: 26px;
   }
 
   .home-page .hero-copy {
@@ -4195,6 +4199,59 @@ th {
 
   .home-page .page-section {
     padding: 68px 0;
+  }
+
+  .home-page .areas-grid,
+  .home-page .listing-grid,
+  .home-page .trust-columns,
+  .home-page .editorial-stats,
+  .home-page .why-og-grid,
+  .home-page .why-og-points {
+    padding-inline: 6px;
+  }
+
+  .home-page .area-card,
+  .home-page .listing-card,
+  .home-page .why-og-points article,
+  .home-page .trust-columns article,
+  .home-page .editorial-stats > div {
+    border-radius: 14px;
+  }
+
+  .home-page .trust-columns {
+    gap: 12px;
+  }
+
+  .home-page .trust-columns article {
+    padding: 14px 14px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--warm-white) 95%, white);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .home-page .editorial-stats {
+    gap: 12px;
+  }
+
+  .home-page .editorial-stats > div {
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--warm-white) 95%, white);
+    box-shadow: var(--shadow-soft);
+    padding: 14px 12px;
+  }
+
+  .home-page .editorial-stats strong {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    line-height: 1.05;
+  }
+
+  .home-page .editorial-stats span {
+    font-size: 0.74rem;
+  }
+
+  .home-page .listing-card,
+  .home-page .area-card {
+    overflow: hidden;
   }
 
   .nav-row {
@@ -4979,7 +5036,7 @@ th {
 
 @media (max-width: 480px) {
   .home-page .home-wrap {
-    padding-inline: 18px;
+    padding-inline: 22px;
   }
 
   .home-page .hero-copy {
@@ -4992,6 +5049,23 @@ th {
 
   .home-page .glass-search {
     margin-inline: 10px;
+  }
+
+  .home-page .areas-grid,
+  .home-page .listing-grid,
+  .home-page .trust-columns,
+  .home-page .editorial-stats,
+  .home-page .why-og-grid,
+  .home-page .why-og-points {
+    padding-inline: 4px;
+  }
+
+  .home-page .trust-columns article {
+    padding-inline: 12px;
+  }
+
+  .home-page .editorial-stats > div {
+    padding: 12px 10px;
   }
 }
 
