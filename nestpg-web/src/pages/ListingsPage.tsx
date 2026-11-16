@@ -88,6 +88,9 @@ export function ListingsPage() {
         <label>Area</label>
         <CustomDropdown
           ariaLabel="Area filter"
+          searchable
+          searchPlaceholder="Search area..."
+          minSearchOptions={1}
           value={area}
           onChange={updateArea}
           options={[

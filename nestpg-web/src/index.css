@@ -23,7 +23,7 @@ html { box-sizing: border-box; height: 100%; scroll-padding-top: calc(var(--spac
 body {
   margin: 0;
   min-height: 100%;
-  background: var(--c-surface);
+  background: var(--ivory);
   color: var(--c-text);
   font: 400 var(--font-xs)/var(--lh-base) var(--font-stack);
 }
@@ -71,6 +71,10 @@ a {
 main {
   min-height: calc(100vh - 120px);
   padding-bottom: 78px;
+  background:
+    radial-gradient(980px 320px at 12% 8%, rgba(201, 93, 67, 0.04), transparent 66%),
+    radial-gradient(840px 300px at 88% 10%, rgba(104, 112, 90, 0.035), transparent 70%),
+    var(--ivory);
 }
 
 .app-wrap {
@@ -403,12 +407,10 @@ main {
 
 .hero-block {
   position: relative;
-  margin: 34px 0 0;
-  background:
-    radial-gradient(980px 320px at 12% 8%, rgba(201, 93, 67, 0.04), transparent 66%),
-    radial-gradient(840px 300px at 88% 10%, rgba(104, 112, 90, 0.035), transparent 70%),
-    var(--ivory);
+  margin: 0;
+  background: transparent;
   overflow: visible;
+  z-index: 60;
 }
 
 .hero-block::before,
@@ -418,17 +420,17 @@ main {
 
 .hero-grid {
   position: relative;
-  z-index: 1;
+  z-index: 70;
   display: grid;
   grid-template-columns: 5fr 7fr;
   gap: 42px;
   align-items: start;
-  padding: 28px 0 8px;
+  padding: 44px 0 20px;
 }
 
 .hero-copy {
   display: grid;
-  gap: 18px;
+  gap: 26px;
   padding-top: 34px;
 }
 
@@ -482,7 +484,6 @@ main {
   .glass-search,
   .glass-search:hover,
   .search-btn,
-  .search-btn:hover,
   .search-btn::before,
   .search-btn:hover::before {
     animation: none;
@@ -526,6 +527,9 @@ main {
 .glass-search {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
+  margin-top: 24px;
+  position: relative;
+  z-index: 80;
   border: 1px solid var(--line);
   background: var(--warm-white);
   box-shadow: var(--shadow-soft);
@@ -634,12 +638,42 @@ main {
   left: 0;
   right: 0;
   top: calc(100% + 4px);
-  z-index: 30;
+  z-index: 100;
   border: 1px solid var(--line);
   background: var(--warm-white);
   box-shadow: var(--shadow-soft);
   max-height: 240px;
   overflow-y: auto;
+}
+
+.custom-dropdown-search-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px;
+  background: var(--warm-white);
+  border-bottom: 1px solid var(--sand);
+}
+
+.custom-dropdown-search {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--charcoal);
+  padding: 9px 10px;
+  font: 500 0.85rem Inter, system-ui, sans-serif;
+}
+
+.custom-dropdown-search:focus-visible {
+  outline: 1px solid var(--stone);
+  border-color: #c5bcaf;
+}
+
+.custom-dropdown-empty {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--warm-gray);
+  font: 500 0.84rem Inter, system-ui, sans-serif;
 }
 
 .custom-dropdown-option {
@@ -703,7 +737,7 @@ main {
 }
 
 .hero-photo {
-  min-height: 468px;
+  min-height: 560px;
   border: 1px solid var(--line);
   background-color: #fff;
   background-image: url('./assets/bangalore.avif');
@@ -725,6 +759,10 @@ main {
 
 .hero-photo-note.second {
   bottom: 18px;
+}
+
+.home-page .home-wrap {
+  padding-inline: clamp(20px, 3.8vw, 36px);
 }
 
 .page-section {
@@ -4085,6 +4123,80 @@ th {
     padding: 0 14px;
   }
 
+  .home-page .home-wrap {
+    padding-inline: 22px;
+  }
+
+  .home-page .hero-copy {
+    padding-inline: 8px;
+  }
+
+  .home-page .hero-block {
+    margin-top: 0;
+  }
+
+  .home-page .hero-grid {
+    gap: 24px;
+    padding: 26px 6px 10px;
+  }
+
+  .home-page .hero-grid h1 {
+    font-size: clamp(2.1rem, 11vw, 3rem);
+    line-height: 1;
+  }
+
+  .home-page .hero-grid p {
+    font-size: 0.95rem;
+  }
+
+  .home-page .glass-search {
+    border-radius: 12px;
+    overflow: visible;
+    margin-top: 14px;
+    margin-inline: 8px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 8px;
+  }
+
+  .home-page .search-field {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--warm-white);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .home-page .search-field {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .home-page .search-btn {
+    width: 100%;
+    min-height: 56px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .home-page .hero-photo {
+    min-height: 360px;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .home-page .hero-photo-note {
+    left: 12px;
+    right: 12px;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+    font-size: 0.72rem;
+  }
+
+  .home-page .page-section {
+    padding: 68px 0;
+  }
+
   .nav-row {
     min-height: 66px;
   }
@@ -4862,6 +4974,24 @@ th {
 
   .otp-box-row {
     gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-page .home-wrap {
+    padding-inline: 18px;
+  }
+
+  .home-page .hero-copy {
+    padding-inline: 10px;
+  }
+
+  .home-page .hero-grid {
+    padding-inline: 4px;
+  }
+
+  .home-page .glass-search {
+    margin-inline: 10px;
   }
 }
 

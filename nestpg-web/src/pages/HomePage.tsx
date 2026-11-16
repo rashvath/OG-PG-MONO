@@ -99,9 +99,9 @@ export function HomePage() {
   const searchHref = `/listings${searchParams.size ? `?${searchParams.toString()}` : ''}`
 
   return (
-    <>
+    <div className="home-page">
       <section className="hero-block">
-        <div className="app-wrap hero-grid">
+        <div className="app-wrap home-wrap hero-grid">
           <div className="hero-copy">
             <p className="eyebrow hero-anim hero-anim-eyebrow">OG PG Editorial Collection</p>
             <h1 className="hero-anim hero-anim-title">
@@ -120,6 +120,9 @@ export function HomePage() {
                 <CustomDropdown
                   className="search-dropdown"
                   ariaLabel="Area"
+                  searchable
+                  searchPlaceholder="Search area..."
+                  minSearchOptions={1}
                   value={area}
                   onChange={setArea}
                   placeholder="Where in Bangalore?"
@@ -160,7 +163,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="app-wrap page-section">
+      <section className="app-wrap home-wrap page-section">
         <h2>Where do you want to live?</h2>
         <p className="section-sub">Explore Bangalore's most connected neighbourhoods.</p>
         {loadError ? <p className="section-sub">{loadError}</p> : null}
@@ -196,7 +199,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="app-wrap page-section">
+      <section className="app-wrap home-wrap page-section">
         <h2>Popular this week</h2>
         <p className="section-sub">Curated stays with transparent rent and direct owner contact.</p>
         {isLoading ? (
@@ -210,7 +213,7 @@ export function HomePage() {
         )}
       </section>
 
-      <section className="app-wrap page-section why-og-section">
+      <section className="app-wrap home-wrap page-section why-og-section">
         <p className="eyebrow">WHY OG STAYS?</p>
         <h2 className="why-og-title">
           More than just a <em>stay</em>.
@@ -282,7 +285,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="app-wrap page-section trust-block" id="about">
+      <section className="app-wrap home-wrap page-section trust-block" id="about">
         <p className="trust-headline">REAL HOMES. REAL PEOPLE. NO SURPRISES.</p>
         <div className="trust-columns">
           <article>
@@ -300,7 +303,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="app-wrap page-section editorial-stats">
+      <section className="app-wrap home-wrap page-section editorial-stats">
         <div>
           <strong>
             <NumberTicker value={homeStats.verifiedCount} />
@@ -320,6 +323,6 @@ export function HomePage() {
           <span>AVERAGE RATING</span>
         </div>
       </section>
-    </>
+    </div>
   )
 }
