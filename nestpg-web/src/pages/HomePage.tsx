@@ -2,7 +2,23 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, MapPin, MessageCircle, Search, ShieldCheck, Users, Wallet } from 'lucide-react'
+import {
+  BatteryCharging,
+  Building2,
+  Car,
+  Camera,
+  MapPin,
+  MessageCircle,
+  Search,
+  ShieldCheck,
+  Snowflake,
+  Sparkles,
+  Users,
+  UtensilsCrossed,
+  Wallet,
+  WashingMachine,
+  Wifi,
+} from 'lucide-react'
 
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { ListingCard } from '@/components/ui/ListingCard'
@@ -97,6 +113,17 @@ export function HomePage() {
     searchParams.set('gender', gender)
   }
   const searchHref = `/listings${searchParams.size ? `?${searchParams.toString()}` : ''}`
+
+  const amenities = [
+    { label: 'Wi-Fi', icon: Wifi },
+    { label: 'Food included', icon: UtensilsCrossed },
+    { label: 'AC / Non-AC', icon: Snowflake },
+    { label: 'Washing machine', icon: WashingMachine },
+    { label: 'Housekeeping', icon: Sparkles },
+    { label: 'Power backup', icon: BatteryCharging },
+    { label: 'CCTV security', icon: Camera },
+    { label: 'Parking', icon: Car },
+  ]
 
   return (
     <div className="home-page">
@@ -211,6 +238,26 @@ export function HomePage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="app-wrap home-wrap page-section amenities-showcase" aria-labelledby="great-stay-title">
+        <div className="amenities-head">
+          <h2 id="great-stay-title" className="why-og-title">
+            What makes a great <em>stay</em>?
+          </h2>
+          <p className="section-sub">The essentials that turn a room into a reliable everyday home.</p>
+        </div>
+
+        <div className="amenities-grid" role="list" aria-label="Important amenities">
+          {amenities.map(({ label, icon: Icon }) => (
+            <article key={label} className="amenity-card" role="listitem">
+              <span className="amenity-icon" aria-hidden="true">
+                <Icon size={18} />
+              </span>
+              <p>{label}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="app-wrap home-wrap page-section why-og-section">

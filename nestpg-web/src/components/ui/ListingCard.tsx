@@ -13,11 +13,35 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, withGlare = false }: ListingCardProps) {
   const gradient = areaGradientClass[listing.areaKey] ?? 'glass-image-koramangala'
-  const tileStyle = listing.photos[0] ? { backgroundImage: `url(${listing.photos[0]})` } : undefined
+  const photos = listing.photos.length > 0 ? listing.photos : ['']
   const availability = Number(listing.id) % 2 === 0 ? 'Available' : 'Limited availability'
 
   const tile = (
-    <div className={`listing-tile ${gradient}`} style={tileStyle}>
+    <div className="listing-tile">
+      <div className="listing-tile-media" aria-label="Listing photos">
+        <div className="listing-tile-track">
+          {photos.map((photo, index) => {
+            const tileStyle = photo ? { backgroundImage: `url(${photo})` } : undefined
+            return (
+              <div
+                key={`${listing.id}-${index}`}
+                className={`listing-tile-image ${gradient}`}
+                style={tileStyle}
+                aria-label={`Photo ${index + 1} of ${photos.length}`}
+              />
+            )
+          })}
+        </div>
+      </div>
+
+      {photos.length > 1 ? (
+        <div className="listing-tile-dots" aria-hidden="true">
+          {photos.map((_, index) => (
+            <span key={`${listing.id}-dot-${index}`} className="listing-tile-dot" />
+          ))}
+        </div>
+      ) : null}
+
       <span className="listing-tag">
         <Sparkles size={11} aria-hidden="true" />
         {listing.tag}
