@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { fetchLiveListings } from '@/api/listings-api'
 import { apiClient, toApiError } from '@/api/http'
@@ -123,7 +123,18 @@ export function RegisterPage() {
   const registerConfig = useFormConfig('auth.register')
   const tenantRegisterConfig = useFormConfig('auth.tenantRegistration')
   const ownerRegisterConfig = useFormConfig('auth.ownerRegistration')
-  const [role, setRole] = useState<'customer' | 'owner' | 'tenant'>('customer')
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+
+  const getRoleFromRoute = (): 'customer' | 'owner' | 'tenant' => {
+    const roleParam = searchParams.get('role')
+    if (roleParam === 'customer' || roleParam === 'owner' || roleParam === 'tenant') {
+      return roleParam
+    }
+    return location.pathname === '/register' ? 'owner' : 'customer'
+  }
+
+  const [role, setRole] = useState<'customer' | 'owner' | 'tenant'>(() => getRoleFromRoute())
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -165,6 +176,10 @@ export function RegisterPage() {
         setTenantListings([])
       })
   }, [])
+
+  useEffect(() => {
+    setRole(getRoleFromRoute())
+  }, [location.pathname, searchParams])
 
   const toNumberValue = (value: number) => (value === 0 ? '' : String(value))
   const parseNumberInput = (value: string) => {

@@ -16,7 +16,7 @@ export function Header() {
   const primaryNavItems = useMemo(() => {
     const items: Array<{ to: string; label: string }> = [
       { to: '/listings', label: 'Find a PG' },
-      { to: '/register', label: 'List your PG' },
+      { to: '/register?role=owner', label: 'List your PG' },
       { to: '/about', label: 'About' },
     ]
 
@@ -31,7 +31,7 @@ export function Header() {
     return items
   }, [role])
 
-  const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register'
+  const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register?role=owner'
   const handleLogout = () => {
     const shouldLogout = window.confirm('Are you sure you want to log out?')
     if (!shouldLogout) {
