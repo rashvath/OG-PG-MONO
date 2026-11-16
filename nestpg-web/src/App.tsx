@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -12,8 +12,9 @@ import { AuthProvider } from '@/lib/auth'
 import { clearSession, getStoredToken, isTokenValid } from '@/lib/session'
 import { StoreProvider } from '@/lib/store'
 import { ThemeProvider } from '@/lib/theme'
-import { AboutPage } from '@/pages/AboutPage'
-import { HomePage } from '@/pages/HomePage'
+
+const HomePage = lazy(() => import('@/pages/HomePage').then((m) => ({ default: m.HomePage })))
+const AboutPage = lazy(() => import('@/pages/AboutPage').then((m) => ({ default: m.AboutPage })))
 
 const ListingsPage = lazy(() => import('@/pages/ListingsPage').then((m) => ({ default: m.ListingsPage })))
 const PgDetailPage = lazy(() => import('@/pages/PgDetailPage').then((m) => ({ default: m.PgDetailPage })))
@@ -72,10 +73,28 @@ function AppFrame() {
   const location = useLocation()
   const authPaths = new Set(['/login', '/register', '/auth/login', '/auth/register', '/auth/forgot-password'])
   const hideShellChrome = authPaths.has(location.pathname)
+  const [isRouteChanging, setIsRouteChanging] = useState(false)
+  const didMountRef = useRef(false)
+
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true
+      return
+    }
+
+    setIsRouteChanging(true)
+    const timer = window.setTimeout(() => setIsRouteChanging(false), 320)
+    return () => window.clearTimeout(timer)
+  }, [location.pathname, location.search])
 
   return (
     <>
       {!hideShellChrome ? <Header /> : null}
+      {isRouteChanging ? (
+        <div className="route-loader-overlay" aria-live="polite" aria-label="Loading route">
+          <RouteSpinner label="Loading route..." />
+        </div>
+      ) : null}
       <main>
         <Suspense fallback={<RouteSpinner label="Loading page..." />}>
           <Routes>

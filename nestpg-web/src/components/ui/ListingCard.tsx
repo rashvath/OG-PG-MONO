@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ShieldCheck, Sparkles } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
 import GlareHover from '@/components/ui/GlareHover'
 import { areaGradientClass } from '@/lib/mock-data'
@@ -13,28 +14,48 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, withGlare = false }: ListingCardProps) {
   const gradient = areaGradientClass[listing.areaKey] ?? 'glass-image-koramangala'
-  const photos = listing.photos.length > 0 ? listing.photos : ['']
+  const [failedPhotoUrls, setFailedPhotoUrls] = useState<Record<string, true>>({})
+
+  const photos = useMemo(() => {
+    const unusableMarkers = ['placeholder', 'dummy', 'no-image', 'noimage', 'transparent', 'checkerboard']
+    return listing.photos.filter((photo) => {
+      const normalized = photo.trim().toLowerCase()
+      if (!normalized || failedPhotoUrls[photo]) {
+        return false
+      }
+      return !unusableMarkers.some((marker) => normalized.includes(marker))
+    })
+  }, [failedPhotoUrls, listing.photos])
+
+  const hasPhotos = photos.length > 0
   const availability = Number(listing.id) % 2 === 0 ? 'Available' : 'Limited availability'
 
   const tile = (
     <div className="listing-tile">
       <div className="listing-tile-media" aria-label="Listing photos">
-        <div className="listing-tile-track">
-          {photos.map((photo, index) => {
-            const tileStyle = photo ? { backgroundImage: `url(${photo})` } : undefined
-            return (
-              <div
-                key={`${listing.id}-${index}`}
-                className={`listing-tile-image ${gradient}`}
-                style={tileStyle}
-                aria-label={`Photo ${index + 1} of ${photos.length}`}
-              />
-            )
-          })}
-        </div>
+        {hasPhotos ? (
+          <div className="listing-tile-track">
+            {photos.map((photo, index) => (
+              <figure key={`${listing.id}-${index}`} className={`listing-tile-image ${gradient}`}>
+                <img
+                  className="listing-tile-image-media"
+                  src={photo}
+                  alt={`${listing.name} photo ${index + 1}`}
+                  loading="lazy"
+                  decoding="async"
+                  onError={() => setFailedPhotoUrls((current) => ({ ...current, [photo]: true }))}
+                />
+              </figure>
+            ))}
+          </div>
+        ) : (
+          <div className={`listing-tile-image listing-tile-fallback ${gradient}`}>
+            <p>Photo unavailable</p>
+          </div>
+        )}
       </div>
 
-      {photos.length > 1 ? (
+      {hasPhotos && photos.length > 1 ? (
         <div className="listing-tile-dots" aria-hidden="true">
           {photos.map((_, index) => (
             <span key={`${listing.id}-dot-${index}`} className="listing-tile-dot" />

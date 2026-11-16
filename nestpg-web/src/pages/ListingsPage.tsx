@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
+import { FilterDrawer } from '@/components/ui/FilterDrawer'
 import { ListingCard } from '@/components/ui/ListingCard'
 import { useLiveListings } from '@/api/listings-api'
 import { AMENITIES } from '@/lib/mock-data'
@@ -18,6 +19,7 @@ export function ListingsPage() {
   const [maxBudget, setMaxBudget] = useState(50000)
   const [amenities, setAmenities] = useState<string[]>([])
   const [sort, setSort] = useState<'rec' | 'lo' | 'hi' | 'rt'>('rec')
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
 
   const area = params.get('area') ?? ''
 
@@ -82,9 +84,14 @@ export function ListingsPage() {
     )
   }
 
-  return (
-    <div className="app-wrap layout-grid">
-      <aside className="panel filters">
+  const hasActiveFilters = Boolean(area || gender || sharing || amenities.length > 0 || sort !== 'rec')
+  const activeFiltersCount = [Boolean(area), Boolean(gender), Boolean(sharing), amenities.length > 0, sort !== 'rec'].filter(
+    Boolean,
+  ).length
+
+  const filtersContent = (
+    <>
+      <div className="filter-group">
         <label>Area</label>
         <CustomDropdown
           ariaLabel="Area filter"
@@ -98,9 +105,11 @@ export function ListingsPage() {
             ...areaOptions.map((option) => ({ label: option, value: option })),
           ]}
         />
+      </div>
 
+      <div className="filter-group">
         <label>Gender</label>
-        <div className="chips">
+        <div className="chips" role="radiogroup" aria-label="Gender filter">
           {['', 'Men', 'Women', 'Co-ed'].map((option) => (
             <button
               key={option || 'all'}
@@ -112,9 +121,11 @@ export function ListingsPage() {
             </button>
           ))}
         </div>
+      </div>
 
+      <div className="filter-group">
         <label>Sharing</label>
-        <div className="chips">
+        <div className="chips" role="radiogroup" aria-label="Sharing filter">
           {['', 'Single', 'Double', 'Triple'].map((option) => (
             <button
               key={option || 'all'}
@@ -126,9 +137,12 @@ export function ListingsPage() {
             </button>
           ))}
         </div>
+      </div>
 
+      <div className="filter-group">
         <label>{`Max budget: ${inr(maxBudget)}`}</label>
         <input
+          className="budget-slider"
           type="range"
           min={0}
           max={budgetSliderMax}
@@ -136,7 +150,9 @@ export function ListingsPage() {
           value={maxBudget}
           onChange={(event) => setMaxBudget(Number(event.target.value))}
         />
+      </div>
 
+      <div className="filter-group">
         <label>Amenities</label>
         <div className="checkbox-list">
           {AMENITIES.slice(0, 6).map((amenity) => (
@@ -146,11 +162,13 @@ export function ListingsPage() {
                 checked={amenities.includes(amenity)}
                 onChange={() => toggleAmenity(amenity)}
               />
-              {amenity}
+              <span>{amenity}</span>
             </label>
           ))}
         </div>
+      </div>
 
+      <div className="filter-group">
         <label>Sort</label>
         <CustomDropdown
           ariaLabel="Sort listings"
@@ -163,18 +181,50 @@ export function ListingsPage() {
             { label: 'Top rated', value: 'rt' },
           ]}
         />
+      </div>
+    </>
+  )
+
+  return (
+    <div className="app-wrap layout-grid listings-layout">
+      <aside className="panel filters listings-filters-desktop" aria-label="Listing filters">
+        {filtersContent}
       </aside>
 
-      <section>
+      <section className="listings-main" aria-label="Property listing results">
+        <div className="listings-topbar">
+          <FilterDrawer
+            isOpen={isFilterDrawerOpen}
+            onOpenChange={setIsFilterDrawerOpen}
+            title="Filters"
+            buttonLabel="Filters"
+            onApply={() => undefined}
+            onClear={() => {
+              updateArea('')
+              updateGender('')
+              setSharing('')
+              setMaxBudget(budgetSliderMax)
+              setAmenities([])
+              setSort('rec')
+            }}
+            clearLabel="Reset filters"
+            closeOnApply={false}
+          >
+            <div className="filters listing-drawer-filters">{filtersContent}</div>
+          </FilterDrawer>
+          {hasActiveFilters ? <p className="listings-filter-state">Filters active · {activeFiltersCount}</p> : null}
+        </div>
+
         <h2>{`${result.length} PGs${area ? ` in ${area}` : ' in Bangalore'}`}</h2>
+        <p className="section-sub">Compare verified stays with live pricing, amenities, and availability.</p>
         {loadError ? <p className="section-sub spaced-top">{loadError}</p> : null}
-        <div className="listing-grid spaced-top">
+        <div className="listing-grid listing-grid-page spaced-top">
           {isLoading ? (
-            <p className="section-sub">Loading listings...</p>
+            <p className="section-sub listing-grid-message">Loading listings...</p>
           ) : result.length > 0 ? (
             result.map((listing) => <ListingCard key={listing.id} listing={listing} />)
           ) : (
-            <p className="section-sub">No PGs match. Try a higher budget or fewer filters.</p>
+            <p className="section-sub listing-grid-message">No PGs match. Try a higher budget or fewer filters.</p>
           )}
         </div>
       </section>

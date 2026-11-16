@@ -6,6 +6,7 @@ import { AppTable } from '@/components/data-display/AppTable'
 import { EmptyTableState } from '@/components/data-display/EmptyTableState'
 import { StatCard } from '@/components/data-display/StatCard'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
+import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { FilterDrawer } from '@/components/ui/FilterDrawer'
 import { inr } from '@/helpers/format'
 import { uploadPgImages } from '@/api/upload-api'
@@ -802,18 +803,22 @@ export function OwnerResidentsPage() {
             </div>
             <div className="form-field">
               <label>Status filter</label>
-              <select
+              <CustomDropdown
+                ariaLabel="Status filter"
                 value={draftSelectedStatus}
-                onChange={(event) => setDraftSelectedStatus(event.target.value as 'all' | OwnerResident['status'])}
+                onChange={(nextValue) => setDraftSelectedStatus(nextValue as 'all' | OwnerResident['status'])}
+                searchable={false}
+                options={[
+                  { label: 'All', value: 'all' },
+                  { label: 'Active', value: 'active' },
+                  { label: 'Left', value: 'left' },
+                  { label: 'Notice period', value: 'notice_period' },
+                  { label: 'Pending verification', value: 'pending_verification' },
+                  { label: 'Suspended', value: 'suspended' },
+                  { label: 'Invited', value: 'invited' },
+                ]}
               >
-                <option value="all">All</option>
-                <option value="active">Active</option>
-                <option value="left">Left</option>
-                <option value="notice_period">Notice period</option>
-                <option value="pending_verification">Pending verification</option>
-                <option value="suspended">Suspended</option>
-                <option value="invited">Invited</option>
-              </select>
+              </CustomDropdown>
             </div>
             <div className="form-field">
               <label>Joining date from</label>
@@ -1069,13 +1074,19 @@ export function OwnerResidentsPage() {
                   {residentLeftConfig.getLabel('finalSettlementPaid', 'Payment settled')}
                   {residentLeftConfig.isRequired('finalSettlementPaid') ? <span className="required-mark"> *</span> : null}
                 </label>
-                <select
+                <CustomDropdown
+                  ariaLabel="Payment settled"
                   value={leftForm.finalSettlementPaid ? 'yes' : 'no'}
-                  onChange={(event) => setLeftForm((current) => ({ ...current, finalSettlementPaid: event.target.value === 'yes' }))}
+                  onChange={(nextValue) =>
+                    setLeftForm((current) => ({ ...current, finalSettlementPaid: nextValue === 'yes' }))
+                  }
+                  searchable={false}
+                  options={[
+                    { label: 'No', value: 'no' },
+                    { label: 'Yes', value: 'yes' },
+                  ]}
                 >
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
+                </CustomDropdown>
               </div>
               <div className="form-field" style={{ gridColumn: '1 / -1' }}>
                 <label>
@@ -1124,11 +1135,14 @@ export function OwnerResidentsPage() {
                   {residentAddConfig.getLabel('pgId', 'PG')}
                   {residentAddConfig.isRequired('pgId') ? <span className="required-mark"> *</span> : null}
                 </label>
-                <select value={form.pgId} onChange={(event) => updateResidentField('pgId', event.target.value)}>
-                  {pgs.map((pg) => (
-                    <option key={pg._id} value={pg._id}>{pg.name}</option>
-                  ))}
-                </select>
+                <CustomDropdown
+                  ariaLabel="PG"
+                  value={form.pgId}
+                  onChange={(nextValue) => updateResidentField('pgId', nextValue)}
+                  options={pgs.map((pg) => ({ label: pg.name, value: pg._id }))}
+                  searchable
+                  minSearchOptions={6}
+                />
                 {residentErrors.pgId ? <small className="upload-error-text">{residentErrors.pgId}</small> : null}
                 {selectedPg ? (
                   <small className="section-sub">

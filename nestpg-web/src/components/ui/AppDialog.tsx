@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 type AppDialogProps = {
   open: boolean
@@ -11,13 +12,34 @@ type AppDialogProps = {
 }
 
 export function AppDialog({ open, title, subtitle, onClose, children, footer, wide = false }: AppDialogProps) {
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onEscape)
+    }
+  }, [onClose, open])
+
   if (!open) {
     return null
   }
 
-  return (
-    <div className="app-dialog-backdrop" role="dialog" aria-modal="true" aria-label={title}>
-      <div className={`app-dialog${wide ? ' app-dialog-wide' : ''}`}>
+  return createPortal(
+    <div className="app-dialog-backdrop" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
+      <div className={`app-dialog${wide ? ' app-dialog-wide' : ''}`} onClick={(event) => event.stopPropagation()}>
         <div className="app-dialog-head">
           <div>
             <h3>{title}</h3>
@@ -32,6 +54,7 @@ export function AppDialog({ open, title, subtitle, onClose, children, footer, wi
 
         {footer ? <div className="pg-form-actions">{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

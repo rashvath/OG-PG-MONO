@@ -69,6 +69,8 @@ export function LoginPage() {
           <p>Welcome back. Enter your credentials to continue.</p>
         </div>
 
+        <fieldset className="auth-fieldset" disabled={isSubmitting}>
+
         <Input
           label={loginConfig.getLabel('email', 'Email address')}
           required={loginConfig.isRequired('email')}
@@ -99,6 +101,7 @@ export function LoginPage() {
         <p className="auth-switch">
           Don&apos;t have an account? <Link to="/auth/register">Register</Link>
         </p>
+        </fieldset>
       </form>
       <div className="auth-demo-grid">
         {demoUsers.map((account) => (
@@ -106,6 +109,7 @@ export function LoginPage() {
             key={account.email}
             type="button"
             className="auth-demo-chip"
+            disabled={isSubmitting}
             onClick={() => selectDemoAccount(account.email, account.password)}
           >
             Use demo {account.label} account
@@ -268,6 +272,8 @@ export function RegisterPage() {
           <h1>{step === 1 ? 'Create account' : 'Verify your email'}</h1>
           <p>{step === 1 ? 'Enter your details to continue.' : <>We sent a code to <strong>{email}</strong></>}</p>
         </div>
+
+        <fieldset className="auth-fieldset" disabled={isSubmitting}>
 
         {step === 1 ? (
           <>
@@ -501,6 +507,7 @@ export function RegisterPage() {
         <p className="auth-switch">
           Already registered? <Link to="/auth/login">Sign in</Link>
         </p>
+        </fieldset>
       </form>
     </AuthLayout>
   )

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { EmptyTableState } from '@/components/data-display/EmptyTableState'
+import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { createOwnerDocument, deleteOwnerDocument, getOwnerDocuments, getOwnerPgs, type OwnerDocument, type OwnerPg } from '@/api/owner-api'
 import { uploadPgImages } from '@/api/upload-api'
 import { useFormConfig } from '@/hooks/use-form-config'
@@ -135,12 +136,17 @@ export function OwnerDocumentsPage() {
             {getLabel('pgId', 'PG')}
             {isRequired('pgId') ? <span className="required-mark"> *</span> : null}
           </label>
-          <select value={form.pgId} onChange={(event) => setForm((current) => ({ ...current, pgId: event.target.value }))}>
-            <option value="">Select PG</option>
-            {pgs.map((pg) => (
-              <option key={pg._id} value={pg._id}>{pg.name}</option>
-            ))}
-          </select>
+          <CustomDropdown
+            ariaLabel="Select PG"
+            value={form.pgId}
+            onChange={(nextValue) => setForm((current) => ({ ...current, pgId: nextValue }))}
+            options={[
+              { label: 'Select PG', value: '' },
+              ...pgs.map((pg) => ({ label: pg.name, value: pg._id })),
+            ]}
+            searchable
+            minSearchOptions={6}
+          />
         </div>
 
         <div className="form-field">
