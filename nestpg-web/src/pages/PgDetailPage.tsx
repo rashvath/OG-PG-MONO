@@ -44,11 +44,6 @@ export function PgDetailPage() {
 
   const gradient = areaGradientClass[listing.areaKey] ?? 'glass-image-koramangala'
   const galleryPhotos = listing.photos.length > 0 ? listing.photos : ['']
-  const sidePhotos = galleryPhotos.slice(1, 5)
-  const extraPhotoCount = Math.max(galleryPhotos.length - 5, 0)
-  const galleryVisibleCount = Math.min(galleryPhotos.length, 5)
-  const galleryLayoutClass =
-    galleryVisibleCount <= 1 ? 'is-single' : galleryVisibleCount === 2 ? 'is-two' : galleryVisibleCount === 3 ? 'is-three' : 'is-multi'
 
   const amenityItems = listing.amenities.filter(Boolean)
   const sharingAvailability = new Map((listing.availabilityBySharing ?? []).map((item) => [item.sharing, item]))
@@ -87,19 +82,25 @@ export function PgDetailPage() {
   return (
     <div className="app-wrap detail-grid detail-page-grid">
       <section className="detail-main">
-        <div className={`detail-gallery ${galleryLayoutClass}`}>
-          <div className={`detail-gallery-main ${gradient}`} style={galleryPhotos[0] ? { backgroundImage: `url(${galleryPhotos[0]})` } : undefined}>
-            <span className="listing-tag">{listing.tag}</span>
-          </div>
-          {sidePhotos.length > 0 ? (
-            <div className={`detail-gallery-side side-count-${Math.min(sidePhotos.length, 3)}`}>
-              {sidePhotos.map((photo, index) => (
-                <div key={`${photo}-${index}`} className="detail-gallery-side-card">
-                  <img src={photo} alt={`${listing.name} photo ${index + 2}`} loading="lazy" />
-                  {extraPhotoCount > 0 && index === sidePhotos.length - 1 ? (
-                    <span className="detail-gallery-more">+{extraPhotoCount} more</span>
-                  ) : null}
+        <div className="detail-gallery">
+          <div className="detail-gallery-track" aria-label="PG photos">
+            {galleryPhotos.map((photo, index) => (
+              <div key={`${listing.id}-photo-${index}`} className="detail-gallery-slide">
+                <div
+                  className={`detail-gallery-main ${gradient}`}
+                  style={photo ? { backgroundImage: `url(${photo})` } : undefined}
+                  aria-label={`${listing.name} photo ${index + 1} of ${galleryPhotos.length}`}
+                >
+                  {index === 0 ? <span className="listing-tag">{listing.tag}</span> : null}
                 </div>
+              </div>
+            ))}
+          </div>
+
+          {galleryPhotos.length > 1 ? (
+            <div className="detail-gallery-dots" aria-hidden="true">
+              {galleryPhotos.map((_, index) => (
+                <span key={`${listing.id}-gallery-dot-${index}`} className="detail-gallery-dot" />
               ))}
             </div>
           ) : null}

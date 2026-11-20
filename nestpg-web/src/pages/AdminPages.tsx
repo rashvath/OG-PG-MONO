@@ -7,6 +7,7 @@ import { AppTable } from '@/components/data-display/AppTable'
 import { EnquiriesChart } from '@/components/charts/EnquiriesChart'
 import { EmptyTableState } from '@/components/data-display/EmptyTableState'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
+import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import {
   getAdminEnquiries,
   approveOwnerApplication,
@@ -728,20 +729,21 @@ export function AdminOwnersPage() {
             <div className="form-grid">
               <div className="form-field">
                 <label>PG owner</label>
-                <select
+                <CustomDropdown
+                  ariaLabel="PG owner"
                   value={assignOwnerId}
-                  onChange={(event) => {
-                    setAssignOwnerId(event.target.value)
+                  onChange={(nextValue) => {
+                    setAssignOwnerId(nextValue)
                     setSelectedPgIds([])
                   }}
+                  options={[
+                    { label: 'Select owner', value: '' },
+                    ...owners.map((owner) => ({ label: owner.name, value: owner._id })),
+                  ]}
+                  searchable
+                  minSearchOptions={6}
                 >
-                  <option value="">Select owner</option>
-                  {owners.map((owner) => (
-                    <option key={owner._id} value={owner._id}>
-                      {owner.name}
-                    </option>
-                  ))}
-                </select>
+                </CustomDropdown>
               </div>
 
               <div className="form-field">
@@ -942,10 +944,18 @@ export function AdminResidentsPage() {
           </div>
           <div className="form-field">
             <label>Settlement paid by owner</label>
-            <select value={form.finalSettlementPaid ? 'yes' : 'no'} onChange={(event) => setForm((current) => ({ ...current, finalSettlementPaid: event.target.value === 'yes' }))}>
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-            </select>
+            <CustomDropdown
+              ariaLabel="Settlement paid by owner"
+              value={form.finalSettlementPaid ? 'yes' : 'no'}
+              onChange={(nextValue) =>
+                setForm((current) => ({ ...current, finalSettlementPaid: nextValue === 'yes' }))
+              }
+              options={[
+                { label: 'No', value: 'no' },
+                { label: 'Yes', value: 'yes' },
+              ]}
+              searchable={false}
+            />
           </div>
           <div className="form-field" style={{ gridColumn: '1 / -1' }}>
             <label>Notes</label>

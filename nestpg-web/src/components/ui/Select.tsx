@@ -1,7 +1,8 @@
-import type { SelectHTMLAttributes, ReactNode } from 'react'
-import { useId } from 'react'
+import { Children, isValidElement, useId } from 'react'
+import type { ChangeEvent, ReactElement, ReactNode, SelectHTMLAttributes } from 'react'
 
 import { cn } from '@/helpers/utils'
+import { CustomDropdown } from '@/components/ui/CustomDropdown'
 
 type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label?: ReactNode
@@ -14,6 +15,18 @@ export function Select({ className, label, hint, error, id, children, ...props }
   const inputId = id ?? generatedId
   const describedBy = [hint ? `${inputId}-hint` : undefined, error ? `${inputId}-error` : undefined].filter(Boolean).join(' ') || undefined
 
+  const options = Children.toArray(children)
+    .filter((child) => isValidElement(child) && child.type === 'option')
+    .map((child) => {
+      const element = child as ReactElement<{ value?: string; children?: ReactNode }>
+      return {
+        label: String(element.props.children ?? ''),
+        value: String(element.props.value ?? ''),
+      }
+    })
+
+  const selectedValue = String(props.value ?? '')
+
   return (
     <div className="relative">
       {label ? (
@@ -22,22 +35,22 @@ export function Select({ className, label, hint, error, id, children, ...props }
           {props.required ? <span className="required-mark"> *</span> : null}
         </label>
       ) : null}
-      <select
-        id={inputId}
-        className={cn(
-          'h-[var(--space-8)] w-full appearance-none rounded-xs border border-border bg-surface px-[var(--space-6)] pr-10 text-sm font-[inherit] text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-focus)]',
-          error && 'border-2 border-error',
-          className,
-        )}
-        aria-invalid={Boolean(error) || props['aria-invalid']}
-        aria-describedby={describedBy}
-        {...props}
-      >
-        {children}
-      </select>
-      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="pointer-events-none absolute right-3 top-[calc(50%+10px)] h-4 w-4 -translate-y-1/2 text-text-2">
-        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <CustomDropdown
+        ariaLabel={typeof label === 'string' ? label : 'Select option'}
+        value={selectedValue}
+        onChange={(nextValue) => {
+          const syntheticEvent = {
+            target: { value: nextValue },
+            currentTarget: { value: nextValue },
+          } as ChangeEvent<HTMLSelectElement>
+          props.onChange?.(syntheticEvent)
+        }}
+        options={options}
+        searchable
+        minSearchOptions={8}
+        className={cn('select-dropdown', className, error ? 'select-dropdown-error' : '')}
+      />
+      <input type="hidden" id={inputId} name={props.name} value={selectedValue} aria-describedby={describedBy} />
       {hint ? (
         <p id={`${inputId}-hint`} className="mt-[var(--space-2)] text-xs text-text-2">
           {hint}

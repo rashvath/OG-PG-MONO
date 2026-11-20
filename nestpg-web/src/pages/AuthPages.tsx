@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { fetchLiveListings } from '@/api/listings-api'
 import { apiClient, toApiError } from '@/api/http'
@@ -69,6 +69,8 @@ export function LoginPage() {
           <p>Welcome back. Enter your credentials to continue.</p>
         </div>
 
+        <fieldset className="auth-fieldset" disabled={isSubmitting}>
+
         <Input
           label={loginConfig.getLabel('email', 'Email address')}
           required={loginConfig.isRequired('email')}
@@ -99,6 +101,7 @@ export function LoginPage() {
         <p className="auth-switch">
           Don&apos;t have an account? <Link to="/auth/register">Register</Link>
         </p>
+        </fieldset>
       </form>
       <div className="auth-demo-grid">
         {demoUsers.map((account) => (
@@ -106,6 +109,7 @@ export function LoginPage() {
             key={account.email}
             type="button"
             className="auth-demo-chip"
+            disabled={isSubmitting}
             onClick={() => selectDemoAccount(account.email, account.password)}
           >
             Use demo {account.label} account
@@ -165,6 +169,10 @@ export function RegisterPage({ ownerOnly = false }: { ownerOnly?: boolean }) {
         setTenantListings([])
       })
   }, [])
+
+  useEffect(() => {
+    setRole(getRoleFromRoute())
+  }, [location.pathname, searchParams])
 
   const toNumberValue = (value: number) => (value === 0 ? '' : String(value))
   const parseNumberInput = (value: string) => {
@@ -259,6 +267,8 @@ export function RegisterPage({ ownerOnly = false }: { ownerOnly?: boolean }) {
               : <>We sent a code to <strong>{email}</strong></>}
           </p>
         </div>
+
+        <fieldset className="auth-fieldset" disabled={isSubmitting}>
 
         {step === 1 ? (
           <>
@@ -510,6 +520,7 @@ export function RegisterPage({ ownerOnly = false }: { ownerOnly?: boolean }) {
         <p className="auth-switch">
           Already registered? <Link to="/auth/login">Sign in</Link>
         </p>
+        </fieldset>
       </form>
     </AuthLayout>
   )

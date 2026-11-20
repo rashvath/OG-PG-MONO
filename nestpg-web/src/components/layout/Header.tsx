@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, Menu, Search, X } from 'lucide-react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 
+import { AppDialog } from '@/components/ui/AppDialog'
 import { useAuth } from '@/lib/auth'
 
 export function Header() {
   const { role, logout } = useAuth()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
 
   useEffect(() => {
     setIsMobileMenuOpen(false)
@@ -16,7 +18,7 @@ export function Header() {
   const primaryNavItems = useMemo(() => {
     const items: Array<{ to: string; label: string }> = [
       { to: '/listings', label: 'Find a PG' },
-      { to: '/register', label: 'List your PG' },
+      { to: '/register?role=owner', label: 'List your PG' },
       { to: '/about', label: 'About' },
     ]
 
@@ -31,15 +33,16 @@ export function Header() {
     return items
   }, [role])
 
-  const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register'
-  const handleLogout = () => {
-    const shouldLogout = window.confirm('Are you sure you want to log out?')
-    if (!shouldLogout) {
-      return
-    }
-
+  const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register?role=owner'
+  const confirmLogout = () => {
+    setIsLogoutDialogOpen(false)
     logout()
     window.location.replace('/')
+  }
+
+  const openLogoutDialog = () => {
+    setIsMobileMenuOpen(false)
+    setIsLogoutDialogOpen(true)
   }
 
   return (
@@ -69,7 +72,7 @@ export function Header() {
           </Link>
 
           {role ? (
-            <button type="button" className="nav-link-button" onClick={handleLogout}>
+            <button type="button" className="nav-link-button" onClick={openLogoutDialog}>
               Log out
             </button>
           ) : (
@@ -113,7 +116,7 @@ export function Header() {
           </Link>
 
           {role ? (
-            <button type="button" className="mobile-nav-link mobile-nav-logout" onClick={handleLogout}>
+            <button type="button" className="mobile-nav-link mobile-nav-logout" onClick={openLogoutDialog}>
               Log out
             </button>
           ) : (
@@ -128,6 +131,25 @@ export function Header() {
           </NavLink>
         </nav>
       </div>
+
+      <AppDialog
+        open={isLogoutDialogOpen}
+        title="Log out"
+        subtitle="Are you sure you want to log out?"
+        onClose={() => setIsLogoutDialogOpen(false)}
+        footer={
+          <>
+            <button type="button" className="btn btn-line" onClick={() => setIsLogoutDialogOpen(false)}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn-brand" onClick={confirmLogout}>
+              Log out
+            </button>
+          </>
+        }
+      >
+        <p className="section-sub">You will need to sign in again to access your dashboard.</p>
+      </AppDialog>
     </header>
   )
 }
