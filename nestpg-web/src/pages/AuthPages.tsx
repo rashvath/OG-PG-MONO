@@ -124,6 +124,8 @@ export function RegisterPage({ ownerOnly = false }: { ownerOnly?: boolean }) {
   const { register } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const registerConfig = useFormConfig('auth.register')
   const tenantRegisterConfig = useFormConfig('auth.tenantRegistration')
   const ownerRegisterConfig = useFormConfig('auth.ownerRegistration')
@@ -150,6 +152,18 @@ export function RegisterPage({ ownerOnly = false }: { ownerOnly?: boolean }) {
   const [resendSeconds, setResendSeconds] = useState(0)
   const [otpLength, setOtpLength] = useState(4)
   const requiredMark = (required: boolean) => (required ? <span className="required-mark"> *</span> : null)
+  const getRoleFromRoute = (): 'customer' | 'owner' | 'tenant' => {
+    if (ownerOnly || location.pathname === '/register') {
+      return 'owner'
+    }
+
+    const roleParam = searchParams.get('role')
+    if (roleParam === 'owner' || roleParam === 'tenant' || roleParam === 'customer') {
+      return roleParam
+    }
+
+    return 'customer'
+  }
 
   useEffect(() => {
     if (resendSeconds === 0) {
@@ -172,7 +186,7 @@ export function RegisterPage({ ownerOnly = false }: { ownerOnly?: boolean }) {
 
   useEffect(() => {
     setRole(getRoleFromRoute())
-  }, [location.pathname, searchParams])
+  }, [ownerOnly, location.pathname, searchParams])
 
   const toNumberValue = (value: number) => (value === 0 ? '' : String(value))
   const parseNumberInput = (value: string) => {
