@@ -5,8 +5,10 @@ import { AppDialog } from '@/components/ui/AppDialog'
 import { createTenantAbsenceRequest, getTenantAbsenceRequests, type TenantAbsenceRequest } from '@/api/tenant-api'
 import { useFormConfig } from '@/hooks/use-form-config'
 import { useToast } from '@/lib/toast'
+import { useAuth } from '@/lib/auth'
 
 export function TenantAbsencesPage() {
+  const { role } = useAuth()
   const toast = useToast()
   const absenceConfig = useFormConfig('tenant.absence')
   const [items, setItems] = useState<TenantAbsenceRequest[]>([])
@@ -92,7 +94,16 @@ export function TenantAbsencesPage() {
         <h2 className="tenant-page-title">Absences</h2>
         <p className="tenant-page-description">Submit your planned away dates for approval tracking.</p>
         <div className="tenant-page-actions">
-          <button type="button" className="btn btn-brand" onClick={() => setIsDialogOpen(true)}>
+            <button
+              type="button"
+              className="btn btn-brand"
+              onClick={() => {
+                if (role !== 'admin' && !fromDate) {
+                  setFromDate(new Date().toISOString().slice(0, 10))
+                }
+                setIsDialogOpen(true)
+              }}
+            >
             New Absence Request
           </button>
         </div>
@@ -156,19 +167,25 @@ export function TenantAbsencesPage() {
         )}
       >
         <div className="tenant-form-card">
-          <label>
-            {absenceConfig.getLabel('fromDate', 'From date')}
-            {absenceConfig.isRequired('fromDate') ? ' *' : ''}
-          </label>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(event) => {
-              setFromDate(event.target.value)
-              if (errors.fromDate) setErrors((current) => ({ ...current, fromDate: undefined }))
-            }}
-          />
-          {errors.fromDate ? <p className="form-error">{errors.fromDate}</p> : null}
+          {role === 'admin' ? (
+            <>
+              <label>
+                {absenceConfig.getLabel('fromDate', 'From date')}
+                {absenceConfig.isRequired('fromDate') ? ' *' : ''}
+              </label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(event) => {
+                  setFromDate(event.target.value)
+                  if (errors.fromDate) setErrors((current) => ({ ...current, fromDate: undefined }))
+                }}
+              />
+              {errors.fromDate ? <p className="form-error">{errors.fromDate}</p> : null}
+            </>
+          ) : (
+            <p className="section-sub">Absence starts today.</p>
+          )}
 
           <label>
             {absenceConfig.getLabel('toDate', 'To date')}

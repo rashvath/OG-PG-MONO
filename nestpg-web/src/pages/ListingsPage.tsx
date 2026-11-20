@@ -98,7 +98,7 @@ export function ListingsPage() {
 
         <label>Gender</label>
         <div className="chips">
-          {['', 'Men', 'Women', 'Co-ed'].map((option) => (
+          {['', 'Men', 'Women', 'Co-Living'].map((option) => (
             <button
               key={option || 'all'}
               type="button"

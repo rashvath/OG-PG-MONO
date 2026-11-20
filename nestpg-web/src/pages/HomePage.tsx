@@ -141,7 +141,7 @@ export function HomePage() {
                     { label: "Who's staying?", value: '' },
                     { label: 'Men', value: 'Men' },
                     { label: 'Women', value: 'Women' },
-                    { label: 'Co-ed', value: 'Co-ed' },
+                    { label: 'Co-Living', value: 'Co-Living' },
                   ]}
                 />
               </div>

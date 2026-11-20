@@ -116,14 +116,14 @@ export function LoginPage() {
   )
 }
 
-export function RegisterPage() {
+export function RegisterPage({ ownerOnly = false }: { ownerOnly?: boolean }) {
   const { register } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
   const registerConfig = useFormConfig('auth.register')
   const tenantRegisterConfig = useFormConfig('auth.tenantRegistration')
   const ownerRegisterConfig = useFormConfig('auth.ownerRegistration')
-  const [role, setRole] = useState<'customer' | 'owner' | 'tenant'>('customer')
+  const [role, setRole] = useState<'customer' | 'owner' | 'tenant'>(ownerOnly ? 'owner' : 'customer')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -244,44 +244,54 @@ export function RegisterPage() {
 
   return (
     <AuthLayout>
-      <form className="auth-form" onSubmit={submit}>
+      <form className={`auth-form${ownerOnly ? ' list-pg-form' : ''}`} onSubmit={submit}>
         <div className="auth-progress" aria-label={`Step ${step} of 2`}>
           <span className="active" />
           <span className={step === 2 ? 'active' : ''} />
         </div>
         <div className="auth-heading">
-          <h1>{step === 1 ? 'Create account' : 'Verify your email'}</h1>
-          <p>{step === 1 ? 'Enter your details to continue.' : <>We sent a code to <strong>{email}</strong></>}</p>
+          <h1>{step === 1 ? (ownerOnly ? 'List your PG' : 'Create account') : 'Verify your email'}</h1>
+          <p>
+            {step === 1
+              ? ownerOnly
+                ? 'Create a PG owner account to submit your property.'
+                : 'Enter your details to continue.'
+              : <>We sent a code to <strong>{email}</strong></>}
+          </p>
         </div>
 
         {step === 1 ? (
           <>
-        <label>Register as</label>
-        <div className="auth-role-switch">
-          <button
-            type="button"
-            className={`auth-role-btn ${role === 'customer' ? 'active' : ''}`}
-            onClick={() => setRole('customer')}
-          >
-            Customer
-          </button>
-          <button
-            type="button"
-            className={`auth-role-btn ${role === 'owner' ? 'active' : ''}`}
-            onClick={() => setRole('owner')}
-          >
-            PG Owner
-          </button>
-          <button
-            type="button"
-            className={`auth-role-btn ${role === 'tenant' ? 'active' : ''}`}
-            onClick={() => setRole('tenant')}
-          >
-            Tenant
-          </button>
-        </div>
+        {!ownerOnly ? (
+          <>
+            <label>Register as</label>
+            <div className="auth-role-switch">
+              <button
+                type="button"
+                className={`auth-role-btn ${role === 'customer' ? 'active' : ''}`}
+                onClick={() => setRole('customer')}
+              >
+                Customer
+              </button>
+              <button
+                type="button"
+                className={`auth-role-btn ${role === 'owner' ? 'active' : ''}`}
+                onClick={() => setRole('owner')}
+              >
+                PG Owner
+              </button>
+              <button
+                type="button"
+                className={`auth-role-btn ${role === 'tenant' ? 'active' : ''}`}
+                onClick={() => setRole('tenant')}
+              >
+                Tenant
+              </button>
+            </div>
+          </>
+        ) : null}
 
-        <div className="auth-fields-grid">
+        <div className="auth-fields-grid py-3">
           <div>
             <label>
               {registerConfig.getLabel('name', 'Name')}
@@ -305,23 +315,29 @@ export function RegisterPage() {
           </div>
         </div>
 
-        <Input label={registerConfig.getLabel('email', 'Email')} required={registerConfig.isRequired('email')} type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <PasswordInput
-          required={registerConfig.isRequired('password')}
-          label={registerConfig.getLabel('password', 'Password')}
-          autoComplete="new-password"
-          minLength={6}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-        <PasswordInput
-          required={registerConfig.isRequired('confirmPassword')}
-          label={registerConfig.getLabel('confirmPassword', 'Confirm password')}
-          autoComplete="new-password"
-          minLength={6}
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
-        />
+        <div className="py-3">
+          <Input label={registerConfig.getLabel('email', 'Email')} required={registerConfig.isRequired('email')} type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        </div>
+        <div className="py-3">
+          <PasswordInput
+            required={registerConfig.isRequired('password')}
+            label={registerConfig.getLabel('password', 'Password')}
+            autoComplete="new-password"
+            minLength={6}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+        <div className="py-3">
+          <PasswordInput
+            required={registerConfig.isRequired('confirmPassword')}
+            label={registerConfig.getLabel('confirmPassword', 'Confirm password')}
+            autoComplete="new-password"
+            minLength={6}
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+          />
+        </div>
 
         {role === 'tenant' ? (
           <>
@@ -344,7 +360,7 @@ export function RegisterPage() {
 
         {role === 'owner' ? (
           <>
-            <div className="auth-fields-grid">
+            <div className="auth-fields-grid py-3">
               <div>
                 <label>
                   {ownerRegisterConfig.getLabel('pgName', 'PG Name')}
@@ -364,17 +380,19 @@ export function RegisterPage() {
                 <input required={ownerRegisterConfig.isRequired('area')} value={area} onChange={(event) => setArea(event.target.value)} />
               </div>
             </div>
-            <label>
-              {ownerRegisterConfig.getLabel('pgAddress', 'PG Address')}
-              {requiredMark(ownerRegisterConfig.isRequired('pgAddress'))}
-            </label>
-            <input
-              required={ownerRegisterConfig.isRequired('pgAddress')}
-              value={pgAddress}
-              onChange={(event) => setPgAddress(event.target.value)}
-            />
+            <div className="py-3">
+              <label>
+                {ownerRegisterConfig.getLabel('pgAddress', 'PG Address')}
+                {requiredMark(ownerRegisterConfig.isRequired('pgAddress'))}
+              </label>
+              <input
+                required={ownerRegisterConfig.isRequired('pgAddress')}
+                value={pgAddress}
+                onChange={(event) => setPgAddress(event.target.value)}
+              />
+            </div>
 
-            <div className="auth-fields-grid">
+            <div className="auth-fields-grid py-3">
               <div>
                 <label>
                   {ownerRegisterConfig.getLabel('rooms', 'Rooms')}
@@ -401,36 +419,42 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <label>
-              {ownerRegisterConfig.getLabel('amenities', 'Amenities (comma separated)')}
-              {requiredMark(ownerRegisterConfig.isRequired('amenities'))}
-            </label>
-            <input
-              required={ownerRegisterConfig.isRequired('amenities')}
-              value={amenities}
-              onChange={(event) => setAmenities(event.target.value)}
-              placeholder="WiFi, Meals, Laundry"
-            />
-            <label>
-              {ownerRegisterConfig.getLabel('photos', 'Photo URLs (comma separated)')}
-              {requiredMark(ownerRegisterConfig.isRequired('photos'))}
-            </label>
-            <input
-              required={ownerRegisterConfig.isRequired('photos')}
-              value={photos}
-              onChange={(event) => setPhotos(event.target.value)}
-              placeholder="https://..."
-            />
-            <label>
-              {ownerRegisterConfig.getLabel('description', 'Description')}
-              {requiredMark(ownerRegisterConfig.isRequired('description'))}
-            </label>
-            <textarea
-              required={ownerRegisterConfig.isRequired('description')}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={3}
-            />
+            <div className="py-3">
+              <label>
+                {ownerRegisterConfig.getLabel('amenities', 'Amenities (comma separated)')}
+                {requiredMark(ownerRegisterConfig.isRequired('amenities'))}
+              </label>
+              <input
+                required={ownerRegisterConfig.isRequired('amenities')}
+                value={amenities}
+                onChange={(event) => setAmenities(event.target.value)}
+                placeholder="WiFi, Meals, Laundry"
+              />
+            </div>
+            <div className="py-3">
+              <label>
+                {ownerRegisterConfig.getLabel('photos', 'Photo URLs (comma separated)')}
+                {requiredMark(ownerRegisterConfig.isRequired('photos'))}
+              </label>
+              <input
+                required={ownerRegisterConfig.isRequired('photos')}
+                value={photos}
+                onChange={(event) => setPhotos(event.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+            <div className="py-3">
+              <label>
+                {ownerRegisterConfig.getLabel('description', 'Description')}
+                {requiredMark(ownerRegisterConfig.isRequired('description'))}
+              </label>
+              <textarea
+                required={ownerRegisterConfig.isRequired('description')}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={3}
+              />
+            </div>
             <p className="auth-hint">Your owner account remains pending until admin reviews and approves it.</p>
           </>
         ) : null}

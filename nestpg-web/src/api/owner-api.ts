@@ -1,4 +1,5 @@
 import { apiRequest } from './api'
+import type { RoomSharing } from '@/lib/types'
 
 async function api<T>(config: Parameters<typeof apiRequest<T>>[0]): Promise<T> {
   return apiRequest<T>(config)
@@ -26,7 +27,8 @@ export type OwnerPg = {
   occupiedBeds?: number
   pgType?: string
   totalFloors?: number
-  gender: 'Men' | 'Women' | 'Co-ed'
+  gender: 'Men' | 'Women' | 'Co-Living'
+  roomSharing?: RoomSharing
   amenities: string[]
   weeklyMenu?: Array<{ day: string; items: string[] }>
   photos: string[]
@@ -221,7 +223,8 @@ export async function updateOwnerPg(
     totalBeds: number
     pgType?: string
     totalFloors?: number
-    gender: 'Men' | 'Women' | 'Co-ed'
+    gender: 'Men' | 'Women' | 'Co-Living'
+    roomSharing?: RoomSharing
     amenities: string[]
     weeklyMenu?: Array<{ day: string; items: string[] }>
     photos: string[]

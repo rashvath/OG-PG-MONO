@@ -1,4 +1,5 @@
 import { apiRequest } from './api'
+import type { RoomSharing } from '@/lib/types'
 
 async function api<T>(config: Parameters<typeof apiRequest<T>>[0]): Promise<T> {
   return apiRequest<T>(config)
@@ -13,10 +14,12 @@ export type AdminPg = {
   latitude?: number
   longitude?: number
   baseRent: number
+  fromDate?: string
   totalRooms?: number
   totalBeds?: number
   ownerId?: string
-  gender?: 'Men' | 'Women' | 'Co-ed'
+  gender?: 'Men' | 'Women' | 'Co-Living'
+  roomSharing?: RoomSharing
   amenities?: string[]
   weeklyMenu?: Array<{ day: string; items: string[] }>
   photos?: string[]
@@ -126,9 +129,11 @@ export async function createAdminPg(payload: {
   latitude?: number
   longitude?: number
   baseRent: number
+  fromDate?: string
   totalRooms?: number
   totalBeds?: number
-  gender: 'Men' | 'Women' | 'Co-ed'
+  gender: 'Men' | 'Women' | 'Co-Living'
+  roomSharing?: RoomSharing
   amenities?: string[]
   weeklyMenu?: Array<{ day: string; items: string[] }>
   photos?: string[]
@@ -167,9 +172,11 @@ export async function updateAdminPg(
     latitude?: number
     longitude?: number
     baseRent: number
+    fromDate?: string
     totalRooms: number
     totalBeds: number
-    gender: 'Men' | 'Women' | 'Co-ed'
+    gender: 'Men' | 'Women' | 'Co-Living'
+    roomSharing?: RoomSharing
     amenities: string[]
     weeklyMenu?: Array<{ day: string; items: string[] }>
     photos: string[]

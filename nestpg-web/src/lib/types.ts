@@ -1,4 +1,5 @@
 export type Role = 'customer' | 'owner' | 'admin' | 'tenant'
+export type RoomSharing = 'Single' | 'Double' | 'Triple' | 'Quadruple' | 'Dormitory'
 
 export type ListingStatus = 'pending' | 'live' | 'suspended' | 'rejected'
 
@@ -20,7 +21,8 @@ export interface Listing {
   electricityRules?: string
   foodCharges?: number
   otherCharges?: number
-  gender: 'Men' | 'Women' | 'Co-ed'
+  gender: 'Men' | 'Women' | 'Co-Living'
+  roomSharing?: RoomSharing
   pgType?: string
   totalFloors?: number
   totalRooms?: number

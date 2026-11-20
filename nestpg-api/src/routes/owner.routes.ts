@@ -690,7 +690,8 @@ router.patch('/pgs/:id', auth('owner'), async (req: AuthedRequest, res) => {
       availability: z.number().int().nonnegative().optional(),
       totalRooms: z.number().int().nonnegative().optional(),
       totalBeds: z.number().int().nonnegative().optional(),
-      gender: z.enum(['Men', 'Women', 'Co-ed']).optional(),
+      gender: z.enum(['Men', 'Women', 'Co-Living']).optional(),
+      roomSharing: z.enum(['Single', 'Double', 'Triple', 'Quadruple', 'Dormitory']).optional(),
       roomTypes: z
         .array(
           z.object({
