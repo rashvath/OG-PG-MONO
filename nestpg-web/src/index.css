@@ -1,5 +1,4 @@
 @import './styles/tokens.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 :root {
   --header-height: 77px;
@@ -53,8 +52,11 @@ body,
 h1,
 h2,
 h3,
+h4,
+h5,
+h6,
 .logo {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', sans-serif;
   color: var(--soft-black);
   margin: 0;
 }
@@ -381,12 +383,14 @@ main {
 }
 
 .btn-brand {
-  color: #fff;
+  color: #222;
   border-color: var(--terracotta-deep);
   background: var(--terracotta);
 }
 
-.btn-brand:hover {
+.btn-brand:hover,
+.btn-brand:focus-visible {
+  color: #222;
   background: var(--terracotta-deep);
 }
 
@@ -923,35 +927,35 @@ main {
 }
 
 .glass-image-koramangala {
-  background-image: url('https://images.unsplash.com/photo-1600585154205-3f76c8191398?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80');
 }
 
 .glass-image-hsr-layout {
-  background-image: url('https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80');
 }
 
 .glass-image-indiranagar {
-  background-image: url('https://images.unsplash.com/photo-1529408632839-a54952c491e5?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&q=80');
 }
 
 .glass-image-whitefield {
-  background-image: url('https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80');
 }
 
 .glass-image-btm-layout {
-  background-image: url('https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80');
 }
 
 .glass-image-marathahalli {
-  background-image: url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80');
 }
 
 .glass-image-electronic-city {
-  background-image: url('https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80');
 }
 
 .glass-image-bellandur {
-  background-image: url('https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&q=80');
 }
 
 .area-content {
@@ -1220,7 +1224,7 @@ main {
 }
 
 .listing-title {
-  font: 600 1.28rem 'Playfair Display', Georgia, serif;
+  font: 600 1.28rem Inter, sans-serif;
 }
 
 .listing-meta {
@@ -1455,7 +1459,7 @@ input[type='number'] {
 
 .detail-page-grid .panel h3 {
   margin: 0 0 4px;
-  font: 600 1.12rem 'Playfair Display', Georgia, serif;
+  font: 600 1.12rem Inter, sans-serif;
 }
 
 .detail-page-grid .panel p {
@@ -1578,7 +1582,7 @@ input[type='number'] {
 
 .detail-hero-title {
   margin: 8px 0 0;
-  font: 700 clamp(2rem, 4vw, 3.4rem) 'Playfair Display', Georgia, serif;
+  font: 700 clamp(2rem, 4vw, 3.4rem) Inter, sans-serif;
   line-height: 1.05;
 }
 
@@ -3436,7 +3440,7 @@ body.dashboard-lock-scroll .side-menu {
 
 .inventory-empty-state h4 {
   margin: 0;
-  font: 600 1.05rem 'Playfair Display', Georgia, serif;
+  font: 600 1.05rem Inter, sans-serif;
 }
 
 .inventory-empty-state p {
@@ -3743,7 +3747,7 @@ body.dashboard-lock-scroll .side-menu {
 
 .about-flow-step strong {
   display: block;
-  font: 600 1.02rem 'Playfair Display', Georgia, serif;
+  font: 600 1.02rem Inter, sans-serif;
   color: var(--soft-black);
 }
 
@@ -3771,7 +3775,7 @@ body.dashboard-lock-scroll .side-menu {
 }
 
 .about-flow-center span {
-  font: 600 2rem 'Playfair Display', Georgia, serif;
+  font: 600 2rem Inter, sans-serif;
   line-height: 0.95;
 }
 
@@ -3811,7 +3815,7 @@ body.dashboard-lock-scroll .side-menu {
 
 .about-value-card h3,
 .about-promise-strip h3 {
-  font: 600 1.05rem 'Playfair Display', Georgia, serif;
+  font: 600 1.05rem Inter, sans-serif;
   margin: 0;
 }
 
@@ -3958,7 +3962,7 @@ th {
 
 .why-og-float-card strong {
   display: block;
-  font: 700 1.8rem 'Playfair Display', Georgia, serif;
+  font: 700 1.8rem Inter, sans-serif;
   line-height: 1;
 }
 
@@ -4016,7 +4020,7 @@ th {
 }
 
 .why-og-points h3 {
-  font: 600 clamp(1.5rem, 1.95vw, 1.95rem) 'Playfair Display', Georgia, serif;
+  font: 600 clamp(1.5rem, 1.95vw, 1.95rem) Inter, sans-serif;
   line-height: 1.1;
 }
 
@@ -4028,7 +4032,7 @@ th {
 }
 
 .trust-headline {
-  font: 600 clamp(1.9rem, 3.8vw, 3rem) 'Playfair Display', Georgia, serif;
+  font: 600 clamp(1.9rem, 3.8vw, 3rem) Inter, sans-serif;
   letter-spacing: -0.02em;
   max-width: 920px;
   margin: 0 auto 18px;
@@ -4066,7 +4070,7 @@ th {
 
 .editorial-stats strong {
   display: block;
-  font: 600 clamp(2.6rem, 5vw, 4.2rem) 'Playfair Display', Georgia, serif;
+  font: 600 clamp(2.6rem, 5vw, 4.2rem) Inter, sans-serif;
   color: var(--terracotta-deep);
   line-height: 1;
 }
@@ -4867,7 +4871,7 @@ th {
 .auth-page-media-copy h2 {
   margin: 0;
   color: #fff;
-  font: 700 clamp(1.9rem, 3.2vw, 2.8rem)/1.1 'Playfair Display', Georgia, serif;
+  font: 700 clamp(1.9rem, 3.2vw, 2.8rem)/1.1 Inter, sans-serif;
 }
 
 .auth-page-media-copy p {
@@ -4947,7 +4951,7 @@ th {
 .auth-heading h1 {
   margin: 0;
   color: var(--soft-black);
-  font: 700 clamp(2rem, 4.4vw, 2.3rem)/1.1 'Playfair Display', Georgia, serif;
+  font: 700 clamp(2rem, 4.4vw, 2.3rem)/1.1 Inter, sans-serif;
   line-height: 1.4;
 }
 

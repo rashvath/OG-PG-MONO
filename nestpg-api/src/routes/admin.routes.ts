@@ -232,7 +232,9 @@ router.post('/pgs', auth('admin'), async (req: AuthedRequest, res) => {
       longitude: z.number().optional(),
       description: z.string().default(''),
       baseRent: z.number().positive(),
-      gender: z.enum(['Men', 'Women', 'Co-ed']),
+      fromDate: z.coerce.date().optional(),
+      gender: z.enum(['Men', 'Women', 'Co-Living']),
+      roomSharing: z.enum(['Single', 'Double', 'Triple', 'Quadruple', 'Dormitory']).optional(),
       amenities: z.array(z.string()).default([]),
       foodAvailable: z.boolean().default(false),
       weeklyMenu: weeklyMenuSchema.default(() => DEFAULT_WEEKLY_MENU.map((entry) => ({ ...entry }))),
@@ -275,8 +277,11 @@ router.post('/pgs', auth('admin'), async (req: AuthedRequest, res) => {
     }
   }
 
+  const { roomSharing, fromDate, ...listingData } = parsed.data
   const listing = await ListingModel.create({
-    ...parsed.data,
+    ...listingData,
+    ...(roomSharing ? { roomSharing } : {}),
+    ...(fromDate ? { fromDate } : {}),
     city: 'Bangalore',
     mapsLocation: parsed.data.mapsLocation ?? '',
     latitude: parsed.data.latitude ?? null,
@@ -723,7 +728,7 @@ router.post('/owner-applications/:id/approve', auth('admin'), async (req: Authed
     area: application.area,
     description: application.description,
     baseRent: application.rent,
-    gender: 'Co-ed',
+    gender: 'Co-Living',
     amenities: application.amenities,
     photos: application.photos,
     contactName: application.name,
@@ -792,6 +797,7 @@ router.patch('/pgs/:id', auth('admin'), async (req, res) => {
       longitude: z.number().optional(),
       description: z.string().optional(),
       baseRent: z.number().positive().optional(),
+      fromDate: z.coerce.date().optional(),
       amenities: z.array(z.string()).optional(),
       foodAvailable: z.boolean().optional(),
       weeklyMenu: weeklyMenuSchema.optional(),
@@ -801,7 +807,8 @@ router.patch('/pgs/:id', auth('admin'), async (req, res) => {
       availability: z.number().int().nonnegative().optional(),
       totalRooms: z.number().int().nonnegative().optional(),
       totalBeds: z.number().int().nonnegative().optional(),
-      gender: z.enum(['Men', 'Women', 'Co-ed']).optional(),
+      gender: z.enum(['Men', 'Women', 'Co-Living']).optional(),
+      roomSharing: z.enum(['Single', 'Double', 'Triple', 'Quadruple', 'Dormitory']).optional(),
       roomTypes: z.array(roomTypeSchema).optional(),
       status: z.enum(['pending', 'live', 'suspended', 'rejected', 'unassigned']).optional(),
     })

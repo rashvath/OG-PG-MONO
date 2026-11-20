@@ -1,7 +1,6 @@
 :root {
   /* ── TESTBNB canonical tokens ────────────────── */
-  --font-stack: "Airbnb Cereal VF", Circular, -apple-system,
-                BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  --font-stack: "Inter", sans-serif;
   --font-xs:   14px;
   --font-sm:   16px;
   --font-md:   28px;

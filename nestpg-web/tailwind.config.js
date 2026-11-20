@@ -21,7 +21,8 @@ const config = {
         'neutral-label': 'var(--c-neutral-label)',
       },
       fontFamily: {
-        sans: ['var(--font-stack)'],
+        inter: ['Inter', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
       },
       fontSize: {
         xs: ['var(--font-xs)', { lineHeight: 'var(--lh-base)' }],

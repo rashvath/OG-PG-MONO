@@ -58,13 +58,14 @@ export function PgDetailPage() {
   const propertyFacts = [
     { label: 'PG type', value: listing.pgType },
     { label: 'Accommodation', value: listing.gender },
+    { label: 'Room Sharing', value: listing.roomSharing },
     { label: 'Total floors', value: (listing.totalFloors ?? 0) > 0 ? String(listing.totalFloors) : '' },
     { label: 'Total rooms', value: (listing.totalRooms ?? 0) > 0 ? String(listing.totalRooms) : '' },
     { label: 'Total beds', value: (listing.totalBeds ?? 0) > 0 ? String(listing.totalBeds) : '' },
   ].filter((item) => item.value)
 
   const houseRules = [
-    listing.curfew?.trim() ? `Curfew: ${listing.curfew.trim()}` : '',
+    listing.curfew?.trim() ? `Entry Timings: ${listing.curfew.trim()}` : '',
     listing.securityInfo?.trim() ? `Security: ${listing.securityInfo.trim()}` : '',
     listing.electricityRules?.trim() ? `Electricity: ${listing.electricityRules.trim()}` : '',
   ].filter(Boolean)

@@ -109,8 +109,8 @@ export function ListingsPage() {
 
       <div className="filter-group">
         <label>Gender</label>
-        <div className="chips" role="radiogroup" aria-label="Gender filter">
-          {['', 'Men', 'Women', 'Co-ed'].map((option) => (
+        <div className="chips">
+          {['', 'Men', 'Women', 'Co-Living'].map((option) => (
             <button
               key={option || 'all'}
               type="button"

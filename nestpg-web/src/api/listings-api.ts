@@ -1,4 +1,4 @@
-import type { Listing } from '@/lib/types'
+import type { Listing, RoomSharing } from '@/lib/types'
 import { useApiGet } from '@/hooks/api-hooks'
 
 import { API_ENDPOINTS, apiGet } from './api'
@@ -20,7 +20,8 @@ type ApiListing = {
   electricityRules?: string
   foodCharges?: number
   otherCharges?: number
-  gender: 'Men' | 'Women' | 'Co-ed'
+  gender: 'Men' | 'Women' | 'Co-Living'
+  roomSharing?: RoomSharing
   pgType?: string
   totalFloors?: number
   totalRooms?: number
@@ -121,6 +122,7 @@ export function normalizeListing(input: ApiListing): Listing {
     foodCharges: input.foodCharges ?? 0,
     otherCharges: input.otherCharges ?? 0,
     gender: input.gender,
+    roomSharing: input.roomSharing,
     pgType: input.pgType ?? '',
     totalFloors: input.totalFloors ?? 0,
     totalRooms: input.totalRooms ?? 0,

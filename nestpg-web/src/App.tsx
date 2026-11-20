@@ -104,7 +104,7 @@ function AppFrame() {
             <Route path="/pg/:id" element={<PgDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/auth/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register" element={<RegisterPage ownerOnly />} />
             <Route path="/auth/register" element={<RegisterPage />} />
             <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
 

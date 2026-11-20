@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(250).default(20),
     area: z.string().trim().optional(),
-    gender: z.enum(['Men', 'Women', 'Co-ed']).optional(),
+    gender: z.enum(['Men', 'Women', 'Co-Living']).optional(),
     maxBudget: z.coerce.number().optional(),
     sort: z.enum(['rec', 'lo', 'hi', 'rt']).default('rec'),
   })

@@ -6,8 +6,10 @@ import L from 'leaflet'
 
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { AMENITIES, AREAS } from '@/lib/mock-data'
+import { useAuth } from '@/lib/auth'
 import { uploadPgImages } from '@/api/upload-api'
 import { useFormConfig } from '@/hooks/use-form-config'
+import type { RoomSharing } from '@/lib/types'
 
 const BENGALURU_CENTER: [number, number] = [12.9716, 77.5946]
 const BENGALURU_BOUNDS = {
@@ -24,8 +26,9 @@ const markerIcon = new L.Icon({
   iconAnchor: [12, 41],
 })
 
-type Gender = 'Men' | 'Women' | 'Co-ed'
+type Gender = 'Men' | 'Women' | 'Co-Living'
 type FormRole = 'admin' | 'owner'
+type RoomSharingValue = RoomSharing | ''
 
 export type PgFormValues = {
   name: string
@@ -44,6 +47,8 @@ export type PgFormValues = {
   pgType: string
   totalFloors: number
   gender: Gender
+  roomSharing: RoomSharingValue
+  fromDate: string
   foodAvailable: boolean
   weeklyMenu: Array<{ day: string; items: string[] }>
   curfew: string
@@ -71,6 +76,13 @@ type PgFormDialogProps = {
 }
 
 const DAYS: readonly string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const ROOM_SHARING_OPTIONS: Array<{ label: string; value: RoomSharingValue }> = [
+  { label: 'Single (1 Sharing)', value: 'Single' },
+  { label: 'Double (2 Sharing)', value: 'Double' },
+  { label: 'Triple (3 Sharing)', value: 'Triple' },
+  { label: 'Quadruple (4 Sharing)', value: 'Quadruple' },
+  { label: 'Dormitory (5+ Sharing)', value: 'Dormitory' },
+]
 
 const FIELD_LABELS: Record<keyof PgFormValues, string> = {
   name: 'PG name',
@@ -89,9 +101,11 @@ const FIELD_LABELS: Record<keyof PgFormValues, string> = {
   pgType: 'PG type',
   totalFloors: 'Total floors',
   gender: 'Gender',
+  roomSharing: 'Room Sharing',
+  fromDate: 'From',
   foodAvailable: 'Food available',
   weeklyMenu: '7-day menu (flexible)',
-  curfew: 'Curfew timing',
+  curfew: 'Entry Timings',
   securityInfo: 'Security information',
   contactName: 'Contact person name',
   contactPhone: 'Contact phone',
@@ -303,6 +317,8 @@ function normalizeInitial(input?: Partial<PgFormValues>): PgFormValues {
     pgType: input?.pgType ?? '',
     totalFloors: input?.totalFloors ?? 0,
     gender: input?.gender ?? 'Men',
+    roomSharing: input?.roomSharing ?? '',
+    fromDate: input?.fromDate?.slice(0, 10) ?? '',
     foodAvailable: input?.foodAvailable ?? false,
     weeklyMenu: input?.weeklyMenu ?? [],
     curfew: input?.curfew ?? '',
@@ -351,6 +367,7 @@ export function PgFormDialog({
   onClose,
   onSubmit,
 }: PgFormDialogProps) {
+  const { role: currentRole } = useAuth()
   const { requiredFieldKeys, isRequired, getLabel } = useFormConfig(role === 'admin' ? 'admin.pgs' : 'owner.pgs')
   const [form, setForm] = useState<PgFormValues>(() => normalizeInitial(initialValues))
   const [imageUrlsText, setImageUrlsText] = useState('')
@@ -757,10 +774,26 @@ export function PgFormDialog({
               options={[
                 { label: 'Men', value: 'Men' },
                 { label: 'Women', value: 'Women' },
-                { label: 'Co-ed', value: 'Co-ed' },
+                { label: 'Co-Living', value: 'Co-Living' },
               ]}
             />
             {showFieldError('gender')}
+          </div>
+          <div className="form-field" data-field="roomSharing">
+            {renderLabel('roomSharing', 'Room Sharing')}
+            <CustomDropdown
+              ariaLabel="Room Sharing"
+              value={form.roomSharing}
+              onChange={(value) => {
+                const selected = ROOM_SHARING_OPTIONS.find((option) => option.value === value)
+                if (selected) {
+                  setField('roomSharing', selected.value)
+                }
+              }}
+              placeholder="Select sharing type"
+              options={ROOM_SHARING_OPTIONS}
+            />
+            {showFieldError('roomSharing')}
           </div>
           <div className="form-field" data-field="totalRooms">
             {renderLabel('totalRooms', 'Total rooms')}
@@ -820,11 +853,22 @@ export function PgFormDialog({
             {showPendingNote('pincode')}
           </div>
           <div className={getFieldClassName('curfew')} data-field="curfew">
-            {renderLabel('curfew', 'Curfew timing')}
+            {renderLabel('curfew', 'Entry Timings')}
             <input value={form.curfew} onChange={(event) => setField('curfew', event.target.value)} placeholder="e.g. 11:00 PM" />
             {showFieldError('curfew')}
             {showPendingNote('curfew')}
           </div>
+          {currentRole === 'admin' ? (
+            <div className="form-field" data-field="fromDate">
+              {renderLabel('fromDate', 'From')}
+              <input
+                type="date"
+                value={form.fromDate}
+                onChange={(event) => setField('fromDate', event.target.value)}
+              />
+              {showFieldError('fromDate')}
+            </div>
+          ) : null}
           <div className={getFieldClassName('description')} style={{ gridColumn: '1 / -1' }} data-field="description">
             {renderLabel('description', 'Description')}
             <textarea rows={3} value={form.description} onChange={(event) => setField('description', event.target.value)} placeholder="Briefly describe your PG" />

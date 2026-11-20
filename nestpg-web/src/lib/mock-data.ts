@@ -42,6 +42,14 @@ const roomMultipliers: Record<'Single' | 'Double' | 'Triple', number> = {
   Triple: 1,
 }
 
+const listingPhotos = [
+  'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80',
+  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
+  'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&q=80',
+  'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80',
+  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80',
+]
+
 export const listingsSeed: Listing[] = names.map((name, index) => {
   const baseRent = 6500 + ((index * 1700) % 7500)
   const area = AREAS[index % AREAS.length]
@@ -60,12 +68,12 @@ export const listingsSeed: Listing[] = names.map((name, index) => {
     area,
     areaKey: area.toLowerCase().replace(/\s+/g, '-'),
     baseRent,
-    gender: (['Men', 'Women', 'Co-ed'] as const)[index % 3],
+    gender: (['Men', 'Women', 'Co-Living'] as const)[index % 3],
     rating: Number((4 + ((index * 37) % 10) / 10).toFixed(1)),
     reviewCount: 40 + index * 23,
     amenities: AMENITIES.filter((_, i) => (i + index) % 3 !== 0 || i < 3),
     weeklyMenu: [],
-    photos: [],
+    photos: [listingPhotos[index % listingPhotos.length]],
     status: index === 3 || index === 8 ? 'pending' : 'live',
     ownerId: String((index % 4) + 1),
     tag: (['Popular', 'Verified', 'New', 'Best value'] as const)[index % 4],
