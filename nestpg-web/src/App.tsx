@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { ModuleHelpButton } from '@/components/layout/ModuleHelpButton'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { ManagerLayout, ManagerLanding } from '@/components/layout/ManagerLayout'
 import { RouteSpinner } from '@/components/ui/RouteSpinner'
 import { AppToaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/lib/auth'
@@ -57,6 +58,8 @@ const AdminBalanceSheetPage = lazy(() =>
 )
 const OwnerDocumentsPage = lazy(() => import('@/pages/OwnerDocumentsPage').then((m) => ({ default: m.OwnerDocumentsPage })))
 const OwnerStaffPage = lazy(() => import('@/pages/OwnerStaffPage').then((m) => ({ default: m.OwnerStaffPage })))
+const OwnerManagersPage = lazy(() => import('@/pages/OwnerManagersPage').then((m) => ({ default: m.OwnerManagersPage })))
+const AdminManagersPage = lazy(() => import('@/pages/AdminManagersPage').then((m) => ({ default: m.AdminManagersPage })))
 
 const AdminOverviewPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminOverviewPage })))
 const AdminPgsPage = lazy(() => import('@/pages/AdminPages').then((m) => ({ default: m.AdminPgsPage })))
@@ -123,6 +126,7 @@ function AppFrame() {
                       { label: 'Balance Sheet', to: '/owner/balance-sheet' },
                       { label: 'Documents', to: '/owner/documents' },
                       { label: 'Staff', to: '/owner/staff' },
+                      { label: 'Managers', to: '/owner/managers' },
                       { label: 'Tenant Approvals', to: '/owner/tenant-review/approvals' },
                       { label: 'Tenant Complaints', to: '/owner/tenant-review/complaints' },
                       { label: 'Tenant Payments', to: '/owner/tenant-review/payments' },
@@ -140,6 +144,7 @@ function AppFrame() {
                 <Route path="balance-sheet" element={<OwnerBalanceSheetPage />} />
                 <Route path="documents" element={<OwnerDocumentsPage />} />
                 <Route path="staff" element={<OwnerStaffPage />} />
+                <Route path="managers" element={<OwnerManagersPage />} />
                 <Route path="tenant-review">
                   <Route index element={<Navigate to="approvals" replace />} />
                   <Route path="approvals" element={<TenantReviewApprovalsPage />} />
@@ -176,6 +181,27 @@ function AppFrame() {
               </Route>
             </Route>
 
+            <Route element={<ProtectedRoute allow="manager" />}>
+              <Route path="/manager" element={<ManagerLayout />}>
+                <Route index element={<ManagerLanding />} />
+                <Route path="pgs" element={<OwnerAddPgPage />} />
+                <Route path="residents" element={<OwnerResidentsPage />} />
+                <Route path="inventory" element={<OwnerInventoryPage />} />
+                <Route path="enquiries" element={<OwnerEnquiriesPage />} />
+                <Route path="finance" element={<OwnerBalanceSheetPage />} />
+                <Route path="documents" element={<OwnerDocumentsPage />} />
+                <Route path="staff" element={<OwnerStaffPage />} />
+                <Route path="tenant-review">
+                  <Route index element={<Navigate to="approvals" replace />} />
+                  <Route path="approvals" element={<TenantReviewApprovalsPage />} />
+                  <Route path="complaints" element={<TenantReviewComplaintsPage />} />
+                  <Route path="payments" element={<TenantReviewPaymentsPage />} />
+                  <Route path="absences" element={<TenantReviewAbsencesPage />} />
+                  <Route path="profiles" element={<TenantReviewProfilesPage />} />
+                </Route>
+              </Route>
+            </Route>
+
             <Route element={<ProtectedRoute allow="admin" />}>
               <Route
                 path="/admin"
@@ -186,6 +212,7 @@ function AppFrame() {
                       { label: 'Overview', to: '/admin' },
                       { label: 'PGs', to: '/admin/pgs' },
                       { label: 'Owners', to: '/admin/owners' },
+                      { label: 'Managers', to: '/admin/managers' },
                       { label: 'Residents', to: '/admin/residents' },
                       { label: 'Approvals', to: '/admin/approvals' },
                       { label: 'Enquiries', to: '/admin/enquiries' },
@@ -204,6 +231,7 @@ function AppFrame() {
                 <Route index element={<AdminOverviewPage />} />
                 <Route path="pgs" element={<AdminPgsPage />} />
                 <Route path="owners" element={<AdminOwnersPage />} />
+                <Route path="managers" element={<AdminManagersPage />} />
                 <Route path="residents" element={<AdminResidentsPage />} />
                 <Route path="approvals" element={<AdminOwnerApprovalsPage />} />
                 <Route path="enquiries" element={<AdminEnquiriesPage />} />

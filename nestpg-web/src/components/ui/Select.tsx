@@ -20,7 +20,9 @@ export function Select({ className, label, hint, error, id, children, ...props }
     .map((child) => {
       const element = child as ReactElement<{ value?: string; children?: ReactNode }>
       return {
-        label: String(element.props.children ?? ''),
+        label: Children.toArray(element.props.children)
+          .map((part) => typeof part === 'string' || typeof part === 'number' ? String(part) : '')
+          .join(''),
         value: String(element.props.value ?? ''),
       }
     })

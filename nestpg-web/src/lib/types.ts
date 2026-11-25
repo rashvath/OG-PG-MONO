@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'owner' | 'admin' | 'tenant'
+export type Role = 'customer' | 'owner' | 'manager' | 'admin' | 'tenant'
 export type RoomSharing = 'Single' | 'Double' | 'Triple' | 'Quadruple' | 'Dormitory'
 
 export type ListingStatus = 'pending' | 'live' | 'suspended' | 'rejected'

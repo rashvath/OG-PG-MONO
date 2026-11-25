@@ -38,7 +38,7 @@ The Vite development server uses port `5173`.
 ### Owner
 
 - `/owner`, `/owner/add`, `/owner/residents`, `/owner/inventory`
-- `/owner/enquiries`, `/owner/balance-sheet`, `/owner/documents`, `/owner/staff`
+- `/owner/enquiries`, `/owner/balance-sheet`, `/owner/documents`, `/owner/staff`, `/owner/managers`
 - `/owner/tenant-review/*`
 
 ### Admin
@@ -46,6 +46,10 @@ The Vite development server uses port `5173`.
 - `/admin`, `/admin/pgs`, `/admin/owners`, `/admin/residents`
 - `/admin/approvals`, `/admin/enquiries`, `/admin/users`
 - `/admin/form-config`, `/admin/balance-sheet`, `/admin/tenant-review/*`
+
+### Manager
+
+- `/manager/*` exposes only the modules the owner has enabled for the manager's assigned PG.
 
 ## Design system
 

@@ -24,6 +24,8 @@ export function Header() {
 
     if (role === 'owner') {
       items.push({ to: '/owner', label: 'Owner' })
+    } else if (role === 'manager') {
+      items.push({ to: '/manager', label: 'Manager' })
     } else if (role === 'admin') {
       items.push({ to: '/admin', label: 'Admin' })
     } else if (role === 'tenant') {
@@ -33,7 +35,7 @@ export function Header() {
     return items
   }, [role])
 
-  const ctaTarget = role === 'owner' ? '/owner/add' : role === 'tenant' ? '/tenant' : '/register?role=owner'
+  const ctaTarget = role === 'owner' ? '/owner/add' : role === 'manager' ? '/manager' : role === 'tenant' ? '/tenant' : '/register?role=owner'
   const confirmLogout = () => {
     setIsLogoutDialogOpen(false)
     logout()

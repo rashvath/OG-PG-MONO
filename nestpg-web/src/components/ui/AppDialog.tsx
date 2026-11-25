@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 
 type AppDialogProps = {
   open: boolean
@@ -9,9 +10,10 @@ type AppDialogProps = {
   children: ReactNode
   footer?: ReactNode
   wide?: boolean
+  className?: string
 }
 
-export function AppDialog({ open, title, subtitle, onClose, children, footer, wide = false }: AppDialogProps) {
+export function AppDialog({ open, title, subtitle, onClose, children, footer, wide = false, className }: AppDialogProps) {
   useEffect(() => {
     if (!open) {
       return
@@ -39,14 +41,14 @@ export function AppDialog({ open, title, subtitle, onClose, children, footer, wi
 
   return createPortal(
     <div className="app-dialog-backdrop" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
-      <div className={`app-dialog${wide ? ' app-dialog-wide' : ''}`} onClick={(event) => event.stopPropagation()}>
+      <div className={`app-dialog${wide ? ' app-dialog-wide' : ''}${className ? ` ${className}` : ''}`} onClick={(event) => event.stopPropagation()}>
         <div className="app-dialog-head">
           <div>
             <h3>{title}</h3>
             {subtitle ? <p>{subtitle}</p> : null}
           </div>
           <button type="button" className="dialog-close-btn" onClick={onClose} aria-label="Close dialog">
-            x
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 

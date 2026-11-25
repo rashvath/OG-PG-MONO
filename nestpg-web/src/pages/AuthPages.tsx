@@ -46,6 +46,8 @@ export function LoginPage() {
       navigate(
         user.role === 'owner'
           ? '/owner'
+          : user.role === 'manager'
+            ? '/manager'
           : user.role === 'admin'
             ? '/admin'
             : user.role === 'tenant'
@@ -62,14 +64,14 @@ export function LoginPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout compactCard>
       <form className="auth-form" onSubmit={submit}>
         <div className="auth-heading">
           <h1>Sign in</h1>
           <p>Welcome back. Enter your credentials to continue.</p>
         </div>
 
-        <fieldset className="auth-fieldset" disabled={isSubmitting}>
+        <fieldset className="auth-fieldset auth-login-fields" disabled={isSubmitting}>
 
         <Input
           label={loginConfig.getLabel('email', 'Email address')}
@@ -79,17 +81,17 @@ export function LoginPage() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
-        <PasswordInput
-          required={loginConfig.isRequired('password')}
-          label={loginConfig.getLabel('password', 'Password')}
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-        <div className="auth-forgot-link">
-          <Link to="/auth/forgot-password">
-            Forgot password?
-          </Link>
+        <div className="auth-password-field">
+          <PasswordInput
+            required={loginConfig.isRequired('password')}
+            label={loginConfig.getLabel('password', 'Password')}
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <div className="auth-forgot-link">
+            <Link to="/auth/forgot-password">Forgot password?</Link>
+          </div>
         </div>
 
         {error ? <p className="auth-error" role="alert">⚠ {error}</p> : null}

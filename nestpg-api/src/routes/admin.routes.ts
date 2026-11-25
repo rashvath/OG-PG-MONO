@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'node:crypto'
 import { Router } from 'express'
+import mongoose from 'mongoose'
 import { z } from 'zod'
 
 import { auth, type AuthedRequest } from '../middleware/auth'
@@ -10,6 +12,7 @@ import { EmployeeModel } from '../models/Employee'
 import { BedModel } from '../models/Bed'
 import { LedgerEntryModel } from '../models/LedgerEntry'
 import { ListingModel } from '../models/Listing'
+import { ManagerAccessModel, MANAGER_MODULES } from '../models/ManagerAccess'
 import { OwnerApplicationModel } from '../models/OwnerApplication'
 import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
 import { OwnerProfileModel } from '../models/OwnerProfile'
@@ -19,6 +22,93 @@ import { UserModel } from '../models/User'
 import { listDefaultFormConfigs, listMergedFormConfigs, upsertFormConfig, validateRequiredFields } from '../services/form-config.service'
 
 const router = Router()
+const managerActions = ['read', 'create', 'update', 'delete'] as const
+const managerPermissionSchema = z.object(Object.fromEntries(MANAGER_MODULES.map((module) => [
+  module, z.object(Object.fromEntries(managerActions.map((action) => [action, z.boolean()]))),
+])))
+
+router.get('/managers', auth('admin'), async (_req, res) => {
+  const items = await ManagerAccessModel.find()
+    .populate('managerId', 'name email phone status')
+    .populate('ownerId', 'name email phone')
+    .populate('pgId', 'name area status')
+    .sort({ createdAt: -1 }).lean()
+  res.json({ items })
+})
+
+router.post('/managers', auth('admin'), async (req: AuthedRequest, res) => {
+  const parsed = z.object({
+    name: z.string().trim().min(2).max(120),
+    email: z.string().email().transform((value) => value.toLowerCase()),
+    phone: z.string().regex(/^\d{10}$/),
+    pgId: z.string().regex(/^[a-f\d]{24}$/i),
+    permissions: managerPermissionSchema,
+  }).safeParse(req.body)
+  if (!parsed.success) { res.status(400).json({ message: parsed.error.flatten() }); return }
+
+  const [pg, assignment, existingUser] = await Promise.all([
+    ListingModel.findById(parsed.data.pgId).select('ownerId').lean(),
+    PgOwnerAssignmentModel.findOne({ pgId: parsed.data.pgId }).select('ownerId').lean(),
+    UserModel.findOne({ email: parsed.data.email }).select('_id').lean(),
+  ])
+  if (!pg) { res.status(404).json({ message: 'PG not found' }); return }
+  if (existingUser) { res.status(409).json({ message: 'Email already exists' }); return }
+  const adminId = req.user?.sub
+  if (!adminId) { res.status(401).json({ message: 'Unauthorized' }); return }
+  const assignedOwnerId = assignment?.ownerId ?? pg.ownerId
+
+  const temporaryPassword = randomBytes(9).toString('base64url') + 'A1!'
+  const user = await UserModel.create({
+    name: parsed.data.name,
+    email: parsed.data.email,
+    phone: parsed.data.phone,
+    passwordHash: await bcrypt.hash(temporaryPassword, 10),
+    role: 'manager',
+  })
+  try {
+    const access = await ManagerAccessModel.create({
+      managerId: user._id,
+      ...(assignedOwnerId ? { ownerId: assignedOwnerId } : {}),
+      pgId: parsed.data.pgId,
+      permissions: parsed.data.permissions,
+      createdBy: adminId,
+    })
+    res.status(201).json({
+      item: { id: user.id, name: user.name, email: user.email, phone: user.phone, pgId: String(access.pgId), permissions: parsed.data.permissions },
+      temporaryPassword,
+    })
+  } catch (error) {
+    await UserModel.findByIdAndDelete(user._id)
+    throw error
+  }
+})
+
+router.patch('/managers/:id', auth('admin'), async (req: AuthedRequest, res) => {
+  const parsed = z.object({
+    permissions: managerPermissionSchema,
+    status: z.enum(['active', 'blocked']).optional(),
+  }).safeParse(req.body)
+  if (!parsed.success || !mongoose.isValidObjectId(req.params.id)) {
+    res.status(400).json({ message: parsed.success ? 'Invalid manager id' : parsed.error.flatten() })
+    return
+  }
+  const access = await ManagerAccessModel.findOneAndUpdate(
+    { managerId: req.params.id } as never,
+    { $set: { permissions: parsed.data.permissions } },
+    { new: true },
+  ).lean()
+  if (!access) { res.status(404).json({ message: 'Manager not found' }); return }
+  if (parsed.data.status) await UserModel.findByIdAndUpdate(req.params.id, { status: parsed.data.status })
+  res.json({ item: access })
+})
+
+router.delete('/managers/:id', auth('admin'), async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) { res.status(400).json({ message: 'Invalid manager id' }); return }
+  const access = await ManagerAccessModel.findOneAndDelete({ managerId: req.params.id } as never)
+  if (!access) { res.status(404).json({ message: 'Manager not found' }); return }
+  await UserModel.findByIdAndDelete(req.params.id)
+  res.json({ message: 'Manager access revoked' })
+})
 
 const PHONE_10_REGEX = /^\d{10}$/
 const BENGALURU_BOUNDS = {

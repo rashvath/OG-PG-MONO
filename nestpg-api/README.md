@@ -49,10 +49,12 @@ registered. Development OTPs are logged by the API when `SEND_OTP=false`.
 ## Other route groups
 
 - `/api/v1/listings` — public listing search/details and owner listing creation
-- `/api/v1/owner` — owner dashboard, PGs, residents, inventory, staff, and finances
+- `/api/v1/owner` — owner dashboard, PGs, residents, inventory, staff, finances, and manager account/permission management
 - `/api/v1/admin` — admin PG, owner, user, and finance operations
 - `/api/v1/tenant` — tenant profile, complaints, payment proofs, and absences
 - `/api/v1/uploads` — authenticated image uploads
+
+Managers are created by owners and assigned to one PG. Owners grant CRUD permissions by module; manager requests are checked against the current grants and assigned PG. Admins can review manager-to-PG assignments at `/api/v1/admin/managers`.
 
 ## Scripts
 

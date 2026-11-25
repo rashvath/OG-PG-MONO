@@ -25,7 +25,7 @@ type TenantProfileField = (typeof TENANT_PROFILE_FIELDS)[number]
 type TenantProfileSnapshot = Record<TenantProfileField, string>
 
 function isOwnerOrAdmin(role?: string) {
-  return role === 'owner' || role === 'admin'
+  return role === 'owner' || role === 'manager' || role === 'admin'
 }
 
 async function getTenantScope(tenantUserId: string) {
@@ -115,7 +115,7 @@ function getRequestSnapshotValues(item: Record<string, unknown>) {
 }
 
 router.get('/tenant/me', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -137,7 +137,7 @@ router.get('/tenant/me', auth('tenant'), async (req: AuthedRequest, res) => {
 })
 
 router.post('/tenant/profile-update-requests', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -248,7 +248,7 @@ router.post('/tenant/profile-update-requests', auth('tenant'), async (req: Authe
 })
 
 router.get('/tenant/profile-update-requests', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -259,7 +259,7 @@ router.get('/tenant/profile-update-requests', auth('tenant'), async (req: Authed
 })
 
 router.post('/tenant/complaints', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -296,7 +296,7 @@ router.post('/tenant/complaints', auth('tenant'), async (req: AuthedRequest, res
 })
 
 router.get('/tenant/complaints', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -307,7 +307,7 @@ router.get('/tenant/complaints', auth('tenant'), async (req: AuthedRequest, res)
 })
 
 router.post('/tenant/payment-proofs', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -350,7 +350,7 @@ router.post('/tenant/payment-proofs', auth('tenant'), async (req: AuthedRequest,
 })
 
 router.get('/tenant/payment-proofs', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -361,7 +361,7 @@ router.get('/tenant/payment-proofs', auth('tenant'), async (req: AuthedRequest, 
 })
 
 router.post('/tenant/absences', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -407,7 +407,7 @@ router.post('/tenant/absences', auth('tenant'), async (req: AuthedRequest, res) 
 })
 
 router.get('/tenant/absences', auth('tenant'), async (req: AuthedRequest, res) => {
-  const tenantUserId = req.user?.sub
+  const tenantUserId = (req.user?.ownerId ?? req.user?.sub)
   if (!tenantUserId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -418,7 +418,7 @@ router.get('/tenant/absences', auth('tenant'), async (req: AuthedRequest, res) =
 })
 
 router.get('/tenant/approvals', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
@@ -430,8 +430,9 @@ router.get('/tenant/approvals', auth(), async (req: AuthedRequest, res) => {
     tenantApprovalStatus: 'pending',
   }
 
-  if (actorRole === 'owner') {
+  if (actorRole === 'owner' || actorRole === 'manager') {
     filter.tenantOwnerId = actorUserId
+    if (actorRole === 'manager') filter.tenantPgId = req.user?.pgId
   }
 
   const items = await UserModel.find(filter)
@@ -443,7 +444,7 @@ router.get('/tenant/approvals', auth(), async (req: AuthedRequest, res) => {
 })
 
 router.patch('/tenant/approvals/:tenantUserId', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
@@ -468,7 +469,7 @@ router.patch('/tenant/approvals/:tenantUserId', auth(), async (req: AuthedReques
     return
   }
 
-  if (actorRole === 'owner' && String(tenant.get('tenantOwnerId') ?? '') !== actorUserId) {
+  if ((actorRole === 'owner' || actorRole === 'manager') && String(tenant.get('tenantOwnerId') ?? '') !== actorUserId) {
     res.status(403).json({ message: 'Forbidden: tenant does not belong to this owner' })
     return
   }
@@ -485,14 +486,15 @@ router.patch('/tenant/approvals/:tenantUserId', auth(), async (req: AuthedReques
 })
 
 router.get('/tenant/review/complaints', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }
 
-  const filter: Record<string, unknown> = actorRole === 'owner' ? { ownerId: actorUserId } : {}
+  const filter: Record<string, unknown> = actorRole === 'owner' || actorRole === 'manager' ? { ownerId: actorUserId } : {}
+  if (actorRole === 'manager') filter.pgId = req.user?.pgId
   const items = await TenantComplaintModel.find(filter)
     .populate('tenantUserId', 'name email phone')
     .populate('pgId', 'name area')
@@ -502,7 +504,7 @@ router.get('/tenant/review/complaints', auth(), async (req: AuthedRequest, res) 
 })
 
 router.patch('/tenant/review/complaints/:id', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
@@ -527,7 +529,7 @@ router.patch('/tenant/review/complaints/:id', auth(), async (req: AuthedRequest,
     return
   }
 
-  if (actorRole === 'owner' && String(item.ownerId) !== actorUserId) {
+  if ((actorRole === 'owner' || actorRole === 'manager') && String(item.ownerId) !== actorUserId) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }
@@ -542,14 +544,15 @@ router.patch('/tenant/review/complaints/:id', auth(), async (req: AuthedRequest,
 })
 
 router.get('/tenant/review/payment-proofs', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }
 
-  const filter: Record<string, unknown> = actorRole === 'owner' ? { ownerId: actorUserId } : {}
+  const filter: Record<string, unknown> = actorRole === 'owner' || actorRole === 'manager' ? { ownerId: actorUserId } : {}
+  if (actorRole === 'manager') filter.pgId = req.user?.pgId
   const items = await TenantPaymentProofModel.find(filter)
     .populate('tenantUserId', 'name email phone')
     .populate('pgId', 'name area')
@@ -559,7 +562,7 @@ router.get('/tenant/review/payment-proofs', auth(), async (req: AuthedRequest, r
 })
 
 router.patch('/tenant/review/payment-proofs/:id', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
@@ -584,7 +587,7 @@ router.patch('/tenant/review/payment-proofs/:id', auth(), async (req: AuthedRequ
     return
   }
 
-  if (actorRole === 'owner' && String(item.ownerId) !== actorUserId) {
+  if ((actorRole === 'owner' || actorRole === 'manager') && String(item.ownerId) !== actorUserId) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }
@@ -599,14 +602,15 @@ router.patch('/tenant/review/payment-proofs/:id', auth(), async (req: AuthedRequ
 })
 
 router.get('/tenant/review/absences', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }
 
-  const filter: Record<string, unknown> = actorRole === 'owner' ? { ownerId: actorUserId } : {}
+  const filter: Record<string, unknown> = actorRole === 'owner' || actorRole === 'manager' ? { ownerId: actorUserId } : {}
+  if (actorRole === 'manager') filter.pgId = req.user?.pgId
   const items = await TenantAbsenceModel.find(filter)
     .populate('tenantUserId', 'name email phone')
     .populate('pgId', 'name area')
@@ -616,7 +620,7 @@ router.get('/tenant/review/absences', auth(), async (req: AuthedRequest, res) =>
 })
 
 router.patch('/tenant/review/absences/:id', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
@@ -641,7 +645,7 @@ router.patch('/tenant/review/absences/:id', auth(), async (req: AuthedRequest, r
     return
   }
 
-  if (actorRole === 'owner' && String(item.ownerId) !== actorUserId) {
+  if ((actorRole === 'owner' || actorRole === 'manager') && String(item.ownerId) !== actorUserId) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }
@@ -656,14 +660,15 @@ router.patch('/tenant/review/absences/:id', auth(), async (req: AuthedRequest, r
 })
 
 router.get('/tenant/review/profile-update-requests', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }
 
-  const filter: Record<string, unknown> = actorRole === 'owner' ? { ownerId: actorUserId } : {}
+  const filter: Record<string, unknown> = actorRole === 'owner' || actorRole === 'manager' ? { ownerId: actorUserId } : {}
+  if (actorRole === 'manager') filter.pgId = req.user?.pgId
   const items = await TenantProfileUpdateRequestModel.find(filter)
     .populate('tenantUserId', 'name email phone')
     .populate('pgId', 'name area')
@@ -673,7 +678,7 @@ router.get('/tenant/review/profile-update-requests', auth(), async (req: AuthedR
 })
 
 router.patch('/tenant/review/profile-update-requests/:id', auth(), async (req: AuthedRequest, res) => {
-  const actorUserId = req.user?.sub
+  const actorUserId = (req.user?.ownerId ?? req.user?.sub)
   const actorRole = req.user?.role
   if (!actorUserId || !isOwnerOrAdmin(actorRole)) {
     res.status(403).json({ message: 'Forbidden' })
@@ -698,7 +703,7 @@ router.patch('/tenant/review/profile-update-requests/:id', auth(), async (req: A
     return
   }
 
-  if (actorRole === 'owner' && String(item.ownerId) !== actorUserId) {
+  if ((actorRole === 'owner' || actorRole === 'manager') && String(item.ownerId) !== actorUserId) {
     res.status(403).json({ message: 'Forbidden' })
     return
   }

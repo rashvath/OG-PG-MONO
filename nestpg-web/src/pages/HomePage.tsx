@@ -191,7 +191,7 @@ export function HomePage() {
       </section>
 
       <section className="app-wrap home-wrap page-section">
-        <h2>Where do you want to live?</h2>
+        <h2 className="home-section-heading">Where do you want to live?</h2>
         <p className="section-sub">Explore Bangalore's most connected neighbourhoods.</p>
         {loadError ? <p className="section-sub">{loadError}</p> : null}
         <div className="areas-grid">
@@ -227,7 +227,7 @@ export function HomePage() {
       </section>
 
       <section className="app-wrap home-wrap page-section">
-        <h2>Popular this week</h2>
+        <h2 className="home-section-heading">Popular this week</h2>
         <p className="section-sub">Curated stays with transparent rent and direct owner contact.</p>
         {isLoading ? (
           <p className="section-sub">Loading listings...</p>
@@ -242,7 +242,7 @@ export function HomePage() {
 
       <section className="app-wrap home-wrap page-section amenities-showcase" aria-labelledby="great-stay-title">
         <div className="amenities-head">
-          <h2 id="great-stay-title" className="why-og-title">
+          <h2 id="great-stay-title" className="home-section-heading">
             What makes a great <em>stay</em>?
           </h2>
           <p className="section-sub">The essentials that turn a room into a reliable everyday home.</p>
@@ -262,7 +262,7 @@ export function HomePage() {
 
       <section className="app-wrap home-wrap page-section why-og-section">
         <p className="eyebrow">WHY OG STAYS?</p>
-        <h2 className="why-og-title">
+        <h2 className="home-section-heading">
           More than just a <em>stay</em>.
         </h2>
         <p className="section-sub why-og-sub">A simpler, safer and smarter way to find your next home in Bangalore.</p>

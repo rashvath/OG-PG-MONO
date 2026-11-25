@@ -20,7 +20,8 @@ export function auth(requiredRole?: Role) {
       const payload = jwt.verify(token, env.jwtSecret) as JwtPayload
       req.user = payload
 
-      if (requiredRole && payload.role !== requiredRole) {
+      const allowedManager = requiredRole === 'owner' && payload.role === 'manager' && Boolean(payload.ownerId && payload.pgId)
+      if (requiredRole && payload.role !== requiredRole && !allowedManager) {
         res.status(403).json({ message: 'Forbidden' })
         return
       }

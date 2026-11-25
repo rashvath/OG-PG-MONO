@@ -21,7 +21,7 @@ NestPG is a full-stack PG management platform with:
 
 ### 3.1 App Shell and Routing
 - Global header and footer
-- Protected route gating by role (`owner`, `admin`)
+- Protected route gating by role (`owner`, `manager`, `admin`)
 - Lazy-loaded pages with suspense fallback spinner
 - Route groups:
   - Public: Home, About, Listings, PG detail, Login, Register
@@ -122,6 +122,10 @@ NestPG is a full-stack PG management platform with:
   - Resident profile photo upload
 - Bed inventory utility:
   - Initialize rooms/beds from configured PG capacity
+- Manager access:
+  - Owner creates a manager account for one assigned PG and receives a temporary password
+  - Owner controls read, create, update, and delete permissions by module
+  - Manager API requests are scoped to the assigned PG and checked against current permissions
 
 ### 3.9 Admin Dashboard Features
 - Overview KPIs:
@@ -151,6 +155,7 @@ NestPG is a full-stack PG management platform with:
   - View residents
   - Mark resident left and capture final settlement metadata
 - Admin enquiries table
+- Manager directory showing each manager, owner, assigned PG, and permitted modules
 
 ### 3.10 Shared Form and Dialog System
 - Reusable PG form dialog used by owner/admin with role-aware behavior
@@ -189,6 +194,8 @@ NestPG is a full-stack PG management platform with:
   - Blocks owner login until approved
   - Blocks blocked users
   - JWT issuance
+- Owner managed manager accounts with per-PG assignment and per-module CRUD permissions
+- Admin manager listing with owner and PG information
 - `GET /auth/me` to return authenticated profile
 - Role-gated middleware for owner/admin routes
 

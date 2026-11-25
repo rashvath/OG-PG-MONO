@@ -10,6 +10,7 @@ import {
   Settings,
   Users,
   UserSquare2,
+  UserCog,
 } from 'lucide-react'
 
 type SideMenuLink = {
@@ -30,6 +31,7 @@ const iconByLabel: Record<string, typeof Home> = {
   Absences: Clock3,
   'Profile Requests': FileText,
   Owners: UserSquare2,
+  Managers: UserCog,
   Users: Users,
   Enquiries: MessageSquare,
   Approvals: CheckCircle2,

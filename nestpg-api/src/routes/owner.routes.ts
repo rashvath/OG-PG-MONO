@@ -10,6 +10,7 @@ import { BedModel } from '../models/Bed'
 import { EnquiryModel } from '../models/Enquiry'
 import { LedgerEntryModel } from '../models/LedgerEntry'
 import { ListingModel } from '../models/Listing'
+import { ManagerAccessModel } from '../models/ManagerAccess'
 import { OwnerDocumentModel } from '../models/OwnerDocument'
 import { OwnerProfileModel } from '../models/OwnerProfile'
 import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
@@ -339,7 +340,7 @@ async function computeBalanceSnapshot(ownerId: string, params: { pgId?: string; 
 }
 
 router.get('/dashboard/summary', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -351,7 +352,7 @@ router.get('/dashboard/summary', auth('owner'), async (req: AuthedRequest, res) 
     return
   }
 
-  const assignedPgIds = await getAssignedPgIds(ownerId)
+  const assignedPgIds = (req.user?.role === 'manager' && req.user.pgId ? [req.user.pgId] : await getAssignedPgIds(ownerId))
   const assignedFilter = { $in: assignedPgIds } as Record<string, unknown>
 
   const today = new Date()
@@ -419,7 +420,7 @@ router.get('/dashboard/summary', auth('owner'), async (req: AuthedRequest, res) 
 })
 
 router.get('/enquiries', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -431,7 +432,7 @@ router.get('/enquiries', auth('owner'), async (req: AuthedRequest, res) => {
     return
   }
 
-  const assignedPgIds = await getAssignedPgIds(ownerId)
+  const assignedPgIds = (req.user?.role === 'manager' && req.user.pgId ? [req.user.pgId] : await getAssignedPgIds(ownerId))
 
   const items = await EnquiryModel.find({ listingId: { $in: assignedPgIds } } as Record<string, unknown>)
     .populate('listingId', 'name')
@@ -440,7 +441,7 @@ router.get('/enquiries', auth('owner'), async (req: AuthedRequest, res) => {
 })
 
 router.get('/pgs', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -452,13 +453,16 @@ router.get('/pgs', auth('owner'), async (req: AuthedRequest, res) => {
     return
   }
 
-  const assignedPgIds = await getAssignedPgIds(ownerId)
-  const items = await ListingModel.find({ _id: { $in: assignedPgIds } }).sort({ createdAt: -1 })
+  const assignedPgIds = (req.user?.role === 'manager' && req.user.pgId ? [req.user.pgId] : await getAssignedPgIds(ownerId))
+  const listings = ListingModel.find({ _id: { $in: assignedPgIds } }).sort({ createdAt: -1 })
+  const items = req.user?.role === 'manager' && !(await ManagerAccessModel.findOne({ managerId: req.user.sub }).select('permissions.pgs.read').lean())?.permissions?.pgs?.read
+    ? await listings.select('name area address')
+    : await listings
   res.json({ items })
 })
 
 router.post('/documents', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -502,7 +506,7 @@ router.post('/documents', auth('owner'), async (req: AuthedRequest, res) => {
 })
 
 router.get('/documents', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -537,7 +541,7 @@ router.get('/documents', auth('owner'), async (req: AuthedRequest, res) => {
     }
   }
 
-  const assignedPgIds = await getAssignedPgIds(ownerId)
+  const assignedPgIds = (req.user?.role === 'manager' && req.user.pgId ? [req.user.pgId] : await getAssignedPgIds(ownerId))
   const filter: Record<string, unknown> = {
     ownerId,
     pgId: parsed.data.pgId ? parsed.data.pgId : { $in: assignedPgIds },
@@ -577,7 +581,7 @@ router.get('/documents', auth('owner'), async (req: AuthedRequest, res) => {
 })
 
 router.delete('/documents/:id', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -594,7 +598,7 @@ router.delete('/documents/:id', auth('owner'), async (req: AuthedRequest, res) =
 })
 
 router.post('/pgs/:id/initialize-beds', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -635,7 +639,7 @@ router.post('/pgs/:id/initialize-beds', auth('owner'), async (req: AuthedRequest
 })
 
 router.patch('/pgs/:id', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -745,13 +749,13 @@ router.patch('/pgs/:id', auth('owner'), async (req: AuthedRequest, res) => {
 })
 
 router.get('/residents', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
   }
 
-  const assignedPgIds = await getAssignedPgIds(ownerId)
+  const assignedPgIds = (req.user?.role === 'manager' && req.user.pgId ? [req.user.pgId] : await getAssignedPgIds(ownerId))
   const parsed = z
     .object({
       pgId: z.string().optional(),
@@ -783,7 +787,7 @@ router.get('/residents', auth('owner'), async (req: AuthedRequest, res) => {
 })
 
 router.post('/residents', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -927,7 +931,7 @@ router.post('/residents', auth('owner'), async (req: AuthedRequest, res) => {
 })
 
 router.post('/residents/:id/move', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1006,7 +1010,7 @@ router.post('/residents/:id/move', auth('owner'), async (req: AuthedRequest, res
 })
 
 router.patch('/residents/:id', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1069,7 +1073,7 @@ router.patch('/residents/:id', auth('owner'), async (req: AuthedRequest, res) =>
 })
 
 router.post('/residents/:id/mark-left', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1135,7 +1139,7 @@ router.post('/residents/:id/mark-left', auth('owner'), async (req: AuthedRequest
 })
 
 router.get('/residents/:id/activity', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1152,7 +1156,7 @@ router.get('/residents/:id/activity', auth('owner'), async (req: AuthedRequest, 
 })
 
 router.post('/ledger/entries', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1195,7 +1199,7 @@ router.post('/ledger/entries', auth('owner'), async (req: AuthedRequest, res) =>
 })
 
 router.post('/ledger/entries/bulk', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1237,7 +1241,7 @@ router.post('/ledger/entries/bulk', auth('owner'), async (req: AuthedRequest, re
 })
 
 router.get('/ledger/entries', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1309,7 +1313,7 @@ router.get('/ledger/entries', auth('owner'), async (req: AuthedRequest, res) => 
 })
 
 router.delete('/ledger/entries/:id', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1329,7 +1333,7 @@ router.delete('/ledger/entries/:id', auth('owner'), async (req: AuthedRequest, r
 })
 
 router.post('/balance-sheets/generate', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1376,7 +1380,7 @@ router.post('/balance-sheets/generate', auth('owner'), async (req: AuthedRequest
 })
 
 router.post('/balance-sheets', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1427,7 +1431,7 @@ router.post('/balance-sheets', auth('owner'), async (req: AuthedRequest, res) =>
 })
 
 router.get('/balance-sheets', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1481,7 +1485,7 @@ router.get('/balance-sheets', auth('owner'), async (req: AuthedRequest, res) => 
 })
 
 router.get('/balance-sheets/:id', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1501,7 +1505,7 @@ router.get('/balance-sheets/:id', auth('owner'), async (req: AuthedRequest, res)
 })
 
 router.delete('/balance-sheets/:id', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1521,7 +1525,7 @@ router.delete('/balance-sheets/:id', auth('owner'), async (req: AuthedRequest, r
 })
 
 router.get('/balance-sheets/:id/export', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return

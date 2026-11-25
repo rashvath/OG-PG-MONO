@@ -9,10 +9,13 @@ import emailRoutes from './routes/email.routes'
 import employeeRoutes from './routes/employee.routes'
 import formConfigRoutes from './routes/form-config.routes'
 import listingsRoutes from './routes/listings.routes'
+import managersRoutes from './routes/managers.routes'
 import ownerInventoryRoutes from './routes/owner-inventory.routes'
 import ownerRoutes from './routes/owner.routes'
 import tenantRoutes from './routes/tenant.routes'
 import uploadsRoutes from './routes/uploads.routes'
+import { auth } from './middleware/auth'
+import { managerAccess } from './middleware/manager-access'
 
 const app: Express = express()
 
@@ -29,10 +32,13 @@ app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/listings', listingsRoutes)
 app.use('/api/v1/email', emailRoutes)
 app.use('/api/v1/form-configs', formConfigRoutes)
+app.use('/api/v1/owner', auth(), managerAccess)
 app.use('/api/v1/owner', ownerInventoryRoutes)
 app.use('/api/v1/owner', employeeRoutes)
+app.use('/api/v1/owner', managersRoutes)
 app.use('/api/v1/owner', ownerRoutes)
 app.use('/api/v1/admin', adminRoutes)
+app.use('/api/v1/tenant', auth(), managerAccess)
 app.use('/api/v1/uploads', uploadsRoutes)
 app.use('/api/v1', tenantRoutes)
 

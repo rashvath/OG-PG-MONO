@@ -9,7 +9,7 @@ const userSchema = new Schema(
     emergencyContactName: { type: String, default: '' },
     emergencyContactPhone: { type: String, default: '' },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ['customer', 'owner', 'admin', 'tenant'], default: 'customer' },
+    role: { type: String, enum: ['customer', 'owner', 'manager', 'admin', 'tenant'], default: 'customer' },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
     tenantApprovalStatus: {
       type: String,

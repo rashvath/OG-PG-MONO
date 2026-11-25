@@ -237,7 +237,7 @@ async function buildInventoryPayload(pgId: string, filters?: {
 }
 
 router.get('/pgs/:pgId/inventory', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -288,7 +288,7 @@ router.get('/pgs/:pgId/inventory', auth('owner'), async (req: AuthedRequest, res
 })
 
 router.post('/pgs/:pgId/floors', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -344,7 +344,7 @@ router.post('/pgs/:pgId/floors', auth('owner'), async (req: AuthedRequest, res) 
 })
 
 router.patch('/pgs/:pgId/floors/:floorId', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -407,7 +407,7 @@ router.patch('/pgs/:pgId/floors/:floorId', auth('owner'), async (req: AuthedRequ
 })
 
 router.delete('/pgs/:pgId/floors/:floorId', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -444,7 +444,7 @@ router.delete('/pgs/:pgId/floors/:floorId', auth('owner'), async (req: AuthedReq
 })
 
 router.post('/pgs/:pgId/rooms', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -560,7 +560,7 @@ router.post('/pgs/:pgId/rooms', auth('owner'), async (req: AuthedRequest, res) =
 })
 
 router.patch('/pgs/:pgId/rooms/:roomId', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -690,7 +690,7 @@ router.patch('/pgs/:pgId/rooms/:roomId', auth('owner'), async (req: AuthedReques
 })
 
 router.delete('/pgs/:pgId/rooms/:roomId', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -752,7 +752,7 @@ router.delete('/pgs/:pgId/rooms/:roomId', auth('owner'), async (req: AuthedReque
 })
 
 router.patch('/pgs/:pgId/beds/:bedId/status', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -856,7 +856,7 @@ router.patch('/pgs/:pgId/beds/:bedId/status', auth('owner'), async (req: AuthedR
 })
 
 router.post('/pgs/:pgId/beds/:bedId/assign-tenant', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1017,7 +1017,7 @@ router.post('/pgs/:pgId/beds/:bedId/assign-tenant', auth('owner'), async (req: A
 })
 
 router.post('/pgs/:pgId/beds/:bedId/vacate', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1131,7 +1131,7 @@ router.post('/pgs/:pgId/beds/:bedId/vacate', auth('owner'), async (req: AuthedRe
 })
 
 router.get('/pgs/:pgId/rooms', auth('owner'), async (req: AuthedRequest, res) => {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return
@@ -1144,7 +1144,7 @@ router.get('/pgs/:pgId/rooms', auth('owner'), async (req: AuthedRequest, res) =>
     return
   }
 
-  const assignedPgIds = await getAssignedPgIds(ownerId)
+  const assignedPgIds = (req.user?.role === 'manager' && req.user.pgId ? [req.user.pgId] : await getAssignedPgIds(ownerId))
   if (!assignedPgIds.includes(pgId)) {
     res.status(403).json({ message: 'Forbidden: PG is not assigned to this owner' })
     return

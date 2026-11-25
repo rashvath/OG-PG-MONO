@@ -1,0 +1,38 @@
+# UI Cleanup and HeroUI v3 Integration Prompt
+
+## Goal
+
+Improve the existing NestPG interface using the supplied screenshots as the visual reference. Make the manager list, manager create/edit dialog, and sign-in screen clean, structured, responsive, and easy to use. Avoid decorative filler, generic AI-style copy, unnecessary motion, and unrelated redesigns.
+
+## Project constraints
+
+- Work within the existing React, TypeScript, Vite, Tailwind CSS v4, and design-token setup.
+- Reuse components already present in the codebase where they fit.
+- Use HeroUI v3 components from `@heroui/react` only where they replace an existing control or solve a real UI need: Calendar, Breadcrumbs, Tabs, Pagination, TagGroup, Skeleton, Autocomplete, and Table.
+- Before implementing a HeroUI component, read its official documentation:
+  - https://heroui.com/en/docs/react/components/calendar.mdx
+  - https://heroui.com/en/docs/react/components/breadcrumbs.mdx
+  - https://heroui.com/en/docs/react/components/tabs.mdx
+  - https://heroui.com/en/docs/react/components/pagination.mdx
+  - https://heroui.com/en/docs/react/components/tag-group.mdx
+  - https://heroui.com/en/docs/react/components/skeleton.mdx
+  - https://heroui.com/en/docs/react/components/autocomplete.mdx
+  - https://heroui.com/en/docs/react/components/table.mdx
+- Use only documented HeroUI props and compound parts. Compose components using their documented compound APIs.
+- Style HeroUI components with Tailwind CSS classes and HeroUI theme variables. Put shared theme overrides in the global CSS file so the theme can be changed in one place.
+- Do not add a HeroUI component just to use it. Remove an existing component only when the replacement is appropriate and does not break existing behavior.
+
+## Screenshot issues to address
+
+- The Managers page has excessive empty space and default-looking controls. Use the dashboard layout and shared components consistently, with clear loading, error, and empty states.
+- The create/edit manager dialog is too wide and vertically crowded. Group identity fields, keep the permission matrix readable, make the dialog usable on mobile, and keep actions accessible.
+- Permission labels and controls must be understandable and keyboard accessible.
+- The sign-in card stretches far below its content. Size it to the form content while preserving responsive layout.
+
+## Quality requirements
+
+- Keep pages and forms structured, with clear headings, labels, spacing, and action hierarchy.
+- Preserve existing manager creation, permission editing, revocation, login, and routing behavior.
+- Handle loading, API errors, empty data, duplicate submissions, and small screens without clipping or overlapping elements.
+- Keep changes focused. Do not add placeholder components, demo-only UI, or unnecessary dependencies.
+- Run the frontend production build and report any visual checks that could not be completed.

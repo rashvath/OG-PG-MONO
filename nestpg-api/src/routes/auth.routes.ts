@@ -11,6 +11,7 @@ import { OwnerProfileModel } from '../models/OwnerProfile'
 import { PgOwnerAssignmentModel } from '../models/PgOwnerAssignment'
 import { OtpModel } from '../models/Otp'
 import { UserModel } from '../models/User'
+import { ManagerAccessModel } from '../models/ManagerAccess'
 import { createAndSendOtp, getOtpLength, OtpDeliveryError, verifyOtp } from '../utils/otpUtils'
 
 const router = Router()
@@ -246,7 +247,17 @@ router.post('/login', async (req, res) => {
     return
   }
 
-  const token = jwt.sign({ sub: user.id, role: user.role }, env.jwtSecret, { expiresIn: '1h' })
+  const tokenPayload: Record<string, string> = { sub: user.id, role: user.role }
+  if (user.role === 'manager') {
+    const access = await ManagerAccessModel.findOne({ managerId: user._id }).select('ownerId pgId').lean()
+    if (!access) {
+      res.status(403).json({ message: 'Manager access has been revoked. Contact the PG owner.' })
+      return
+    }
+    tokenPayload.ownerId = String(access.ownerId)
+    tokenPayload.pgId = String(access.pgId)
+  }
+  const token = jwt.sign(tokenPayload, env.jwtSecret, { expiresIn: '1h' })
   res.json({ token, user: { id: user.id, role: user.role, name: user.name } })
 })
 

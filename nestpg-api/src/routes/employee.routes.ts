@@ -69,7 +69,7 @@ async function ensureAssignedPg(ownerId: string, pgId: string) {
 }
 
 async function getOwnerAndAssignedPg(req: AuthedRequest, res: Response, pgId: string) {
-  const ownerId = req.user?.sub
+  const ownerId = (req.user?.ownerId ?? req.user?.sub)
   if (!ownerId) {
     res.status(401).json({ message: 'Unauthorized' })
     return null
@@ -213,7 +213,7 @@ router.patch('/staff/roles/:id', auth('owner'), async (req: AuthedRequest, res) 
 
   const role = await CustomRoleModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!role) {
     res.status(404).json({ message: 'Role not found' })
@@ -239,7 +239,7 @@ router.delete('/staff/roles/:id', auth('owner'), async (req: AuthedRequest, res)
   }
   const role = await CustomRoleModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!role) {
     res.status(404).json({ message: 'Role not found' })
@@ -423,7 +423,7 @@ router.patch('/staff/attendance/:id', auth('owner'), async (req: AuthedRequest, 
   }
   const record = await AttendanceModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!record) {
     res.status(404).json({ message: 'Attendance record not found' })
@@ -447,7 +447,7 @@ router.get('/staff/:id/attendance-summary', auth('owner'), async (req: AuthedReq
   }
   const employee = await EmployeeModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!employee) {
     res.status(404).json({ message: 'Employee not found' })
@@ -543,7 +543,7 @@ router.patch('/staff/expenses/:id', auth('owner'), async (req: AuthedRequest, re
   }
   const item = await EmployeeExpenseModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!item) {
     res.status(404).json({ message: 'Expense not found' })
@@ -568,7 +568,7 @@ router.delete('/staff/expenses/:id', auth('owner'), async (req: AuthedRequest, r
   }
   const item = await EmployeeExpenseModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!item) {
     res.status(404).json({ message: 'Expense not found' })
@@ -642,7 +642,7 @@ router.patch('/staff/leaves/:id/approve', auth('owner'), async (req: AuthedReque
   }
   const item = await EmployeeLeaveModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
     status: 'pending',
   } as Record<string, unknown>)
   if (!item) {
@@ -666,7 +666,7 @@ router.patch('/staff/leaves/:id/reject', auth('owner'), async (req: AuthedReques
   }
   const item = await EmployeeLeaveModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
     status: 'pending',
   } as Record<string, unknown>)
   if (!item) {
@@ -688,7 +688,7 @@ router.delete('/staff/leaves/:id', auth('owner'), async (req: AuthedRequest, res
   }
   const item = await EmployeeLeaveModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
     status: 'pending',
   } as Record<string, unknown>)
   if (!item) {
@@ -773,7 +773,7 @@ router.get('/staff/:id/salary-history', auth('owner'), async (req: AuthedRequest
   }
   const employee = await EmployeeModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!employee) {
     res.status(404).json({ message: 'Employee not found' })
@@ -796,7 +796,7 @@ router.delete('/staff/salary/:id', auth('owner'), async (req: AuthedRequest, res
   }
   const item = await SalaryPaymentModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!item) {
     res.status(404).json({ message: 'Salary payment not found' })
@@ -815,7 +815,7 @@ router.get('/staff/:id', auth('owner'), async (req: AuthedRequest, res) => {
   }
   const employee = await EmployeeModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
     .populate('roleId', 'name color')
   if (!employee) {
@@ -835,7 +835,7 @@ router.patch('/staff/:id', auth('owner'), async (req: AuthedRequest, res) => {
   }
   const employee = await EmployeeModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!employee) {
     res.status(404).json({ message: 'Employee not found' })
@@ -868,7 +868,7 @@ router.delete('/staff/:id', auth('owner'), async (req: AuthedRequest, res) => {
   }
   const employee = await EmployeeModel.findOne({
     _id: objectId(req.params.id),
-    ownerId: objectId(req.user?.sub ?? ''),
+    ownerId: objectId((req.user?.ownerId ?? req.user?.sub) ?? ''),
   } as Record<string, unknown>)
   if (!employee) {
     res.status(404).json({ message: 'Employee not found' })
