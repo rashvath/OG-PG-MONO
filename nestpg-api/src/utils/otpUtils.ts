@@ -33,14 +33,14 @@ export async function createAndSendOtp(email: string, purpose: OtpPurpose): Prom
   const normalizedEmail = email.trim().toLowerCase()
   await OtpModel.deleteMany({ email: normalizedEmail, purpose })
 
+  if (!env.sendOtp) {
+    console.log(`[DEV] Email OTP disabled for ${normalizedEmail} (${purpose}); OTP_KEYWORD is active.`)
+    return
+  }
+
   const otp = getOtp()
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
   await OtpModel.create({ email: normalizedEmail, otp, purpose, expiresAt })
-
-  if (!env.sendOtp) {
-    console.log(`[DEV] OTP for ${normalizedEmail} (${purpose}): ${otp}`)
-    return
-  }
 
   const subject =
     purpose === 'registration' ? 'NestPG — Your Registration OTP' : 'NestPG — Password Reset OTP'
@@ -76,6 +76,14 @@ export async function verifyOtp(
   purpose: OtpPurpose,
   otpInput: string,
 ): Promise<{ valid: boolean; reason?: string; otpId?: string }> {
+  if (!env.sendOtp) {
+    const configuredOtp = getOtp()
+    if (otpInput.trim() !== configuredOtp) {
+      return { valid: false, reason: 'Incorrect OTP.' }
+    }
+    return { valid: true, otpId: 'dev-keyword' }
+  }
+
   const record = await OtpModel.findOne({
     email: email.trim().toLowerCase(),
     purpose,
