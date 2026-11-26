@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { FilePlus2 } from 'lucide-react'
 
 import { EmptyTableState } from '@/components/data-display/EmptyTableState'
+import { AppDialog } from '@/components/ui/AppDialog'
+import { Button } from '@/components/ui/Button'
 import { CustomDropdown } from '@/components/ui/CustomDropdown'
 import { createOwnerDocument, deleteOwnerDocument, getOwnerDocuments, getOwnerPgs, type OwnerDocument, type OwnerPg } from '@/api/owner-api'
 import { uploadPgImages } from '@/api/upload-api'
@@ -21,6 +24,8 @@ export function OwnerDocumentsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({
     pgId: '',
@@ -101,6 +106,8 @@ export function OwnerDocumentsPage() {
         imageUrl: '',
       }))
       setSelectedFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setIsUploadDialogOpen(false)
       load()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to save document')
@@ -119,6 +126,10 @@ export function OwnerDocumentsPage() {
     }
   }
 
+  const closeUploadDialog = () => {
+    if (!isSaving && !isUploading) setIsUploadDialogOpen(false)
+  }
+
   return (
     <div className="finance-shell">
       <div className="admin-hero-row">
@@ -126,70 +137,77 @@ export function OwnerDocumentsPage() {
           <h2 className="page-heading">PG Document Locker</h2>
           <p className="section-sub">Simple upload: choose PG, add document name, upload image, and view it below.</p>
         </div>
+        <Button leftIcon={<FilePlus2 size={16} aria-hidden="true" />} onClick={() => setIsUploadDialogOpen(true)} disabled={!pgs.length || isLoading}>
+          Upload document
+        </Button>
       </div>
 
-      <div className="panel finance-panel form-grid two-col spaced-top">
-        <h3 className="finance-title span-all">Upload document</h3>
-
-        <div className="form-field">
-          <label>
-            {getLabel('pgId', 'PG')}
-            {isRequired('pgId') ? <span className="required-mark"> *</span> : null}
-          </label>
-          <CustomDropdown
-            ariaLabel="Select PG"
-            value={form.pgId}
-            onChange={(nextValue) => setForm((current) => ({ ...current, pgId: nextValue }))}
-            options={[
-              { label: 'Select PG', value: '' },
-              ...pgs.map((pg) => ({ label: pg.name, value: pg._id })),
-            ]}
-            searchable
-            minSearchOptions={6}
-          />
-        </div>
-
-        <div className="form-field">
-          <label>
-            {getLabel('title', 'Document name')}
-            {isRequired('title') ? <span className="required-mark"> *</span> : null}
-          </label>
-          <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="PG Trade License" />
-        </div>
-
-        <div className="form-field span-all">
-          <label>
-            {getLabel('imageUrl', 'Document image')}
-            {isRequired('imageUrl') ? <span className="required-mark"> *</span> : null}
-          </label>
-          <div className="image-upload-row">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null
-                setSelectedFile(file)
-              }}
+      <AppDialog
+        open={isUploadDialogOpen}
+        title="Upload document"
+        subtitle="Choose a PG, name the document, and upload an image."
+        onClose={closeUploadDialog}
+        footer={(
+          <>
+            <Button variant="secondary" onClick={closeUploadDialog} disabled={isSaving || isUploading}>Cancel</Button>
+            <Button type="submit" form="owner-document-form" loading={isSaving} disabled={isUploading}>Save document</Button>
+          </>
+        )}
+      >
+        <form id="owner-document-form" className="form-grid two-col" onSubmit={(event) => { event.preventDefault(); void submit() }}>
+          <div className="form-field">
+            <label>
+              {getLabel('pgId', 'PG')}
+              {isRequired('pgId') ? <span className="required-mark"> *</span> : null}
+            </label>
+            <CustomDropdown
+              ariaLabel="Select PG"
+              value={form.pgId}
+              onChange={(nextValue) => setForm((current) => ({ ...current, pgId: nextValue }))}
+              options={[
+                { label: 'Select PG', value: '' },
+                ...pgs.map((pg) => ({ label: pg.name, value: pg._id })),
+              ]}
+              searchable
+              minSearchOptions={6}
             />
-            <button type="button" className="btn btn-line" onClick={uploadImage} disabled={!selectedFile || isUploading}>
-              {isUploading ? 'Uploading...' : 'Upload image'}
-            </button>
           </div>
-          {form.imageUrl ? <small className="section-sub">Image uploaded successfully.</small> : null}
-        </div>
 
-        {form.imageUrl ? (
-          <div className="owner-doc-preview span-all">
-            <img src={form.imageUrl} alt="Uploaded document preview" />
+          <div className="form-field">
+            <label>
+              {getLabel('title', 'Document name')}
+              {isRequired('title') ? <span className="required-mark"> *</span> : null}
+            </label>
+            <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="PG Trade License" />
           </div>
-        ) : null}
 
-        <div className="table-action-row span-all">
-          <button type="button" className="btn btn-brand" onClick={submit} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save document'}
-          </button>
-        </div>
-      </div>
+          <div className="form-field span-all">
+            <label>
+              {getLabel('imageUrl', 'Document image')}
+              {isRequired('imageUrl') ? <span className="required-mark"> *</span> : null}
+            </label>
+            <div className="image-upload-row">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                disabled={isUploading || isSaving}
+              />
+              <Button type="button" variant="secondary" onClick={() => void uploadImage()} disabled={!selectedFile || isUploading || isSaving} loading={isUploading}>
+                Upload image
+              </Button>
+            </div>
+            {form.imageUrl ? <small className="section-sub">Image uploaded successfully.</small> : null}
+          </div>
+
+          {form.imageUrl ? (
+            <div className="owner-doc-preview span-all">
+              <img src={form.imageUrl} alt="Uploaded document preview" />
+            </div>
+          ) : null}
+        </form>
+      </AppDialog>
 
       <div className="owner-doc-grid spaced-top">
         {isLoading ? (
