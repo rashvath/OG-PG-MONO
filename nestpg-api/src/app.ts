@@ -14,6 +14,7 @@ import ownerInventoryRoutes from './routes/owner-inventory.routes'
 import ownerRoutes from './routes/owner.routes'
 import tenantRoutes from './routes/tenant.routes'
 import uploadsRoutes from './routes/uploads.routes'
+import newsRoutes from './routes/news.routes'
 import { auth } from './middleware/auth'
 import { managerAccess } from './middleware/manager-access'
 
@@ -30,6 +31,7 @@ app.get('/api/v1/health', (_req, res) => {
 
 app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/listings', listingsRoutes)
+app.use('/api/v1/news', newsRoutes)
 app.use('/api/v1/email', emailRoutes)
 app.use('/api/v1/form-configs', formConfigRoutes)
 app.use('/api/v1/owner', auth(), managerAccess)

@@ -15,6 +15,7 @@ import { StoreProvider } from '@/lib/store'
 import { ThemeProvider } from '@/lib/theme'
 
 const HomePage = lazy(() => import('@/pages/HomePage').then((m) => ({ default: m.HomePage })))
+const NewsPage = lazy(() => import('@/pages/NewsPage').then((m) => ({ default: m.NewsPage })))
 const AboutPage = lazy(() => import('@/pages/AboutPage').then((m) => ({ default: m.AboutPage })))
 
 const ListingsPage = lazy(() => import('@/pages/ListingsPage').then((m) => ({ default: m.ListingsPage })))
@@ -75,7 +76,7 @@ const AdminFormConfigPage = lazy(() => import('@/pages/FormConfigPage').then((m)
 function AppFrame() {
   const location = useLocation()
   const authPaths = new Set(['/login', '/register', '/auth/login', '/auth/register', '/auth/forgot-password'])
-  const hideShellChrome = authPaths.has(location.pathname)
+  const hideShellChrome = authPaths.has(location.pathname) || location.pathname === '/news'
   const [isRouteChanging, setIsRouteChanging] = useState(false)
   const didMountRef = useRef(false)
 
@@ -102,6 +103,7 @@ function AppFrame() {
         <Suspense fallback={<RouteSpinner label="Loading page..." />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/news" element={<NewsPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/listings" element={<ListingsPage />} />
             <Route path="/pg/:id" element={<PgDetailPage />} />

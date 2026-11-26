@@ -20,6 +20,7 @@ export function Header() {
       { to: '/listings', label: 'Find a PG' },
       { to: '/register?role=owner', label: 'List your PG' },
       { to: '/about', label: 'About' },
+      { to: '/news', label: 'Bangalore Bulletin' },
     ]
 
     if (role === 'owner') {

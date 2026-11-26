@@ -35,6 +35,7 @@ export function HomePage() {
   const [loadError, setLoadError] = useState('')
   const [area, setArea] = useState('')
   const [gender, setGender] = useState('')
+  const [newsHeadlines, setNewsHeadlines] = useState<Array<{ title?: string; url?: string; socialimage?: string }>>([])
 
   useEffect(() => {
     fetchLiveListings()
@@ -46,6 +47,14 @@ export function HomePage() {
         setLoadError(error instanceof Error ? error.message : 'Unable to load listings')
       })
       .finally(() => setIsLoading(false))
+  }, [])
+
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1'
+    fetch(`${apiBase}/news`, { headers: { Accept: 'application/json' } })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('News unavailable')))
+      .then((data: { articles?: Array<{ title?: string; url?: string; socialimage?: string }> }) => setNewsHeadlines((data.articles ?? []).filter((article) => article.title && article.url).slice(0, 10)))
+      .catch(() => setNewsHeadlines([]))
   }, [])
 
   const popular = useMemo(() => listings.slice(0, 4), [listings])
@@ -191,7 +200,7 @@ export function HomePage() {
       </section>
 
       <section className="app-wrap home-wrap page-section">
-        <h2 className="home-section-heading">Where do you want to live?</h2>
+        <h2 className="home-section-heading">Where do you want to <em>live</em>?</h2>
         <p className="section-sub">Explore Bangalore's most connected neighbourhoods.</p>
         {loadError ? <p className="section-sub">{loadError}</p> : null}
         <div className="areas-grid">
@@ -227,7 +236,7 @@ export function HomePage() {
       </section>
 
       <section className="app-wrap home-wrap page-section">
-        <h2 className="home-section-heading">Popular this week</h2>
+        <h2 className="home-section-heading">Popular this <em>week</em></h2>
         <p className="section-sub">Curated stays with transparent rent and direct owner contact.</p>
         {isLoading ? (
           <p className="section-sub">Loading listings...</p>
@@ -261,7 +270,7 @@ export function HomePage() {
       </section>
 
       <section className="app-wrap home-wrap page-section why-og-section">
-        <p className="eyebrow">WHY OG STAYS?</p>
+        <p className="eyebrow"><em>WHY OG STAYS?</em></p>
         <h2 className="home-section-heading">
           More than just a <em>stay</em>.
         </h2>
@@ -348,6 +357,21 @@ export function HomePage() {
             <p>Talk directly to owners and managers.</p>
           </article>
         </div>
+      </section>
+
+      <section className="app-wrap home-wrap page-section home-news-preview">
+        <div className="home-news-heading"><div><p className="eyebrow"><em>THE CITY EDITION</em></p><h2 className="home-section-heading">Bangalore <em>Bulletin</em></h2><p className="section-sub">The latest available headlines from around your city.</p></div></div>
+        {newsHeadlines.length ? <><div className="home-news-track" aria-label="Latest Bangalore news headlines">{newsHeadlines.map((article, index) => {
+          let imageUrl: string | undefined
+          try {
+            const parsed = new URL(article.socialimage || '')
+            if (parsed.protocol === 'https:' || parsed.protocol === 'http:') imageUrl = parsed.toString()
+          } catch { /* GDELT image is optional. */ }
+          return <a className="home-news-card" key={article.url} href={article.url} target="_blank" rel="noopener noreferrer">
+            {imageUrl ? <img className="home-news-image" src={imageUrl} alt="" loading="lazy" onError={(event) => { const fallback = document.createElement('div'); fallback.className = 'home-news-image-fallback'; fallback.textContent = 'Bangalore Bulletin'; event.currentTarget.replaceWith(fallback) }} /> : <div className="home-news-image-fallback">Bangalore Bulletin</div>}
+            <div className="home-news-card-copy"><span className="home-news-index">{String(index + 1).padStart(2, '0')}</span><span className="home-news-title">{article.title}</span><span className="home-news-open" aria-hidden="true">↗</span></div>
+          </a>
+        })}</div><div className="home-news-footer"><span>Scroll to browse the latest stories</span><Link to="/news" className="home-news-more">+ More <span aria-hidden="true">→</span></Link></div></> : <p className="home-news-empty">Explore city headlines and neighbourhood updates.</p>}
       </section>
 
       <section className="app-wrap home-wrap page-section editorial-stats">

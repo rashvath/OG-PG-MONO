@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Search } from 'lucide-react'
 
 import { getAdminFormConfigs, updateAdminFormConfig } from '@/api/form-config-api'
 import type { FormConfig } from '@/config/form-config-defaults'
@@ -9,6 +10,7 @@ export function AdminFormConfigPage() {
   const toast = useToast()
   const [items, setItems] = useState<FormConfig[]>([])
   const [savingKey, setSavingKey] = useState('')
+  const [search, setSearch] = useState('')
 
   const orderedSections = useMemo(() => {
     const byKey = new Map(items.map((item) => [item.formKey, item]))
@@ -22,6 +24,24 @@ export function AdminFormConfigPage() {
       otherItems,
     }
   }, [items])
+
+  const filteredSections = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase()
+    if (!query) return orderedSections
+
+    const filterForms = (forms: FormConfig[]) => forms.flatMap((form) => {
+      const formMatches = `${form.title} ${form.formKey}`.toLocaleLowerCase().includes(query)
+      const fields = formMatches
+        ? form.fields
+        : form.fields.filter((field) => `${field.key} ${field.label}`.toLocaleLowerCase().includes(query))
+      return fields.length ? [{ ...form, fields }] : []
+    })
+
+    return {
+      authItems: filterForms(orderedSections.authItems),
+      otherItems: filterForms(orderedSections.otherItems),
+    }
+  }, [orderedSections, search])
 
   const load = () => {
     getAdminFormConfigs()
@@ -77,8 +97,20 @@ export function AdminFormConfigPage() {
         </div>
       </div>
 
+      <label className="form-config-search">
+        <Search size={18} aria-hidden="true" />
+        <span className="sr-only">Search forms and fields</span>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search by form or field name"
+          aria-label="Search forms and fields"
+        />
+      </label>
+
       <div className="spaced-top" style={{ display: 'grid', gap: 12 }}>
-        {orderedSections.authItems.length > 0 ? (
+        {filteredSections.authItems.length > 0 ? (
           <section className="panel finance-panel" style={{ paddingBottom: 16 }}>
             <h3 style={{ marginBottom: 6 }}>Authentication forms</h3>
             <p className="section-sub" style={{ marginBottom: 0 }}>
@@ -87,7 +119,8 @@ export function AdminFormConfigPage() {
           </section>
         ) : null}
 
-        {[...orderedSections.authItems, ...orderedSections.otherItems].map((form) => (
+        {[...filteredSections.authItems, ...filteredSections.otherItems].length > 0 ? (
+          [...filteredSections.authItems, ...filteredSections.otherItems].map((form) => (
           <section key={form.formKey} className="panel finance-panel">
             <div className="admin-table-head" style={{ marginBottom: 8 }}>
               <div>
@@ -132,7 +165,12 @@ export function AdminFormConfigPage() {
               </tbody>
             </table>
           </section>
-        ))}
+          ))
+        ) : (
+          <section className="panel finance-panel form-config-empty" role="status">
+            {search.trim() ? `No forms or fields match “${search.trim()}”.` : 'No form configurations are available.'}
+          </section>
+        )}
       </div>
     </div>
   )
