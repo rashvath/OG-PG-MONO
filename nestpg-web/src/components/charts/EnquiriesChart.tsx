@@ -28,7 +28,7 @@ export function EnquiriesChart({ values, labels, isLoading = false }: EnquiriesC
       {
         label: 'Enquiries',
         data: values,
-        backgroundColor: 'rgba(201, 93, 67, 0.84)',
+        backgroundColor: '#0D6EFD',
         borderRadius: 8,
         borderSkipped: false,
         maxBarThickness: 38,
@@ -42,10 +42,10 @@ export function EnquiriesChart({ values, labels, isLoading = false }: EnquiriesC
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1f1b16',
-        titleColor: '#fcfaf6',
-        bodyColor: '#fcfaf6',
-        borderColor: '#d8d0c5',
+        backgroundColor: '#06265B',
+        titleColor: '#FFFFFF',
+        bodyColor: '#FFFFFF',
+        borderColor: '#CBD5E1',
         borderWidth: 1,
         displayColors: false,
       },
@@ -54,13 +54,13 @@ export function EnquiriesChart({ values, labels, isLoading = false }: EnquiriesC
       x: {
         grid: { display: false },
         border: { display: false },
-        ticks: { color: '#716c64' },
+        ticks: { color: '#475569' },
       },
       y: {
         beginAtZero: true,
-        grid: { color: '#ece5da' },
+        grid: { color: '#CBD5E1' },
         border: { display: false },
-        ticks: { color: '#716c64', precision: 0 },
+        ticks: { color: '#475569', precision: 0 },
       },
     },
   }

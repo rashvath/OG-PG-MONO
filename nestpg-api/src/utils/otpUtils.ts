@@ -43,13 +43,13 @@ export async function createAndSendOtp(email: string, purpose: OtpPurpose): Prom
   await OtpModel.create({ email: normalizedEmail, otp, purpose, expiresAt })
 
   const subject =
-    purpose === 'registration' ? 'NestPG — Your Registration OTP' : 'NestPG — Password Reset OTP'
+    purpose === 'registration' ? 'PGINN — Your Registration OTP' : 'PGINN — Password Reset OTP'
   const description =
     purpose === 'registration'
       ? 'Use this OTP to complete your registration:'
       : 'Use this OTP to reset your password:'
   const html = `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
-    <h2 style="color:#ff385c;">NestPG</h2>
+    <h2 style="color:#0D6EFD;">PGINN</h2>
     <p>${description}</p>
     <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#222;padding:24px 0;">${otp}</div>
     <p style="color:#717171;font-size:14px;">This OTP is valid for <strong>10 minutes</strong>.<br>

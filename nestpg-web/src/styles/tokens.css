@@ -1,83 +1,80 @@
 :root {
-  /* ── TESTBNB canonical tokens ────────────────── */
-  --font-stack: "Inter", sans-serif;
-  --font-xs:   14px;
-  --font-sm:   16px;
-  --font-md:   28px;
-  --lh-base:   20.02px;
+  /* Locked PGINN brand colors */
+  --brand-primary: #0D6EFD;
+  --brand-navy: #06265B;
+  --brand-sky: #E6F2FF;
+  --brand-white: #FFFFFF;
+  --brand-ink: #0F172A;
+  --brand-action: #0757CE;
 
-  --space-1:   2px;
-  --space-2:   4px;
-  --space-4:   8px;
-  --space-6:   12px;
-  --space-8:   48px;    /* control height */
+  /* Shared interface and semantic colors */
+  --muted: #475569;
+  --muted-2: #64748B;
+  --field-border: #64748B;
+  --divider: #CBD5E1;
+  --surface: #F8FAFC;
+  --image-scrim: rgb(15 23 42 / 0.4);
+  --success: #166534;
+  --success-bg: #DCFCE7;
+  --warning: #92400E;
+  --warning-bg: #FEF3C7;
+  --danger: #B91C1C;
+  --danger-bg: #FEE2E2;
+  --info: #06265B;
+  --info-bg: #E6F2FF;
 
-  --radius-xs: 8px;
-  --radius-sm: 20px;
-  --radius-lg: 50px;
+  --font-heading: "Poppins", sans-serif;
+  --font-body: "Inter", sans-serif;
 
-  --shadow-1:  0 0 0 1px rgb(0 0 0/.02),
-               0 2px 6px rgb(0 0 0/.04),
-               0 4px 8px rgb(0 0 0/.1);
+  /* Compatibility aliases used by existing components */
+  --font-stack: var(--font-body);
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-md: 28px;
+  --lh-base: 1.5;
+  --c-text: var(--brand-ink);
+  --c-text-2: var(--muted);
+  --c-accent: var(--brand-primary);
+  --c-surface: var(--brand-white);
+  --c-muted: var(--brand-sky);
+  --c-border: var(--divider);
+  --c-error: var(--danger);
+  --c-focus: var(--brand-action);
+  --c-neutral-bg: var(--brand-navy);
+  --c-neutral-label: var(--brand-white);
+  --c-success: var(--success);
+  --c-warning: var(--warning);
+  --c-info: var(--info);
 
+  /* Preserve existing spacing and control geometry */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-4: 8px;
+  --space-6: 12px;
+  --space-8: 48px;
+  --control: 44px;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --radius-xs: var(--radius-control);
+  --radius-sm: var(--radius-card);
+  --radius-lg: var(--radius-pill);
+  --shadow-card: 0 2px 8px rgb(15 23 42 / 8%);
+  --shadow-1: var(--shadow-card);
   --dur-instant: 200ms;
-  --dur-fast:    250ms;
-
-  /* ── Light mode ──────────────────────────────── */
-  --c-text:         #222;
-  --c-text-2:       #717171;   /* secondary — light surfaces only */
-  --c-accent:       #c95d43;
-  --c-surface:      #fff;
-  --c-muted:        #f2f2f2;
-  --c-border:       #c1c1c1;
-  --c-error:        #c13515;
-  --c-focus:        #222;
-  --c-neutral-bg:   #222;
-  --c-neutral-label:#fff;
-
-  /* ── Status semantic ─────────────────────────── */
-  --c-success:      #008a05;
-  --c-warning:      #c47d00;
-  --c-info:         #0066cc;
+  --dur-fast: 250ms;
 
   box-sizing: border-box;
-  padding-top:    env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Dark mode — auto */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --c-text:          #fff;
-    --c-text-2:        #c1c1c1;
-    --c-surface:       #000;
-    --c-muted:         #222;
-    --c-border:        #3a3a3a;
-    --c-error:         #ff7a5c;
-    --c-focus:         #fff;
-    --c-neutral-bg:    #fff;
-    --c-neutral-label: #222;
-    --shadow-1: 0 0 0 1px rgb(255 255 255/.12);
-  }
-}
-/* Dark mode — explicit override */
-:root[data-theme="dark"] {
-  --c-text:          #fff;
-  --c-text-2:        #c1c1c1;
-  --c-surface:       #000;
-  --c-muted:         #222;
-  --c-border:        #3a3a3a;
-  --c-error:         #ff7a5c;
-  --c-focus:         #fff;
-  --c-neutral-bg:    #fff;
-  --c-neutral-label: #222;
-  --shadow-1: 0 0 0 1px rgb(255 255 255/.12);
-}
+*, *::before, *::after { box-sizing: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    transition: none !important;
-    animation: none !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
-  .spin { border-right-color: currentColor; }
 }

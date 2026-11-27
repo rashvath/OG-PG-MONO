@@ -140,7 +140,10 @@ export function ListingsPage() {
       </div>
 
       <div className="filter-group">
-        <label>{`Max budget: ${inr(maxBudget)}`}</label>
+        <label className="budget-filter-label">
+          <span>Maximum budget</span>
+          <strong>{inr(maxBudget)}</strong>
+        </label>
         <input
           className="budget-slider"
           type="range"

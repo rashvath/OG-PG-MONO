@@ -14,7 +14,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const variantClasses: Record<Exclude<ButtonVariant, 'primary' | 'ghost'>, string> = {
-  brand: 'bg-accent text-[#222]',
+  brand: 'bg-action text-white hover:bg-navy disabled:bg-[var(--divider)] disabled:text-[var(--muted)] disabled:opacity-100',
   neutral: 'bg-neutral-bg text-neutral-label',
   secondary: 'bg-surface text-text shadow-1 ring-1 ring-border',
   tertiary: 'bg-transparent text-text px-[var(--space-6)] hover:underline',

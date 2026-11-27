@@ -17,7 +17,7 @@ export function StatTile({ icon, value, label, trend, className, onClick, ...pro
       <div className="mt-2 text-md font-bold leading-none text-text">{value}</div>
       <div className="mt-1 text-xs text-text-2">{label}</div>
       {trend ? (
-        <span className={cn('mt-3 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold', trend === 'up' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>
+        <span className={cn('mt-3 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold', trend === 'up' ? 'bg-[var(--success-bg)] text-[var(--success)]' : 'bg-[var(--danger-bg)] text-[var(--danger)]')}>
           {trend === 'up' ? '↑' : '↓'} {trend === 'up' ? 'Up' : 'Down'}
         </span>
       ) : null}

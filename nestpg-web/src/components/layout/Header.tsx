@@ -3,6 +3,7 @@ import { ArrowRight, Menu, Search, X } from 'lucide-react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 
 import { AppDialog } from '@/components/ui/AppDialog'
+import brandLogo from '@/assets/PGINN-Logo-HD.png'
 import { useAuth } from '@/lib/auth'
 
 export function Header() {
@@ -51,10 +52,8 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="app-wrap nav-row">
-        <Link className="logo" to="/" aria-label="Go to OG Stays homepage">
-          <span className="logo-mark" aria-hidden="true" />
-          <span className="logo-static">OG</span>
-          <span className="logo-accent">Stays</span>
+        <Link className="logo" to="/" aria-label="Go to PGINN homepage">
+          <img className="brand-logo-image" src={brandLogo} alt="PGINN — Find · Book · Manage PGs" />
         </Link>
 
         <nav className="main-nav" aria-label="Primary navigation">

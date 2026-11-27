@@ -125,8 +125,8 @@ async function sendTenantRegistrationInvite(payload: {
     {
       to: payload.email,
       subject: `Complete your tenant registration for ${payload.pgName}`,
-      text: `Hi ${payload.fullName},\n\nYou have been added as a tenant for ${payload.pgName}. Please register at the tenant portal using this same email and select this PG. Your tenant login is enabled after owner/admin approval.\n\n- OG PG Team`,
-      html: `<p>Hi ${payload.fullName},</p><p>You have been added as a tenant for <strong>${payload.pgName}</strong>.</p><p>Please register at the tenant portal using this same email and select this PG.</p><p>Your tenant login is enabled after owner/admin approval.</p><p>- OG PG Team</p>`,
+      text: `Hi ${payload.fullName},\n\nYou have been added as a tenant for ${payload.pgName}. Please register at the tenant portal using this same email and select this PG. Your tenant login is enabled after owner/admin approval.\n\n- PGINN Team`,
+      html: `<p>Hi ${payload.fullName},</p><p>You have been added as a tenant for <strong>${payload.pgName}</strong>.</p><p>Please register at the tenant portal using this same email and select this PG.</p><p>Your tenant login is enabled after owner/admin approval.</p><p>- PGINN Team</p>`,
     },
     {
       user: env.gmailUser,

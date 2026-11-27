@@ -7,13 +7,13 @@ type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 }
 
 const variantClasses: Record<NonNullable<BadgeProps['variant']>, string> = {
-  pending: 'bg-amber-100 text-amber-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  'in-progress': 'bg-blue-100 text-blue-800',
-  closed: 'bg-gray-100 text-gray-600',
-  info: 'bg-blue-100 text-blue-800',
-  default: 'bg-gray-100 text-gray-600',
+  pending: 'bg-[var(--warning-bg)] text-[var(--warning)]',
+  approved: 'bg-[var(--success-bg)] text-[var(--success)]',
+  rejected: 'bg-[var(--danger-bg)] text-[var(--danger)]',
+  'in-progress': 'bg-[var(--info-bg)] text-[var(--info)]',
+  closed: 'bg-[var(--brand-sky)] text-[var(--muted)]',
+  info: 'bg-[var(--info-bg)] text-[var(--info)]',
+  default: 'bg-[var(--brand-sky)] text-[var(--brand-navy)]',
 }
 
 export function Badge({ variant = 'default', className, ...props }: BadgeProps) {

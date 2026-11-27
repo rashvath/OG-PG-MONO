@@ -23,11 +23,9 @@ export function AboutPage() {
   const ownerRef = useRef<HTMLDivElement>(null)
   const settleRef = useRef<HTMLDivElement>(null)
   const beamColor = {
-    pathColor: '#e4d7c8',
+    pathColor: '#0D6EFD',
     pathWidth: 1.8,
     pathOpacity: 0.32,
-    gradientStartColor: '#e4b89c',
-    gradientStopColor: '#cb6a4d',
     duration: 6,
     curvature: 26,
   }
@@ -36,10 +34,10 @@ export function AboutPage() {
     <>
       <section className="app-wrap page-section about-hero">
         <div>
-          <p className="eyebrow about-title-line">About OG PG</p>
+          <p className="eyebrow about-title-line">About PGINN</p>
           <h2>Built for renters who want clarity before they move.</h2>
           <p className="section-sub" style={{ maxWidth: '600px', marginTop: '16px' }}>
-            OG PG helps students and working professionals discover reliable paying guest stays in Bangalore with
+            PGINN helps students and working professionals discover reliable paying guest stays in Bangalore with
             real photos, clear rent details, and direct owner communication.
           </p>
         </div>
@@ -66,7 +64,7 @@ export function AboutPage() {
         <p className="eyebrow about-title-line">How It Works</p>
         <h2>How the platform works</h2>
         <p className="section-sub" style={{ maxWidth: '820px' }}>
-          This journey is what OG PG is designed for: discover a stay, compare details, connect with the owner,
+          This journey is what PGINN is designed for: discover a stay, compare details, connect with the owner,
           and move in with fewer surprises.
         </p>
 
@@ -116,7 +114,7 @@ export function AboutPage() {
           </div>
 
           <div ref={centerRef} className="about-flow-center" aria-hidden="true">
-            <span>OG PG</span>
+            <span>PGINN</span>
             <small>Clear Path To Move-In</small>
           </div>
 

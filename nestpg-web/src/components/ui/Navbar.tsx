@@ -17,14 +17,14 @@ type NavbarProps = {
 
 export function Navbar({ brand, items, rightSlot, className }: NavbarProps) {
   return (
-    <nav className={cn('flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3', className)}>
-      <Link to="/" className="text-base font-semibold text-slate-900">
+    <nav className={cn('flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--divider)] bg-[var(--brand-white)] px-4 py-3', className)}>
+      <Link to="/" className="text-base font-semibold text-[var(--brand-navy)]">
         {brand}
       </Link>
 
       <div className="flex flex-wrap items-center gap-2">
         {items.map((item) => (
-          <Link key={item.to} to={item.to} className="rounded-md px-2 py-1 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900">
+          <Link key={item.to} to={item.to} className="rounded-[var(--radius-control)] px-2 py-1 text-sm text-[var(--muted)] hover:bg-[var(--brand-sky)] hover:text-[var(--brand-navy)]">
             {item.label}
           </Link>
         ))}

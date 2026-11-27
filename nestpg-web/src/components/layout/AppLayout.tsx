@@ -14,14 +14,14 @@ type AppLayoutProps = {
   onSignOut?: () => void
 }
 
-export function AppLayout({ children, title = 'NestPG', navItems = [], userName = 'User', roleLabel = 'Member', onSignOut }: AppLayoutProps) {
+export function AppLayout({ children, title = 'PGINN', navItems = [], userName = 'User', roleLabel = 'Member', onSignOut }: AppLayoutProps) {
   return (
     <>
       <SkipLink />
       <div className="flex h-screen overflow-hidden bg-surface">
         <aside className="hidden h-full w-64 flex-col border-r border-border bg-surface md:flex">
           <div className="border-b border-border p-[var(--space-6)]">
-            <div className="text-sm font-bold text-accent">NestPG</div>
+            <div className="text-sm font-bold text-accent">PGINN</div>
             <div className="mt-1 text-xs text-text-2">{roleLabel}</div>
           </div>
           <nav aria-label="Primary" className="flex-1 overflow-y-auto py-[var(--space-4)]">

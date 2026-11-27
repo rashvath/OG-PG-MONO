@@ -81,7 +81,7 @@ export function AdminOverviewPage() {
         <div>
           <p className="eyebrow">Admin Dashboard</p>
           <h2 className="page-heading">Platform overview</h2>
-          <p className="section-sub">Here&apos;s what&apos;s happening on OG PG.</p>
+          <p className="section-sub">Here&apos;s what&apos;s happening on PGINN.</p>
         </div>
         <button type="button" className="btn btn-line admin-range-btn">
           Last 7 days

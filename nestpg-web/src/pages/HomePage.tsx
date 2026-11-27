@@ -139,7 +139,7 @@ export function HomePage() {
       <section className="hero-block">
         <div className="app-wrap home-wrap hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow hero-anim hero-anim-eyebrow">OG PG Editorial Collection</p>
+            <p className="eyebrow hero-anim hero-anim-eyebrow">PGINN Editorial Collection</p>
             <h1 className="hero-anim hero-anim-title">
               Find a place
               <br />
@@ -193,8 +193,6 @@ export function HomePage() {
 
           <div className="hero-photo-wrap">
             <div className="hero-photo" aria-hidden="true" />
-            <div className="hero-photo-note">{homeStats.verifiedCount} Verified PGs</div>
-            <div className="hero-photo-note second">Trusted by students and professionals</div>
           </div>
         </div>
       </section>
@@ -219,7 +217,7 @@ export function HomePage() {
                 />
                 <span className="area-verified-badge">
                   <ShieldCheck size={12} aria-hidden="true" />
-                  Verified by OG's
+                  Verified by PGINN
                 </span>
                 <div className="area-content">
                   <strong>{areaName}</strong>
@@ -270,7 +268,7 @@ export function HomePage() {
       </section>
 
       <section className="app-wrap home-wrap page-section why-og-section">
-        <p className="eyebrow"><em>WHY OG STAYS?</em></p>
+        <p className="eyebrow"><em>WHY PGINN?</em></p>
         <h2 className="home-section-heading">
           More than just a <em>stay</em>.
         </h2>
@@ -278,7 +276,7 @@ export function HomePage() {
 
         <div className="why-og-grid">
           <div className="why-og-visual-wrap">
-            <img src={sectionVisual} alt="Resident exploring Bangalore with OG Stays highlights" className="why-og-visual" loading="lazy" />
+            <img src={sectionVisual} alt="Resident exploring Bangalore with PGINN highlights" className="why-og-visual" loading="lazy" />
 
             <div className="why-og-float-card top-left">
               <span className="why-og-float-icon"><Building2 size={24} /></span>

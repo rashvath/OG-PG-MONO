@@ -46,14 +46,10 @@ const PROFILES: Record<GlareVariant, (t: number, softness: number) => number> = 
   sheen: (t, softness) => 0.55 * bump(t, 0.5, 0.25 + 0.25 * softness) + 0.3 * bump(t, 0.5, 0.5),
 }
 
-const gradient = (color: string, opacity: number, variant: GlareVariant, softness: number) => {
+const solidTint = (color: string, opacity: number, variant: GlareVariant, softness: number) => {
   const profile = PROFILES[variant] ?? PROFILES.streak
-  const stops = Array.from({ length: 33 }, (_, index) => {
-    const t = index / 32
-    const alpha = Math.round(Math.min(1, profile(t, softness) * opacity) * 1000) / 10
-    return `color-mix(in srgb, ${color} ${alpha}%, transparent) ${(t * 100).toFixed(1)}%`
-  })
-  return `linear-gradient(90deg, ${stops.join(', ')})`
+  const amount = Math.round(Math.min(0.28, profile(0.5, softness) * opacity * 0.28) * 100)
+  return `color-mix(in srgb, ${color} ${amount}%, transparent)`
 }
 
 const ease = (t: number) => (1 - Math.cos(Math.PI * t)) / 2
@@ -281,8 +277,8 @@ export default function GlareHover({
     engineRef.current?.measure()
   }, [glareAngle, glareSize, rimGlint])
 
-  const glare = gradient(glareColor, glareOpacity, variant, softness)
-  const rim = gradient(glareColor, Math.min(1, glareOpacity * 1.8), variant, softness)
+  const glare = solidTint(glareColor, glareOpacity, variant, softness)
+  const rim = solidTint(glareColor, Math.min(1, glareOpacity * 1.8), variant, softness)
 
   return (
     <div

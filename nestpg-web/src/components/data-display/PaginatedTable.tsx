@@ -37,13 +37,13 @@ export function PaginatedTable<T extends { id?: string | number }>({
   const to = Math.min(page * pageSize, rows.length)
 
   return (
-    <section className={cn('rounded-xl border border-slate-200 bg-white p-4', className)}>
+    <section className={cn('rounded-[var(--radius-card)] border border-[var(--divider)] bg-[var(--brand-white)] p-4', className)}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        {title ? <h3 className="text-base font-semibold text-slate-900">{title}</h3> : <div />}
-        <label className="text-sm text-slate-700">
+        {title ? <h3 className="text-base font-semibold text-[var(--brand-navy)]">{title}</h3> : <div />}
+        <label className="text-sm text-[var(--brand-ink)]">
           Rows per page
           <select
-            className="ml-2 rounded border border-slate-200 px-2 py-1"
+            className="ml-2 rounded-[var(--radius-control)] border border-[var(--field-border)] px-2 py-1"
             value={pageSize}
             onChange={(event) => {
               setPageSize(Number(event.target.value))
@@ -62,9 +62,9 @@ export function PaginatedTable<T extends { id?: string | number }>({
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           <thead>
-            <tr className="border-b border-slate-200 text-left">
+            <tr className="border-b border-[var(--divider)] text-left">
               {columns.map((column) => (
-                <th key={String(column.key)} className={cn('px-3 py-2 text-xs uppercase tracking-wide text-slate-500', column.className)}>
+                <th key={String(column.key)} className={cn('px-3 py-2 text-xs tracking-wide text-[var(--muted)]', column.className)}>
                   {column.header}
                 </th>
               ))}
@@ -73,9 +73,9 @@ export function PaginatedTable<T extends { id?: string | number }>({
           <tbody>
             {currentRows.length > 0 ? (
               currentRows.map((row, rowIndex) => (
-                <tr key={String(row.id ?? rowIndex)} className="border-b border-slate-100">
+                <tr key={String(row.id ?? rowIndex)} className="border-b border-[var(--divider)]">
                   {columns.map((column) => (
-                    <td key={String(column.key)} className={cn('px-3 py-2 text-sm text-slate-700', column.className)}>
+                    <td key={String(column.key)} className={cn('px-3 py-2 text-sm text-[var(--brand-ink)]', column.className)}>
                       {column.cell ? column.cell(row) : String((row as Record<string, unknown>)[String(column.key)] ?? '-')}
                     </td>
                   ))}
@@ -83,7 +83,7 @@ export function PaginatedTable<T extends { id?: string | number }>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-3 py-6 text-center text-sm text-slate-500">
+                <td colSpan={columns.length} className="px-3 py-6 text-center text-sm text-[var(--muted)]">
                   {emptyMessage}
                 </td>
               </tr>
@@ -92,7 +92,7 @@ export function PaginatedTable<T extends { id?: string | number }>({
         </table>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
         <span>{`Showing ${from}-${to} of ${rows.length}`}</span>
         <div className="flex items-center gap-2">
           <Button variant="secondary" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1}>

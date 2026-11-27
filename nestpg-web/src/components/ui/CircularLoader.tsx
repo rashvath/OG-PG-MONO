@@ -21,8 +21,8 @@ export function CircularLoader({ label = 'Loading graph data...' }: CircularLoad
     <div className="chart-loader" role="status" aria-live="polite">
       <AnimatedCircularProgressBar
         value={value}
-        gaugePrimaryColor="rgb(201 93 67)"
-        gaugeSecondaryColor="rgba(201, 93, 67, 0.18)"
+        gaugePrimaryColor="#0D6EFD"
+        gaugeSecondaryColor="#E6F2FF"
       />
       <p>{label}</p>
     </div>

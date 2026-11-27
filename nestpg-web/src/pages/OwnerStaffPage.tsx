@@ -95,7 +95,7 @@ export function OwnerStaffPage() {
   const [employeeForm, setEmployeeForm] = useState({
     name: '', phone: '', email: '', roleId: '', monthlySalary: '', joiningDate: today(), address: '', notes: '',
   })
-  const [roleForm, setRoleForm] = useState({ name: '', color: '#6366f1' })
+  const [roleForm, setRoleForm] = useState({ name: '', color: '#0D6EFD' })
   const [expenseForm, setExpenseForm] = useState({
     employeeId: '', amount: '', description: '', category: 'supplies', expenseDate: today(),
   })
@@ -316,7 +316,7 @@ export function OwnerStaffPage() {
     )
     if (done) {
       setEditingRole(null)
-      setRoleForm({ name: '', color: '#6366f1' })
+      setRoleForm({ name: '', color: '#0D6EFD' })
     }
   }
 
@@ -575,7 +575,7 @@ export function OwnerStaffPage() {
                   <label htmlFor="employee-role">{formLabel(employeeConfig, 'roleId', 'Role')}{requiredMarker(employeeConfig, 'roleId')}</label>
                   <select id="employee-role" required={employeeConfig.isRequired('roleId')} value={employeeForm.roleId} onChange={(event) => setEmployeeForm({ ...employeeForm, roleId: event.target.value })}>
                     {roles.length === 0
-                      ? <option value="" disabled style={{ color: '#b45309' }}>No roles yet — add one in Manage Roles first</option>
+                      ? <option value="" disabled style={{ color: '#92400E' }}>No roles yet — add one in Manage Roles first</option>
                       : <option value="">Select role</option>}
                     {roles.map((role) => <option key={role._id} value={role._id}>{role.name}</option>)}
                   </select>
@@ -619,7 +619,7 @@ export function OwnerStaffPage() {
                 <h4 className="finance-title span-all">{editingRole ? 'Edit staff role' : 'Add staff role'}</h4>
                 <div className="form-field"><label htmlFor="role-name">{formLabel(roleConfig, 'name', 'Role name')}{requiredMarker(roleConfig, 'name')}</label><input id="role-name" minLength={2} maxLength={60} required={roleConfig.isRequired('name')} value={roleForm.name} onChange={(event) => setRoleForm({ ...roleForm, name: event.target.value })} /></div>
                 <div className="form-field"><label htmlFor="role-color">{formLabel(roleConfig, 'color', 'Label color')}{requiredMarker(roleConfig, 'color')}</label><input id="role-color" type="color" required={roleConfig.isRequired('color')} value={roleForm.color} onChange={(event) => setRoleForm({ ...roleForm, color: event.target.value })} /></div>
-                <div className="table-action-row span-all"><button type="submit" className="btn btn-brand" disabled={isSaving}>{editingRole ? 'Save role' : 'Add role'}</button>{editingRole ? <button type="button" className="btn btn-line" onClick={() => { setEditingRole(null); setRoleForm({ name: '', color: '#6366f1' }) }}>Cancel</button> : null}</div>
+                <div className="table-action-row span-all"><button type="submit" className="btn btn-brand" disabled={isSaving}>{editingRole ? 'Save role' : 'Add role'}</button>{editingRole ? <button type="button" className="btn btn-line" onClick={() => { setEditingRole(null); setRoleForm({ name: '', color: '#0D6EFD' }) }}>Cancel</button> : null}</div>
               </form>
               <div className="span-all">
                 {roles.length === 0

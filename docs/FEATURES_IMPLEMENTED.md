@@ -52,7 +52,7 @@ NestPG is a full-stack PG management platform with:
 - Hero search panel (area + gender) linking to filtered listings
 - Area cards derived from live listing data
 - Area cards show:
-  - Verified badge (`Verified by OG's`)
+  - Verified badge (`Verified by PGINN`)
   - Dynamic count and starting rent
   - Background preview image when available
 - Popular listings carousel/grid from live data

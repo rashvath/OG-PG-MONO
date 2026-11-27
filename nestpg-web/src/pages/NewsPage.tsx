@@ -123,7 +123,7 @@ export function NewsPage() {
   return (
     <div className="bulletin-page">
       <header className="bulletin-masthead">
-        <div className="bulletin-topline"><Link to="/" className="bulletin-home"><ArrowLeft size={16} /> OG Stays</Link><span>Powered by OG Stays</span></div>
+        <div className="bulletin-topline"><Link to="/" className="bulletin-home"><ArrowLeft size={16} /> PGINN</Link><span>Powered by PGINN</span></div>
         <div className="bulletin-heading-wrap"><p className="bulletin-kicker">THE BANGALORE EDITION · {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p><h1>Bangalore <em>Bulletin.</em></h1><p className="bulletin-subtitle">Your city. Your neighbourhood. Everything happening around you.</p></div>
         <div className="bulletin-toolbar">
           <label className="bulletin-search"><Search size={18} /><input aria-label="Search news headlines" placeholder="Search Bangalore headlines" value={search} onChange={(event) => setSearch(event.target.value)} /></label>

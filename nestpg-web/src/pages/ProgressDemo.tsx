@@ -22,8 +22,8 @@ export function AnimatedCircularProgressBarDemo() {
   return (
     <AnimatedCircularProgressBar
       value={value}
-      gaugePrimaryColor="rgb(79 70 229)"
-      gaugeSecondaryColor="rgba(0, 0, 0, 0.1)"
+      gaugePrimaryColor="#0D6EFD"
+      gaugeSecondaryColor="#E6F2FF"
     />
   )
 }

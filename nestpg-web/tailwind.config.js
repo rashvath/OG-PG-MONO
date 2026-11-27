@@ -10,6 +10,10 @@ const config = {
         text: 'var(--c-text)',
         'text-2': 'var(--c-text-2)',
         accent: 'var(--c-accent)',
+        action: 'var(--brand-action)',
+        navy: 'var(--brand-navy)',
+        sky: 'var(--brand-sky)',
+        ink: 'var(--brand-ink)',
         surface: 'var(--c-surface)',
         muted: 'var(--c-muted)',
         border: 'var(--c-border)',
@@ -21,6 +25,7 @@ const config = {
         'neutral-label': 'var(--c-neutral-label)',
       },
       fontFamily: {
+        heading: ['Poppins', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
         sans: ['Inter', 'sans-serif'],
       },
@@ -38,7 +43,7 @@ const config = {
         1: 'var(--shadow-1)',
       },
       minHeight: {
-        control: 'var(--space-8)',
+        control: 'var(--control)',
       },
       transitionDuration: {
         instant: 'var(--dur-instant)',

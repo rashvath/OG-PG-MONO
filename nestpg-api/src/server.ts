@@ -5,7 +5,7 @@ import { connectDb } from './db/mongoose'
 async function start() {
   await connectDb()
   app.listen(env.port, () => {
-    console.log(`NestPG API listening on port ${env.port}`)
+    console.log(`PGINN API listening on port ${env.port}`)
   })
 }
 
